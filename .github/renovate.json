@@ -1,0 +1,19 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    ":semanticCommitTypeAll(chore)",
+    "schedule:earlyMondays"
+  ],
+  "labels": ["dependencies"],
+  "automergeType": "pr",
+  "dependencyDashboard": false,
+  "rebaseWhen": "conflicted",
+  "timezone": "Asia/Jakarta",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": "before 6:00am on the first day of the month"
+  },
+  "prConcurrentLimit": 30,
+  "prHourlyLimit": 0
+}

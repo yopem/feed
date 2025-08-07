@@ -1,0 +1,16 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3069:3000"
+    networks:
+      - yopem_network
+    env_file:
+      - .env
+    restart: unless-stopped
+
+networks:
+  yopem_network:
+    driver: bridge
