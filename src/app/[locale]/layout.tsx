@@ -16,11 +16,11 @@ export const metadata: Metadata = {
 const adwaita = localFont({
   src: [
     {
-      path: "./fonts/adwaita-sans-regular.woff2",
+      path: "/fonts/adwaita-sans-regular.woff2",
       style: "normal",
     },
     {
-      path: "./fonts/adwaita-sans-italic.woff2",
+      path: "/fonts/adwaita-sans-italic.woff2",
       style: "italic",
     },
   ],
