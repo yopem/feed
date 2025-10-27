@@ -35,7 +35,7 @@
     "@yopem-ui/utils": "^0.0.2",
     "@yopem/try-catch": "^0.0.2",
     "babel-plugin-react-compiler": "^19.1.0-rc.2",
-    "dotenv-cli": "^8.0.0",
+    "dotenv-cli": "^10.0.0",
     "drizzle-orm": "^0.44.0",
     "drizzle-zod": "^0.8.2",
     "fast-xml-parser": "^5.2.5",
