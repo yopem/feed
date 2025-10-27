@@ -46,7 +46,7 @@
         "@types/react-dom": "^19.1.5",
         "@yopem/eslint-config": "^0.2.0",
         "@yopem/prettier-config": "^0.1.4",
-        "@yopem/typescript-config": "^0.1.0",
+        "@yopem/typescript-config": "^0.2.0",
         "drizzle-kit": "^0.31.1",
         "eslint": "^9.27.0",
         "lefthook": "^1.11.13",
@@ -385,7 +385,7 @@
 
     "@yopem/try-catch": ["@yopem/try-catch@0.0.2", "", {}, "sha512-llMSwocw3ke/kwu4ZRgmiMfTiX1mYy5lAEkXcJG7cZdQgaoaxS9IcSagswhRZC2YY1ckKylpOMkUKccFsmFPGw=="],
 
-    "@yopem/typescript-config": ["@yopem/typescript-config@0.1.0", "", {}, "sha512-z5BefaENo0Ow/Mqx1BaalxQg7pxvrFWquNtl7esbWUEZIoYJVj3MVNzAIfLFwRFnhlmBi+NvF/22UY6tnxYgdw=="],
+    "@yopem/typescript-config": ["@yopem/typescript-config@0.2.1", "", {}, "sha512-/jg5qY4Skn9mjXKKbbQOerwGfQzg+ERtdE0Fi+J5iSAZSlFbK3phoO8QNeAT9wNh/82WdBHsYRC3NKMVvM3AzQ=="],
 
     "@zag-js/accordion": ["@zag-js/accordion@1.12.4", "", { "dependencies": { "@zag-js/anatomy": "1.12.4", "@zag-js/core": "1.12.4", "@zag-js/dom-query": "1.12.4", "@zag-js/types": "1.12.4", "@zag-js/utils": "1.12.4" } }, "sha512-u63ztbMmG3retx5TBpN4TxDvnbqsYZ++G1Rdhjo/EuWm5PTApZrnP1D7gcqEDk4mBw/IkE3o1l3PzzLj6HUegg=="],
 
