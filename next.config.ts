@@ -42,7 +42,6 @@ const config: NextConfig = {
   },
   reactCompiler: true,
   reactStrictMode: true,
-  cacheComponents: true,
   typescript: { ignoreBuildErrors: true },
   productionBrowserSourceMaps: false,
   compiler: {
