@@ -120,3 +120,52 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .panel-header {
+    @apply border-b border-border px-2 h-8 flex items-center;
+    /* stronger top-to-bottom contrast, works in dark/light */
+    background-image: linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--background) 0%, transparent),
+      color-mix(in oklab, var(--foreground) 8%, transparent)
+    );
+    /* fallback if no backdrop-filter: add faint color surface */
+    background-color: color-mix(in oklab, var(--card) 85%, transparent);
+  }
+}
+
+/* Glass utility classes to standardize glassmorphism surfaces */
+@layer utilities {
+  .glass {
+    /* slightly stronger translucency for visibility */
+    background: color-mix(in oklab, var(--card) 70%, transparent);
+    border: 1px solid var(--border);
+    -webkit-backdrop-filter: blur(16px) saturate(110%);
+    backdrop-filter: blur(16px) saturate(110%);
+  }
+
+  .glass-hover:hover {
+    background: color-mix(in oklab, var(--card) 78%, transparent);
+    transform: translateZ(0) scale(1.02);
+    box-shadow: 0 12px 24px -12px color-mix(in oklab, var(--foreground) 14%, transparent);
+  }
+
+  /* Reduce motion/transparency preferences */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass,
+    .panel-header {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      background: color-mix(in oklab, var(--card) 92%, transparent);
+    }
+  }
+
+  /* Fallback when backdrop-filter unsupported */
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .glass,
+    .panel-header {
+      background: color-mix(in oklab, var(--card) 92%, transparent);
+    }
+  }
+}

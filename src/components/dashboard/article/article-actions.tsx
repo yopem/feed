@@ -56,12 +56,12 @@ export function ArticleActions({
   )
 
   return (
-    <div className="border-border flex items-center justify-between border-b p-4">
+    <div className="panel-header flex items-center justify-between">
       <div className="flex items-center gap-2">
         {/* Mark as Read/Unread */}
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-xs"
           onClick={() => updateRead.mutate({ id: articleId, isRead: !isRead })}
           title={isRead ? "Mark as unread" : "Mark as read"}
           aria-label={isRead ? "Mark as unread" : "Mark as read"}
@@ -76,7 +76,7 @@ export function ArticleActions({
         {/* Star/Unstar */}
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-xs"
           onClick={() =>
             updateStarred.mutate({ id: articleId, isStarred: !isStarred })
           }
@@ -92,7 +92,7 @@ export function ArticleActions({
         {/* Read Later */}
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-xs"
           onClick={() =>
             updateReadLater.mutate({
               id: articleId,

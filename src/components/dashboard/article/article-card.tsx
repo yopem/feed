@@ -81,7 +81,7 @@ export function ArticleCard({
 
           <h3
             className={cn(
-              "mb-1 line-clamp-2 text-sm font-semibold",
+              "mb-1 line-clamp-2 text-sm font-semibold tracking-tight",
               isRead ? "text-muted-foreground" : "text-foreground",
             )}
           >
@@ -90,7 +90,7 @@ export function ArticleCard({
 
           <p
             className={cn(
-              "line-clamp-2 text-xs",
+              "line-clamp-2 text-xs leading-relaxed",
               isRead ? "text-muted-foreground/70" : "text-muted-foreground",
             )}
           >

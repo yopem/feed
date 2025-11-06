@@ -1,9 +1,8 @@
 import { type ReactNode } from "react"
 
-import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
-interface SurfaceCardProps {
+interface GlassCardProps {
   children: ReactNode
   className?: string
   hover?: boolean
@@ -15,9 +14,9 @@ export function SurfaceCard({
   className,
   hover = false,
   onClick,
-}: SurfaceCardProps) {
+}: GlassCardProps) {
   return (
-    <Card
+    <div
       onClick={onClick}
       className={cn(
         "bg-card/50 border-border border backdrop-blur-md",
@@ -30,6 +29,6 @@ export function SurfaceCard({
       )}
     >
       {children}
-    </Card>
+    </div>
   )
 }

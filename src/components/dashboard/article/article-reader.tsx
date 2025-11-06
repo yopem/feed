@@ -51,7 +51,7 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
 
   if (isLoading) {
     return (
-      <div className="h-full overflow-y-auto p-6">
+      <div className="h-full overflow-y-auto p-3 md:p-6">
         <div className="mx-auto max-w-3xl space-y-4">
           <LoadingSkeleton variant="text" count={8} className="h-6" />
         </div>
@@ -83,7 +83,7 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl p-6">
+        <div className="mx-auto max-w-3xl p-3 md:p-6 lg:p-8">
           {/* Article Header */}
           <div className="mb-6">
             <h1 className="text-foreground mb-4 text-3xl font-bold">
@@ -130,14 +130,14 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
 
           {/* Article Content */}
           {article.content ? (
-            <SurfaceCard className="p-6">
+            <SurfaceCard className="p-6 md:p-8">
               <div
-                className="prose prose-invert prose-lg prose-headings:text-foreground prose-p:text-foreground/90 prose-a:text-primary hover:prose-a:text-primary/80 prose-strong:text-foreground prose-code:text-foreground/90 prose-pre:bg-muted prose-img:rounded-lg max-w-none"
+                className="prose prose-invert prose-lg prose-headings:tracking-tight prose-headings:text-foreground prose-p:text-foreground/90 prose-a:text-primary hover:prose-a:text-primary/80 prose-strong:text-foreground prose-code:text-foreground/90 prose-pre:bg-muted prose-img:rounded-lg max-w-none"
                 dangerouslySetInnerHTML={{ __html: article.content }}
               />
             </SurfaceCard>
           ) : (
-            <SurfaceCard className="p-6">
+            <SurfaceCard className="p-6 md:p-8">
               <p className="text-muted-foreground text-center">
                 No content available. Click "Open Original" to read the full
                 article.

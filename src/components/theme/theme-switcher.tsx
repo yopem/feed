@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Icon } from "@yopem-ui/react-icons"
+import { MoonIcon, SunIcon } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
@@ -24,16 +24,20 @@ const ThemeSwitcher = () => {
     )
   }
 
+  const toggle = () => setTheme(theme === "dark" ? "light" : "dark")
+
   return (
     <Button
+      aria-label="Toggle theme"
+      title="Toggle theme"
       variant="ghost"
       className="size-10 cursor-pointer px-0"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      onClick={toggle}
     >
       {theme === "dark" ? (
-        <Icon name="Sun" className="transition-all" />
+        <SunIcon className="size-5 transition-all" />
       ) : (
-        <Icon name="Moon" className="transition-all" />
+        <MoonIcon className="size-5 transition-all" />
       )}
       <span className="sr-only">Toggle theme</span>
     </Button>

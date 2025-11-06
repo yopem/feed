@@ -80,35 +80,46 @@ export function FeedSidebar({
   return (
     <>
       <div className="flex flex-col gap-4 p-2">
-        <SurfaceCard className="p-4">
-          <h2 className="text-foreground mb-4 text-lg font-bold">Filters</h2>
-          <FeedFilter
-            activeFilter={activeFilter}
-            onFilterChange={onFilterChange}
-            counts={filterCounts}
-          />
+        <SurfaceCard className="p-0">
+          <div className="panel-header">
+            <h2 className="text-foreground text-sm leading-5 font-medium">
+              Filters
+            </h2>
+          </div>
+          <div className="p-3">
+            <FeedFilter
+              activeFilter={activeFilter}
+              onFilterChange={onFilterChange}
+              counts={filterCounts}
+            />
+          </div>
         </SurfaceCard>
 
         <SurfaceCard className="flex flex-1 flex-col overflow-hidden">
-          <div className="border-border border-b p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-foreground text-lg font-bold">Feeds</h2>
+          <div className="panel-header">
+            <div className="flex items-center justify-between">
+              <h2 className="text-foreground text-sm leading-5 font-medium">
+                Feeds
+              </h2>
               <Button
-                size="sm"
+                size="xs"
                 variant={selectedFeedId === null ? "secondary" : "ghost"}
                 onClick={() => onFeedSelect(null)}
               >
                 All
               </Button>
             </div>
-
-            <Button className="w-full" onClick={() => setIsAddDialogOpen(true)}>
-              <PlusIcon className="h-4 w-4" />
-              Add Feed
-            </Button>
           </div>
 
-          <div className="flex-1 space-y-2 overflow-y-auto p-2">
+          <div className="flex-1 space-y-3 overflow-y-auto p-3">
+            <Button
+              size="xs"
+              className="w-full"
+              onClick={() => setIsAddDialogOpen(true)}
+            >
+              <PlusIcon className="h-3.5 w-3.5" />
+              Add Feed
+            </Button>
             {feedsLoading ? (
               <LoadingSkeleton variant="list" count={5} />
             ) : !feedsWithStats || feedsWithStats.length === 0 ? (

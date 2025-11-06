@@ -49,11 +49,13 @@ export function ArticleList({
 
   return (
     <SurfaceCard className="flex flex-1 flex-col overflow-hidden">
-      <div className="border-border border-b p-4">
-        <h2 className="text-foreground text-lg font-bold">Articles</h2>
+      <div className="panel-header">
+        <h2 className="text-foreground text-xs leading-4 font-medium">
+          Articles
+        </h2>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto p-2">
+      <div className="flex-1 space-y-3 overflow-y-auto p-3">
         {isLoading ? (
           <LoadingSkeleton variant="list" count={5} />
         ) : !articles || articles.length === 0 ? (
