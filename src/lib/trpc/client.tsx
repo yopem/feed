@@ -12,7 +12,6 @@ import { appEnv } from "@/lib/env/client"
 import { createQueryClient } from "./query-client"
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined
-
 const getQueryClient = () => {
   if (typeof window === "undefined") {
     // Server: always make a new query client
@@ -39,27 +38,13 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
         httpBatchStreamLink({
           transformer: SuperJSON,
           url: getBaseUrl() + "/api/trpc",
-          // @ts-expect-error FIX: later
+          // @ts-expect-error
           headers() {
             const headers = new Headers()
             headers.set("x-trpc-source", "nextjs-react")
             return headers
           },
         }),
-        // httpBatchStreamLink({
-        //   transformer: SuperJSON,
-        //   url: getBaseUrl() + "/api/trpc",
-        //   headers() {
-        //     const h = new Headers()
-        //     h.set("x-trpc-source", "nextjs-react")
-        //
-        //     const headers: Record<string, string> = {}
-        //     h.forEach((value, key) => {
-        //       headers[key] = value
-        //     })
-        //     return headers
-        //   },
-        // }),
       ],
     }),
   )

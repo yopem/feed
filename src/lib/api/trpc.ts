@@ -1,6 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server"
 import superjson from "superjson"
-import { ZodError } from "zod"
+import z, { ZodError } from "zod"
 
 import { auth } from "@/lib/auth/session"
 import { db } from "@/lib/db"
@@ -20,16 +20,16 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
-  errorFormatter({ shape, error }) {
-    return {
-      ...shape,
-      data: {
-        ...shape.data,
-        zodError:
-          error.cause instanceof ZodError ? error.cause.flatten() : null,
-      },
-    }
-  },
+  errorFormatter: ({ shape, error }) => ({
+    ...shape,
+    data: {
+      ...shape.data,
+      zodError:
+        error.cause instanceof ZodError
+          ? z.flattenError(error.cause as ZodError<Record<string, unknown>>)
+          : null,
+    },
+  }),
 })
 
 export const createCallerFactory = t.createCallerFactory
