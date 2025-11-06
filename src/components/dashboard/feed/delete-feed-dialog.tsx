@@ -1,0 +1,77 @@
+"use client"
+
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useTRPC } from "@/lib/trpc/client"
+
+interface DeleteFeedDialogProps {
+  isOpen: boolean
+  onClose: () => void
+  feedId: string
+  feedTitle: string
+}
+
+export function DeleteFeedDialog({
+  isOpen,
+  onClose,
+  feedId,
+  feedTitle,
+}: DeleteFeedDialogProps) {
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+
+  const deleteFeed = useMutation(
+    trpc.feed.delete.mutationOptions({
+      onSuccess: async () => {
+        await queryClient.invalidateQueries(trpc.feed.pathFilter())
+        await queryClient.invalidateQueries(trpc.article.pathFilter())
+        onClose()
+        toast.success("Feed deleted successfully")
+      },
+      onError: (err: { message: string }) => {
+        toast.error(err.message || "Failed to delete feed")
+      },
+    }),
+  )
+
+  const handleDelete = () => {
+    deleteFeed.mutate(feedId)
+  }
+
+  return (
+    <AlertDialog open={isOpen} onOpenChange={onClose}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Feed</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete "{feedTitle}"? This will permanently
+            remove the feed and all its articles. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deleteFeed.isPending}>
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={deleteFeed.isPending}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {deleteFeed.isPending ? "Deleting..." : "Delete"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}

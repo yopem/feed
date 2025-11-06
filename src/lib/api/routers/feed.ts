@@ -3,7 +3,13 @@ import z from "zod"
 
 import { handleTRPCError } from "@/lib/api/error"
 import { protectedProcedure } from "@/lib/api/trpc"
-import { articleTable, feedTable, type SelectFeed } from "@/lib/db/schema"
+import {
+  articleTable,
+  feedTable,
+  feedTagsTable,
+  tagTable,
+  type SelectFeed,
+} from "@/lib/db/schema"
 import { parseFeed } from "@/lib/utils/scraping"
 
 export const feedRouter = {
@@ -11,6 +17,19 @@ export const feedRouter = {
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
       try {
+        // Check for duplicate feed URL for this user
+        const existingFeed = await ctx.db.query.feedTable.findFirst({
+          where: (feedTable, { eq, and }) =>
+            and(eq(feedTable.userId, ctx.session.id), eq(feedTable.url, input)),
+        })
+
+        if (existingFeed) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "You have already subscribed to this feed.",
+          })
+        }
+
         const feedData = await parseFeed(input)
         const [feed] = await ctx.db
           .insert(feedTable)
@@ -39,7 +58,94 @@ export const feedRouter = {
           }))
           await ctx.db.insert(articleTable).values(articlesToInsert)
         }
+
+        // Invalidate cache
+        await ctx.redis.invalidatePattern(`feed:feeds:*:user:${ctx.session.id}`)
+
         return feed
+      } catch (error) {
+        handleTRPCError(error)
+      }
+    }),
+
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const { eq, and } = await import("drizzle-orm")
+
+        // Verify feed belongs to user
+        const existingFeed = await ctx.db.query.feedTable.findFirst({
+          where: and(
+            eq(feedTable.id, input.id),
+            eq(feedTable.userId, ctx.session.id),
+          ),
+        })
+
+        if (!existingFeed) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Feed not found.",
+          })
+        }
+
+        const [updatedFeed] = await ctx.db
+          .update(feedTable)
+          .set({
+            title: input.title ?? existingFeed.title,
+            description: input.description ?? existingFeed.description,
+            updatedAt: new Date(),
+          })
+          .where(eq(feedTable.id, input.id))
+          .returning()
+
+        // Invalidate cache
+        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+
+        return updatedFeed
+      } catch (error) {
+        handleTRPCError(error)
+      }
+    }),
+
+  delete: protectedProcedure
+    .input(z.string())
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const { eq, and } = await import("drizzle-orm")
+
+        // Verify feed belongs to user
+        const existingFeed = await ctx.db.query.feedTable.findFirst({
+          where: and(
+            eq(feedTable.id, input),
+            eq(feedTable.userId, ctx.session.id),
+          ),
+        })
+
+        if (!existingFeed) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Feed not found.",
+          })
+        }
+
+        // Delete articles first (cascade)
+        await ctx.db.delete(articleTable).where(eq(articleTable.feedId, input))
+
+        // Delete feed
+        await ctx.db.delete(feedTable).where(eq(feedTable.id, input))
+
+        // Invalidate cache
+        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
+
+        return { success: true }
       } catch (error) {
         handleTRPCError(error)
       }
@@ -147,4 +253,118 @@ export const feedRouter = {
       handleTRPCError(error)
     }
   }),
+
+  assignTags: protectedProcedure
+    .input(
+      z.object({
+        feedId: z.string(),
+        tagIds: z.array(z.string()),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const { eq, and, inArray } = await import("drizzle-orm")
+
+        // Verify feed belongs to user
+        const existingFeed = await ctx.db.query.feedTable.findFirst({
+          where: and(
+            eq(feedTable.id, input.feedId),
+            eq(feedTable.userId, ctx.session.id),
+          ),
+        })
+
+        if (!existingFeed) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Feed not found.",
+          })
+        }
+
+        // Verify all tags belong to user
+        if (input.tagIds.length > 0) {
+          const tags = await ctx.db.query.tagTable.findMany({
+            where: and(
+              inArray(tagTable.id, input.tagIds),
+              eq(tagTable.userId, ctx.session.id),
+            ),
+          })
+
+          if (tags.length !== input.tagIds.length) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "One or more tags not found.",
+            })
+          }
+
+          // Remove existing tag assignments
+          await ctx.db
+            .delete(feedTagsTable)
+            .where(eq(feedTagsTable.feedId, input.feedId))
+
+          // Insert new tag assignments
+          const tagAssignments = input.tagIds.map((tagId) => ({
+            feedId: input.feedId,
+            tagId,
+          }))
+          await ctx.db.insert(feedTagsTable).values(tagAssignments)
+        } else {
+          // If no tags provided, remove all existing assignments
+          await ctx.db
+            .delete(feedTagsTable)
+            .where(eq(feedTagsTable.feedId, input.feedId))
+        }
+
+        // Invalidate cache
+        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+
+        return { success: true }
+      } catch (error) {
+        handleTRPCError(error)
+      }
+    }),
+
+  unassignTag: protectedProcedure
+    .input(
+      z.object({
+        feedId: z.string(),
+        tagId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const { eq, and } = await import("drizzle-orm")
+
+        // Verify feed belongs to user
+        const existingFeed = await ctx.db.query.feedTable.findFirst({
+          where: and(
+            eq(feedTable.id, input.feedId),
+            eq(feedTable.userId, ctx.session.id),
+          ),
+        })
+
+        if (!existingFeed) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Feed not found.",
+          })
+        }
+
+        // Remove tag assignment
+        await ctx.db
+          .delete(feedTagsTable)
+          .where(
+            and(
+              eq(feedTagsTable.feedId, input.feedId),
+              eq(feedTagsTable.tagId, input.tagId),
+            ),
+          )
+
+        // Invalidate cache
+        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+
+        return { success: true }
+      } catch (error) {
+        handleTRPCError(error)
+      }
+    }),
 } satisfies TRPCRouterRecord

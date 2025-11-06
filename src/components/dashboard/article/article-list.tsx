@@ -22,7 +22,7 @@ interface ArticleWithFeed {
   feed: {
     title: string
     imageUrl: string | null
-  }
+  } | null
 }
 
 interface ArticleListProps {
@@ -71,8 +71,8 @@ export function ArticleList({
               id={article.id}
               title={article.title}
               description={article.description ?? ""}
-              feedTitle={article.feed.title}
-              feedImageUrl={article.feed.imageUrl}
+              feedTitle={article.feed?.title ?? "Unknown Feed"}
+              feedImageUrl={article.feed?.imageUrl ?? null}
               imageUrl={article.imageUrl}
               pubDate={article.pubDate}
               isRead={article.isRead}

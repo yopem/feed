@@ -1,13 +1,15 @@
 "use client"
 
+import { useEffect } from "react"
 import Image from "next/image"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 
 import { EmptyState } from "@/components/dashboard/shared/empty-state"
 import { LoadingSkeleton } from "@/components/dashboard/shared/loading-skeleton"
 import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
 import { useTRPC } from "@/lib/trpc/client"
+import { sanitizeHtml, stripHtml } from "@/lib/utils/html"
 import { ArticleActions } from "./article-actions"
 
 interface ArticleWithFeed {
@@ -33,10 +35,27 @@ interface ArticleReaderProps {
 
 export function ArticleReader({ articleId }: ArticleReaderProps) {
   const trpc = useTRPC()
+  const queryClient = useQueryClient()
   const { data: article, isLoading } = useQuery({
     ...trpc.article.byId.queryOptions(articleId!),
     enabled: !!articleId,
   }) as { data: ArticleWithFeed | undefined; isLoading: boolean }
+
+  const markAsRead = useMutation(
+    trpc.article.updateReadStatus.mutationOptions({
+      onSuccess: async () => {
+        await queryClient.invalidateQueries(trpc.article.pathFilter())
+        await queryClient.invalidateQueries(trpc.feed.pathFilter())
+      },
+    }),
+  )
+
+  // Automatically mark article as read when opened
+  useEffect(() => {
+    if (article && !article.isRead) {
+      markAsRead.mutate({ id: article.id, isRead: true })
+    }
+  }, [article, markAsRead])
 
   if (!articleId) {
     return (
@@ -123,7 +142,7 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
           {article.description && (
             <div className="mb-6">
               <p className="text-foreground/90 text-lg leading-relaxed">
-                {article.description}
+                {stripHtml(article.description)}
               </p>
             </div>
           )}
@@ -133,7 +152,9 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
             <SurfaceCard className="p-6 md:p-8">
               <div
                 className="prose prose-invert prose-lg prose-headings:tracking-tight prose-headings:text-foreground prose-p:text-foreground/90 prose-a:text-primary hover:prose-a:text-primary/80 prose-strong:text-foreground prose-code:text-foreground/90 prose-pre:bg-muted prose-img:rounded-lg max-w-none"
-                dangerouslySetInnerHTML={{ __html: article.content }}
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeHtml(article.content),
+                }}
               />
             </SurfaceCard>
           ) : (

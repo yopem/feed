@@ -1,24 +1,34 @@
 import { relations } from "drizzle-orm"
-import { pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core"
+import {
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  unique,
+} from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 
 import { createCustomId } from "@/lib/utils/custom-id"
 import { articleTable } from "./article"
 import { tagTable } from "./tag"
 
-export const feedTable = pgTable("feeds", {
-  id: text()
-    .primaryKey()
-    .$defaultFn(() => createCustomId()),
-  title: text("title").notNull(),
-  url: text("url").notNull(),
-  description: text("description"),
-  imageUrl: text("image_url"),
-  lastUpdated: timestamp("last_updated").defaultNow(),
-  userId: text("user_id").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-})
+export const feedTable = pgTable(
+  "feeds",
+  {
+    id: text()
+      .primaryKey()
+      .$defaultFn(() => createCustomId()),
+    title: text("title").notNull(),
+    url: text("url").notNull(),
+    description: text("description"),
+    imageUrl: text("image_url"),
+    lastUpdated: timestamp("last_updated").defaultNow(),
+    userId: text("user_id").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (t) => [unique("feed_user_url_unique").on(t.userId, t.url)],
+)
 
 export const feedRelations = relations(feedTable, ({ many }) => ({
   articles: many(articleTable),

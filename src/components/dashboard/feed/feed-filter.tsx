@@ -30,7 +30,7 @@ export function FeedFilter({
   counts,
 }: FeedFilterProps) {
   return (
-    <div className="flex flex-col gap-1 p-2">
+    <div className="flex flex-col gap-1">
       {filters.map((filter) => {
         const isActive = activeFilter === filter.value
         const count = counts?.[filter.value]

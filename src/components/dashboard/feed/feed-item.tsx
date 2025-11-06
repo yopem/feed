@@ -1,9 +1,11 @@
 "use client"
 
 import Image from "next/image"
+import { EditIcon, TrashIcon } from "lucide-react"
 
 import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 interface FeedItemProps {
@@ -13,6 +15,9 @@ interface FeedItemProps {
   unreadCount: number
   isSelected: boolean
   onSelect: (id: string) => void
+  onEdit?: (id: string) => void
+  onDelete?: (id: string) => void
+  tags?: { id: string; name: string }[]
 }
 
 export function FeedItem({
@@ -22,13 +27,16 @@ export function FeedItem({
   unreadCount,
   isSelected,
   onSelect,
+  onEdit,
+  onDelete,
+  tags = [],
 }: FeedItemProps) {
   return (
     <SurfaceCard
       hover
       onClick={() => onSelect(id)}
       className={cn(
-        "p-3 transition-all",
+        "group p-3 transition-all",
         isSelected && "bg-accent ring-ring ring-2",
       )}
     >
@@ -52,8 +60,54 @@ export function FeedItem({
           <h4 className="text-foreground truncate text-sm font-semibold">
             {title}
           </h4>
+          {tags.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {tags.map((tag) => (
+                <Badge
+                  key={tag.id}
+                  variant="outline"
+                  className="h-5 px-1.5 text-xs"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {tag.name}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
         {unreadCount > 0 && <Badge className="shrink-0">{unreadCount}</Badge>}
+
+        {/* Action buttons - shown on hover */}
+        <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          {onEdit && (
+            <Button
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit(id)
+              }}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              aria-label="Edit feed"
+            >
+              <EditIcon className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(id)
+              }}
+              variant="ghost"
+              size="icon"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 w-7"
+              aria-label="Delete feed"
+            >
+              <TrashIcon className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
       </div>
     </SurfaceCard>
   )

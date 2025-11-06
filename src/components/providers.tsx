@@ -1,3 +1,5 @@
+"use client"
+
 import ThemeProvider from "@/components/theme/theme-provider"
 import { TRPCReactProvider } from "@/lib/trpc/client"
 

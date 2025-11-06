@@ -11,14 +11,26 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useTRPC } from "@/lib/trpc/client"
 
-interface AddFeedDialogProps {
+interface EditFeedDialogProps {
   isOpen: boolean
   onClose: () => void
+  feedId: string
+  initialTitle: string
+  initialDescription?: string
+  initialTagIds?: string[]
 }
 
-export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
-  const [url, setUrl] = useState("")
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
+export function EditFeedDialog({
+  isOpen,
+  onClose,
+  feedId,
+  initialTitle,
+  initialDescription,
+  initialTagIds = [],
+}: EditFeedDialogProps) {
+  const [title, setTitle] = useState(initialTitle)
+  const [description, setDescription] = useState(initialDescription ?? "")
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialTagIds)
   const [tagSearchQuery, setTagSearchQuery] = useState("")
   const [showDropdown, setShowDropdown] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -43,11 +55,13 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
   const selectedTags =
     tags?.filter((tag) => selectedTagIds.includes(tag.id)) ?? []
 
-  const createFeed = useMutation(
-    trpc.feed.create.mutationOptions({
+  const updateFeed = useMutation(
+    trpc.feed.update.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries(trpc.feed.pathFilter())
-        toast.success("Feed added successfully")
+        setError(null)
+        onClose()
+        toast.success("Feed updated successfully")
       },
       onError: (err: { message: string }) => {
         setError(err.message)
@@ -62,7 +76,7 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
         await queryClient.invalidateQueries(trpc.feed.pathFilter())
       },
       onError: (err: { message: string }) => {
-        toast.error(err.message || "Failed to assign tags")
+        toast.error(err.message || "Failed to update tags")
       },
     }),
   )
@@ -108,39 +122,26 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
     e.preventDefault()
     setError(null)
 
-    if (!url.trim()) {
-      const message = "Please enter a feed URL"
-      setError(message)
-      toast.error(message)
-      return
-    }
-
-    // Basic URL validation
-    try {
-      new URL(url)
-    } catch {
-      const message = "Please enter a valid URL"
+    if (!title.trim()) {
+      const message = "Please enter a feed title"
       setError(message)
       toast.error(message)
       return
     }
 
     try {
-      const feed = await createFeed.mutateAsync(url.trim())
+      // Update feed details
+      await updateFeed.mutateAsync({
+        id: feedId,
+        title: title.trim(),
+        description: description.trim() || undefined,
+      })
 
-      // Assign tags if any selected
-      if (selectedTagIds.length > 0 && feed) {
-        await assignTags.mutateAsync({
-          feedId: feed.id,
-          tagIds: selectedTagIds,
-        })
-      }
-
-      // Reset form and close
-      setUrl("")
-      setSelectedTagIds([])
-      setError(null)
-      onClose()
+      // Update tag assignments
+      await assignTags.mutateAsync({
+        feedId,
+        tagIds: selectedTagIds,
+      })
     } catch {
       // Errors are already handled by mutation callbacks
     }
@@ -152,7 +153,7 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
     <div className="bg-background/80 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
       <SurfaceCard className="w-full max-w-md p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-foreground text-xl font-bold">Add New Feed</h2>
+          <h2 className="text-foreground text-xl font-bold">Edit Feed</h2>
           <Button
             onClick={onClose}
             variant="ghost"
@@ -166,23 +167,36 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
-              htmlFor="feed-url"
+              htmlFor="feed-title"
               className="text-foreground mb-2 block text-sm font-medium"
             >
-              RSS/Atom Feed URL
+              Feed Title
             </label>
             <Input
-              id="feed-url"
+              id="feed-title"
               type="text"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com/feed.xml"
-              disabled={createFeed.isPending}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="My Favorite Blog"
+              disabled={updateFeed.isPending}
             />
-            <p className="text-muted-foreground mt-2 text-xs">
-              Enter the URL of an RSS or Atom feed. Common paths: /feed, /rss,
-              /atom.xml
-            </p>
+          </div>
+
+          <div>
+            <label
+              htmlFor="feed-description"
+              className="text-foreground mb-2 block text-sm font-medium"
+            >
+              Description (optional)
+            </label>
+            <Input
+              id="feed-description"
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="A short description of this feed"
+              disabled={updateFeed.isPending}
+            />
           </div>
 
           <div>
@@ -294,17 +308,17 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
               type="button"
               onClick={onClose}
               variant="secondary"
-              disabled={createFeed.isPending || assignTags.isPending}
+              disabled={updateFeed.isPending || assignTags.isPending}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={createFeed.isPending || assignTags.isPending}
+              disabled={updateFeed.isPending || assignTags.isPending}
             >
-              {createFeed.isPending || assignTags.isPending
-                ? "Adding..."
-                : "Add Feed"}
+              {updateFeed.isPending || assignTags.isPending
+                ? "Saving..."
+                : "Save Changes"}
             </Button>
           </div>
         </form>

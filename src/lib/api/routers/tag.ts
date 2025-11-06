@@ -4,19 +4,30 @@ import z from "zod"
 
 import { handleTRPCError } from "@/lib/api/error"
 import { createTRPCRouter, protectedProcedure } from "@/lib/api/trpc"
-import {
-  insertTagSchema,
-  tagTable,
-  updateTagSchema,
-  type SelectTag,
-} from "@/lib/db/schema"
+import { tagTable, updateTagSchema, type SelectTag } from "@/lib/db/schema"
 
 export const tagRouter = createTRPCRouter({
   create: protectedProcedure
-    .input(insertTagSchema)
+    .input(
+      z.object({
+        name: z.string(),
+        description: z.string().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
-        const [tag] = await ctx.db.insert(tagTable).values(input).returning()
+        const [tag] = await ctx.db
+          .insert(tagTable)
+          .values({
+            name: input.name,
+            description: input.description,
+            userId: ctx.session.id,
+          })
+          .returning()
+
+        // Invalidate cache
+        await ctx.redis.invalidatePattern(`feed:tags:*:user:${ctx.session.id}`)
+
         return tag
       } catch (error) {
         handleTRPCError(error)
@@ -33,6 +44,20 @@ export const tagRouter = createTRPCRouter({
             message: "Tag ID is required for update",
           })
         }
+
+        // Verify tag belongs to user
+        const existingTag = await ctx.db.query.tagTable.findFirst({
+          where: (tag, { eq, and }) =>
+            and(eq(tag.id, input.id!), eq(tag.userId, ctx.session.id)),
+        })
+
+        if (!existingTag) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Tag not found.",
+          })
+        }
+
         const [tag] = await ctx.db
           .update(tagTable)
           .set({
@@ -41,7 +66,44 @@ export const tagRouter = createTRPCRouter({
           })
           .where(eq(tagTable.id, input.id))
           .returning()
+
+        // Invalidate cache
+        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+
         return tag
+      } catch (error) {
+        handleTRPCError(error)
+      }
+    }),
+
+  delete: protectedProcedure
+    .input(z.string())
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const { eq, and } = await import("drizzle-orm")
+
+        // Verify tag belongs to user
+        const existingTag = await ctx.db.query.tagTable.findFirst({
+          where: and(
+            eq(tagTable.id, input),
+            eq(tagTable.userId, ctx.session.id),
+          ),
+        })
+
+        if (!existingTag) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Tag not found.",
+          })
+        }
+
+        // Delete tag (feedTags junction will cascade delete)
+        await ctx.db.delete(tagTable).where(eq(tagTable.id, input))
+
+        // Invalidate cache
+        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+
+        return { success: true }
       } catch (error) {
         handleTRPCError(error)
       }
@@ -58,12 +120,7 @@ export const tagRouter = createTRPCRouter({
         where: (tag, { eq }) => eq(tag.userId, ctx.session.id),
         orderBy: (tag, { desc }) => desc(tag.createdAt),
       })
-      if (tags.length === 0) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "No tags found for the user",
-        })
-      }
+      // Return empty array instead of throwing error when no tags exist
       await ctx.redis.setCache(cacheKey, tags, 1800)
       return tags
     } catch (error) {
