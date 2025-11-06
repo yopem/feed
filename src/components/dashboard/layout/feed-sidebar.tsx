@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { PlusIcon, RssIcon } from "lucide-react"
 
 import { AddFeedDialog } from "@/components/dashboard/feed/add-feed-dialog"
 import {
@@ -10,18 +11,16 @@ import {
 } from "@/components/dashboard/feed/feed-filter"
 import { FeedItem } from "@/components/dashboard/feed/feed-item"
 import { EmptyState } from "@/components/dashboard/shared/empty-state"
-import { GlassCard } from "@/components/dashboard/shared/glass-card"
 import { LoadingSkeleton } from "@/components/dashboard/shared/loading-skeleton"
+import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
+import { Button } from "@/components/ui/button"
 import { useTRPC } from "@/lib/trpc/client"
-import { cn } from "@/lib/utils"
 
 interface FeedSidebarProps {
   activeFilter: FilterType
   onFilterChange: (filter: FilterType) => void
   selectedFeedId: string | null
   onFeedSelect: (feedId: string | null) => void
-  isMobileOpen?: boolean
-  onMobileClose?: () => void
 }
 
 export function FeedSidebar({
@@ -29,8 +28,6 @@ export function FeedSidebar({
   onFilterChange,
   selectedFeedId,
   onFeedSelect,
-  isMobileOpen = false,
-  onMobileClose,
 }: FeedSidebarProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const trpc = useTRPC()
@@ -82,66 +79,33 @@ export function FeedSidebar({
 
   return (
     <>
-      {isMobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={onMobileClose}
-        />
-      )}
-
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 lg:relative lg:w-60",
-          "flex flex-col gap-4 p-4",
-          "transition-transform duration-300 lg:transform-none",
-          isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-        )}
-      >
-        <GlassCard className="p-4">
+      <div className="flex flex-col gap-4 p-2">
+        <SurfaceCard className="p-4">
           <h2 className="text-foreground mb-4 text-lg font-bold">Filters</h2>
           <FeedFilter
             activeFilter={activeFilter}
             onFilterChange={onFilterChange}
             counts={filterCounts}
           />
-        </GlassCard>
+        </SurfaceCard>
 
-        <GlassCard className="flex flex-1 flex-col overflow-hidden">
+        <SurfaceCard className="flex flex-1 flex-col overflow-hidden">
           <div className="border-border border-b p-4">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-foreground text-lg font-bold">Feeds</h2>
-              <button
+              <Button
+                size="sm"
+                variant={selectedFeedId === null ? "secondary" : "ghost"}
                 onClick={() => onFeedSelect(null)}
-                className={cn(
-                  "rounded-md px-2 py-1 text-xs transition-all",
-                  selectedFeedId === null
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
-                )}
               >
                 All
-              </button>
+              </Button>
             </div>
 
-            <button
-              onClick={() => setIsAddDialogOpen(true)}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground flex w-full items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
+            <Button className="w-full" onClick={() => setIsAddDialogOpen(true)}>
+              <PlusIcon className="h-4 w-4" />
               Add Feed
-            </button>
+            </Button>
           </div>
 
           <div className="flex-1 space-y-2 overflow-y-auto p-2">
@@ -151,21 +115,7 @@ export function FeedSidebar({
               <EmptyState
                 title="No feeds yet"
                 description="Subscribe to some RSS feeds to get started"
-                icon={
-                  <svg
-                    className="h-12 w-12"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"
-                    />
-                  </svg>
-                }
+                icon={<RssIcon className="h-12 w-12" />}
               />
             ) : (
               feedsWithStats.map(
@@ -188,8 +138,8 @@ export function FeedSidebar({
               )
             )}
           </div>
-        </GlassCard>
-      </aside>
+        </SurfaceCard>
+      </div>
 
       <AddFeedDialog
         isOpen={isAddDialogOpen}

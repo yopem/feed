@@ -1,5 +1,7 @@
 "use client"
 
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 export type FilterType = "all" | "unread" | "starred" | "readLater"
@@ -34,30 +36,22 @@ export function FeedFilter({
         const count = counts?.[filter.value]
 
         return (
-          <button
+          <Button
             key={filter.value}
             onClick={() => onFilterChange(filter.value)}
+            variant={isActive ? "default" : "ghost"}
             className={cn(
-              "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-all",
-              isActive
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+              "justify-between",
+              !isActive && "text-muted-foreground",
             )}
           >
             <span>{filter.label}</span>
             {count !== undefined && count > 0 && (
-              <span
-                className={cn(
-                  "rounded-full px-2 py-0.5 text-xs font-semibold",
-                  isActive
-                    ? "bg-primary-foreground/20 text-primary-foreground"
-                    : "bg-muted text-muted-foreground",
-                )}
-              >
+              <Badge variant={isActive ? "secondary" : "outline"}>
                 {count}
-              </span>
+              </Badge>
             )}
-          </button>
+          </Button>
         )
       })}
     </div>

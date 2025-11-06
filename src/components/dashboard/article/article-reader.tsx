@@ -5,8 +5,8 @@ import { useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
 
 import { EmptyState } from "@/components/dashboard/shared/empty-state"
-import { GlassCard } from "@/components/dashboard/shared/glass-card"
 import { LoadingSkeleton } from "@/components/dashboard/shared/loading-skeleton"
+import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
 import { useTRPC } from "@/lib/trpc/client"
 import { ArticleActions } from "./article-actions"
 
@@ -130,19 +130,19 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
 
           {/* Article Content */}
           {article.content ? (
-            <GlassCard className="p-6">
+            <SurfaceCard className="p-6">
               <div
                 className="prose prose-invert prose-lg prose-headings:text-foreground prose-p:text-foreground/90 prose-a:text-primary hover:prose-a:text-primary/80 prose-strong:text-foreground prose-code:text-foreground/90 prose-pre:bg-muted prose-img:rounded-lg max-w-none"
                 dangerouslySetInnerHTML={{ __html: article.content }}
               />
-            </GlassCard>
+            </SurfaceCard>
           ) : (
-            <GlassCard className="p-6">
+            <SurfaceCard className="p-6">
               <p className="text-muted-foreground text-center">
                 No content available. Click "Open Original" to read the full
                 article.
               </p>
-            </GlassCard>
+            </SurfaceCard>
           )}
 
           {/* Footer Spacing */}

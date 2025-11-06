@@ -2,7 +2,8 @@
 
 import Image from "next/image"
 
-import { GlassCard } from "@/components/dashboard/shared/glass-card"
+import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 interface FeedItemProps {
@@ -23,7 +24,7 @@ export function FeedItem({
   onSelect,
 }: FeedItemProps) {
   return (
-    <GlassCard
+    <SurfaceCard
       hover
       onClick={() => onSelect(id)}
       className={cn(
@@ -52,12 +53,8 @@ export function FeedItem({
             {title}
           </h4>
         </div>
-        {unreadCount > 0 && (
-          <span className="bg-primary text-primary-foreground shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold">
-            {unreadCount}
-          </span>
-        )}
+        {unreadCount > 0 && <Badge className="shrink-0">{unreadCount}</Badge>}
       </div>
-    </GlassCard>
+    </SurfaceCard>
   )
 }

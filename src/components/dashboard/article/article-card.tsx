@@ -4,7 +4,9 @@
 
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
+import { ClockIcon, StarIcon } from "lucide-react"
 
+import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
 import { cn } from "@/lib/utils"
 
 dayjs.extend(relativeTime)
@@ -39,12 +41,12 @@ export function ArticleCard({
   onSelect,
 }: ArticleCardProps) {
   return (
-    <button
+    <SurfaceCard
+      hover
       onClick={() => onSelect(id)}
       className={cn(
-        "w-full rounded-lg p-3 text-left transition-all",
-        "hover:bg-accent",
-        isSelected ? "bg-accent ring-ring ring-2" : "bg-card/30",
+        "w-full p-3 text-left",
+        isSelected && "bg-accent ring-ring ring-2",
         !isRead && "border-primary border-l-4",
       )}
     >
@@ -98,35 +100,17 @@ export function ArticleCard({
           <div className="mt-2 flex items-center gap-2">
             {isStarred && (
               <span className="text-primary" title="Starred">
-                <svg
-                  className="h-4 w-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
+                <StarIcon className="h-4 w-4" />
               </span>
             )}
             {isReadLater && (
               <span className="text-primary" title="Read Later">
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                <ClockIcon className="h-4 w-4" />
               </span>
             )}
           </div>
         </div>
       </div>
-    </button>
+    </SurfaceCard>
   )
 }

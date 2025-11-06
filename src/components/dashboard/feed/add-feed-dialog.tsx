@@ -2,8 +2,11 @@
 
 import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { XIcon } from "lucide-react"
 
-import { GlassCard } from "@/components/dashboard/shared/glass-card"
+import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { useTRPC } from "@/lib/trpc/client"
 
 interface AddFeedDialogProps {
@@ -55,28 +58,17 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
 
   return (
     <div className="bg-background/80 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-      <GlassCard className="w-full max-w-md p-6">
+      <SurfaceCard className="w-full max-w-md p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-foreground text-xl font-bold">Add New Feed</h2>
-          <button
+          <Button
             onClick={onClose}
-            className="hover:bg-accent rounded-lg p-1 transition-colors"
+            variant="ghost"
+            size="icon"
             aria-label="Close"
           >
-            <svg
-              className="text-muted-foreground h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+            <XIcon className="text-muted-foreground h-5 w-5" />
+          </Button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -87,13 +79,12 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
             >
               RSS/Atom Feed URL
             </label>
-            <input
+            <Input
               id="feed-url"
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://example.com/feed.xml"
-              className="bg-input border-border text-foreground placeholder-muted-foreground focus:ring-ring w-full rounded-md border px-4 py-2 focus:ring-2 focus:outline-none"
               disabled={createFeed.isPending}
             />
             <p className="text-muted-foreground mt-2 text-xs">
@@ -109,24 +100,20 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
           )}
 
           <div className="flex justify-end gap-3">
-            <button
+            <Button
               type="button"
               onClick={onClose}
-              className="bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-md px-4 py-2 transition-colors"
+              variant="secondary"
               disabled={createFeed.isPending}
             >
               Cancel
-            </button>
-            <button
-              type="submit"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-md px-4 py-2 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={createFeed.isPending}
-            >
+            </Button>
+            <Button type="submit" disabled={createFeed.isPending}>
               {createFeed.isPending ? "Adding..." : "Add Feed"}
-            </button>
+            </Button>
           </div>
         </form>
-      </GlassCard>
+      </SurfaceCard>
     </div>
   )
 }
