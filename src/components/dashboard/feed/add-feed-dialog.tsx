@@ -1,14 +1,24 @@
 "use client"
 
 import { useState } from "react"
+import { useForm } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { PlusIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
+import type { z } from "zod"
 
 import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { insertFeedSchema } from "@/lib/db/schema"
 import { useTRPC } from "@/lib/trpc/client"
 
 interface AddFeedDialogProps {
@@ -16,14 +26,43 @@ interface AddFeedDialogProps {
   onClose: () => void
 }
 
+// Create form schema inline by picking the url field from insertFeedSchema
+const formSchema = insertFeedSchema.pick({ url: true })
+type FormData = z.infer<typeof formSchema>
+
 export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
-  const [url, setUrl] = useState("")
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
   const [tagSearchQuery, setTagSearchQuery] = useState("")
   const [showDropdown, setShowDropdown] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+
+  // Initialize TanStack Form with Zod validation
+  const form = useForm({
+    defaultValues: {
+      url: "",
+    } as FormData,
+    onSubmit: async ({ value }) => {
+      try {
+        const feed = await createFeed.mutateAsync(value.url.trim())
+
+        // Assign tags if any selected
+        if (selectedTagIds.length > 0 && feed) {
+          await assignTags.mutateAsync({
+            feedId: feed.id,
+            tagIds: selectedTagIds,
+          })
+        }
+
+        // Reset form and close
+        form.reset()
+        setSelectedTagIds([])
+        onClose()
+      } catch {
+        // Errors are already handled by mutation callbacks
+      }
+    },
+  })
 
   // Fetch all tags
   const { data: tags } = useQuery(trpc.tag.all.queryOptions())
@@ -50,7 +89,6 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
         toast.success("Feed added successfully")
       },
       onError: (err: { message: string }) => {
-        setError(err.message)
         toast.error(err.message)
       },
     }),
@@ -104,48 +142,6 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
     createTag.mutate({ name: tagSearchQuery.trim() })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-
-    if (!url.trim()) {
-      const message = "Please enter a feed URL"
-      setError(message)
-      toast.error(message)
-      return
-    }
-
-    // Basic URL validation
-    try {
-      new URL(url)
-    } catch {
-      const message = "Please enter a valid URL"
-      setError(message)
-      toast.error(message)
-      return
-    }
-
-    try {
-      const feed = await createFeed.mutateAsync(url.trim())
-
-      // Assign tags if any selected
-      if (selectedTagIds.length > 0 && feed) {
-        await assignTags.mutateAsync({
-          feedId: feed.id,
-          tagIds: selectedTagIds,
-        })
-      }
-
-      // Reset form and close
-      setUrl("")
-      setSelectedTagIds([])
-      setError(null)
-      onClose()
-    } catch {
-      // Errors are already handled by mutation callbacks
-    }
-  }
-
   if (!isOpen) return null
 
   return (
@@ -163,27 +159,55 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="feed-url"
-              className="text-foreground mb-2 block text-sm font-medium"
-            >
-              RSS/Atom Feed URL
-            </label>
-            <Input
-              id="feed-url"
-              type="text"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com/feed.xml"
-              disabled={createFeed.isPending}
-            />
-            <p className="text-muted-foreground mt-2 text-xs">
-              Enter the URL of an RSS or Atom feed. Common paths: /feed, /rss,
-              /atom.xml
-            </p>
-          </div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            void form.handleSubmit()
+          }}
+          className="space-y-4"
+        >
+          {/* URL Field with TanStack Form */}
+          <form.Field
+            name="url"
+            validators={{
+              onSubmit: ({ value }) => {
+                const result = formSchema.shape.url.safeParse(value)
+                if (!result.success) {
+                  return result.error.issues[0]?.message || "Invalid URL"
+                }
+                return undefined
+              },
+            }}
+          >
+            {(field) => (
+              <Field data-invalid={field.state.meta.errors.length > 0}>
+                <FieldContent>
+                  <FieldLabel htmlFor={field.name}>
+                    RSS/Atom Feed URL
+                  </FieldLabel>
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    type="text"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="https://example.com/feed.xml"
+                    disabled={createFeed.isPending}
+                    aria-invalid={field.state.meta.errors.length > 0}
+                  />
+                  <FieldDescription>
+                    Enter the URL of an RSS or Atom feed. Common paths: /feed,
+                    /rss, /atom.xml
+                  </FieldDescription>
+                  {field.state.meta.errors.length > 0 && (
+                    <FieldError>{field.state.meta.errors[0]!}</FieldError>
+                  )}
+                </FieldContent>
+              </Field>
+            )}
+          </form.Field>
 
           <div>
             <label className="text-foreground mb-2 block text-sm font-medium">
@@ -283,30 +307,35 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
             </div>
           </div>
 
-          {error && (
-            <div className="bg-destructive/20 border-destructive/50 text-destructive rounded-lg border p-3 text-sm">
-              {error}
-            </div>
-          )}
-
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              onClick={onClose}
-              variant="secondary"
-              disabled={createFeed.isPending || assignTags.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={createFeed.isPending || assignTags.isPending}
-            >
-              {createFeed.isPending || assignTags.isPending
-                ? "Adding..."
-                : "Add Feed"}
-            </Button>
-          </div>
+          <form.Subscribe
+            selector={(state) => [state.isSubmitting, state.canSubmit]}
+          >
+            {([isSubmitting, canSubmit]) => (
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  onClick={onClose}
+                  variant="secondary"
+                  disabled={createFeed.isPending || assignTags.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={
+                    isSubmitting ||
+                    !canSubmit ||
+                    createFeed.isPending ||
+                    assignTags.isPending
+                  }
+                >
+                  {createFeed.isPending || assignTags.isPending
+                    ? "Adding..."
+                    : "Add Feed"}
+                </Button>
+              </div>
+            )}
+          </form.Subscribe>
         </form>
       </SurfaceCard>
     </div>

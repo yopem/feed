@@ -1,14 +1,23 @@
 "use client"
 
 import { useState } from "react"
+import { useForm } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { PlusIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
+import type { z } from "zod"
 
 import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { updateFeedSchema } from "@/lib/db/schema"
 import { useTRPC } from "@/lib/trpc/client"
 
 interface EditFeedDialogProps {
@@ -20,6 +29,10 @@ interface EditFeedDialogProps {
   initialTagIds?: string[]
 }
 
+// Create form schema inline by picking the title and description fields from updateFeedSchema
+const formSchema = updateFeedSchema.pick({ title: true, description: true })
+type FormData = z.infer<typeof formSchema>
+
 export function EditFeedDialog({
   isOpen,
   onClose,
@@ -28,14 +41,37 @@ export function EditFeedDialog({
   initialDescription,
   initialTagIds = [],
 }: EditFeedDialogProps) {
-  const [title, setTitle] = useState(initialTitle)
-  const [description, setDescription] = useState(initialDescription ?? "")
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialTagIds)
   const [tagSearchQuery, setTagSearchQuery] = useState("")
   const [showDropdown, setShowDropdown] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+
+  // Initialize TanStack Form with Zod validation
+  const form = useForm({
+    defaultValues: {
+      title: initialTitle,
+      description: initialDescription ?? "",
+    } as FormData,
+    onSubmit: async ({ value }) => {
+      try {
+        // Update feed details
+        await updateFeed.mutateAsync({
+          id: feedId,
+          title: (value.title ?? "").trim(),
+          description: value.description?.trim() ?? undefined,
+        })
+
+        // Update tag assignments
+        await assignTags.mutateAsync({
+          feedId,
+          tagIds: selectedTagIds,
+        })
+      } catch {
+        // Errors are already handled by mutation callbacks
+      }
+    },
+  })
 
   // Fetch all tags
   const { data: tags } = useQuery(trpc.tag.all.queryOptions())
@@ -59,12 +95,10 @@ export function EditFeedDialog({
     trpc.feed.update.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries(trpc.feed.pathFilter())
-        setError(null)
         onClose()
         toast.success("Feed updated successfully")
       },
       onError: (err: { message: string }) => {
-        setError(err.message)
         toast.error(err.message)
       },
     }),
@@ -118,35 +152,6 @@ export function EditFeedDialog({
     createTag.mutate({ name: tagSearchQuery.trim() })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-
-    if (!title.trim()) {
-      const message = "Please enter a feed title"
-      setError(message)
-      toast.error(message)
-      return
-    }
-
-    try {
-      // Update feed details
-      await updateFeed.mutateAsync({
-        id: feedId,
-        title: title.trim(),
-        description: description.trim() || undefined,
-      })
-
-      // Update tag assignments
-      await assignTags.mutateAsync({
-        feedId,
-        tagIds: selectedTagIds,
-      })
-    } catch {
-      // Errors are already handled by mutation callbacks
-    }
-  }
-
   if (!isOpen) return null
 
   return (
@@ -164,40 +169,89 @@ export function EditFeedDialog({
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="feed-title"
-              className="text-foreground mb-2 block text-sm font-medium"
-            >
-              Feed Title
-            </label>
-            <Input
-              id="feed-title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="My Favorite Blog"
-              disabled={updateFeed.isPending}
-            />
-          </div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            void form.handleSubmit()
+          }}
+          className="space-y-4"
+        >
+          {/* Title Field with TanStack Form */}
+          <form.Field
+            name="title"
+            validators={{
+              onSubmit: ({ value }) => {
+                const result = formSchema.shape.title.safeParse(value)
+                if (!result.success) {
+                  return result.error.issues[0]?.message || "Invalid title"
+                }
+                return undefined
+              },
+            }}
+          >
+            {(field) => (
+              <Field data-invalid={field.state.meta.errors.length > 0}>
+                <FieldContent>
+                  <FieldLabel htmlFor={field.name}>Feed Title</FieldLabel>
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    type="text"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="My Favorite Blog"
+                    disabled={updateFeed.isPending}
+                    aria-invalid={field.state.meta.errors.length > 0}
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <FieldError>{field.state.meta.errors[0]!}</FieldError>
+                  )}
+                </FieldContent>
+              </Field>
+            )}
+          </form.Field>
 
-          <div>
-            <label
-              htmlFor="feed-description"
-              className="text-foreground mb-2 block text-sm font-medium"
-            >
-              Description (optional)
-            </label>
-            <Input
-              id="feed-description"
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="A short description of this feed"
-              disabled={updateFeed.isPending}
-            />
-          </div>
+          {/* Description Field with TanStack Form */}
+          <form.Field
+            name="description"
+            validators={{
+              onSubmit: ({ value }) => {
+                const result = formSchema.shape.description.safeParse(value)
+                if (!result.success) {
+                  return (
+                    result.error.issues[0]?.message || "Invalid description"
+                  )
+                }
+                return undefined
+              },
+            }}
+          >
+            {(field) => (
+              <Field data-invalid={field.state.meta.errors.length > 0}>
+                <FieldContent>
+                  <FieldLabel htmlFor={field.name}>
+                    Description (optional)
+                  </FieldLabel>
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    type="text"
+                    value={field.state.value ?? ""}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="A short description of this feed"
+                    disabled={updateFeed.isPending}
+                    aria-invalid={field.state.meta.errors.length > 0}
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <FieldError>{field.state.meta.errors[0]!}</FieldError>
+                  )}
+                </FieldContent>
+              </Field>
+            )}
+          </form.Field>
 
           <div>
             <label className="text-foreground mb-2 block text-sm font-medium">
@@ -297,30 +351,35 @@ export function EditFeedDialog({
             </div>
           </div>
 
-          {error && (
-            <div className="bg-destructive/20 border-destructive/50 text-destructive rounded-lg border p-3 text-sm">
-              {error}
-            </div>
-          )}
-
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              onClick={onClose}
-              variant="secondary"
-              disabled={updateFeed.isPending || assignTags.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={updateFeed.isPending || assignTags.isPending}
-            >
-              {updateFeed.isPending || assignTags.isPending
-                ? "Saving..."
-                : "Save Changes"}
-            </Button>
-          </div>
+          <form.Subscribe
+            selector={(state) => [state.isSubmitting, state.canSubmit]}
+          >
+            {([isSubmitting, canSubmit]) => (
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  onClick={onClose}
+                  variant="secondary"
+                  disabled={updateFeed.isPending || assignTags.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={
+                    isSubmitting ||
+                    !canSubmit ||
+                    updateFeed.isPending ||
+                    assignTags.isPending
+                  }
+                >
+                  {updateFeed.isPending || assignTags.isPending
+                    ? "Saving..."
+                    : "Save Changes"}
+                </Button>
+              </div>
+            )}
+          </form.Subscribe>
         </form>
       </SurfaceCard>
     </div>
