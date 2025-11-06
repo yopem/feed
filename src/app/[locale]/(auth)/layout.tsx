@@ -1,16 +1,16 @@
 import * as React from "react"
 import { redirect } from "next/navigation"
 
-import { getCurrentSession } from "@/lib/auth/session"
+import { auth } from "@/lib/auth/session"
 
 export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { user } = await getCurrentSession()
+  const session = await auth()
 
-  if (user) {
+  if (session) {
     redirect("/")
   }
 
