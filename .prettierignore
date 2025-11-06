@@ -33,10 +33,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Migration
-migrations/
-
 # Misc
 .DS_Store
 *.pem
+
+# typescript
 tsconfig.tsbuildinfo
+*.tsbuildinfo
+next-env.d.ts
