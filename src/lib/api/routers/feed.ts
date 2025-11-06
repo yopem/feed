@@ -109,4 +109,42 @@ export const feedRouter = {
       handleTRPCError(error)
     }
   }),
+
+  statistics: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const cacheKey = `feed:statistics:user:${ctx.session.id}`
+      const cached = await ctx.redis.getCache<
+        {
+          feedId: string
+          totalCount: number
+          unreadCount: number
+          starredCount: number
+          readLaterCount: number
+        }[]
+      >(cacheKey)
+      if (cached) {
+        return cached
+      }
+
+      const { db } = await import("@/lib/db")
+      const { eq, sql } = await import("drizzle-orm")
+
+      const stats = await db
+        .select({
+          feedId: articleTable.feedId,
+          totalCount: sql<number>`COUNT(*)::int`,
+          unreadCount: sql<number>`COUNT(*) FILTER (WHERE ${articleTable.isRead} = false)::int`,
+          starredCount: sql<number>`COUNT(*) FILTER (WHERE ${articleTable.isStarred} = true)::int`,
+          readLaterCount: sql<number>`COUNT(*) FILTER (WHERE ${articleTable.isReadLater} = true)::int`,
+        })
+        .from(articleTable)
+        .where(eq(articleTable.userId, ctx.session.id))
+        .groupBy(articleTable.feedId)
+
+      await ctx.redis.setCache(cacheKey, stats, 1800)
+      return stats
+    } catch (error) {
+      handleTRPCError(error)
+    }
+  }),
 } satisfies TRPCRouterRecord

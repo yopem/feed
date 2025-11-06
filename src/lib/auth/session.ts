@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { cookies as getCookies } from "next/headers"
 
 import { authClient } from "./client"
@@ -25,7 +26,7 @@ export async function setTokens(access: string, refresh: string) {
   })
 }
 
-export async function auth() {
+export const auth = cache(async () => {
   const cookies = await getCookies()
   const accessToken = cookies.get("access_token")
   const refreshToken = cookies.get("refresh_token")
@@ -49,4 +50,4 @@ export async function auth() {
   }
 
   return verified.subject.properties
-}
+})
