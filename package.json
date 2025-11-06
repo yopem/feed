@@ -64,7 +64,7 @@
     "@types/node": "^24.0.0",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
-    "@yopem/eslint-config": "^0.2.0",
+    "@yopem/eslint-config": "^0.3.0",
     "@yopem/prettier-config": "^0.1.4",
     "@yopem/typescript-config": "^0.1.0",
     "drizzle-kit": "^0.31.1",
