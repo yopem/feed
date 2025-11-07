@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { PlusIcon, XIcon } from "lucide-react"
@@ -66,6 +66,17 @@ export function EditFeedDialog({
   const [showDropdown, setShowDropdown] = useState(false)
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+
+  // Reset form when dialog opens with new initial values
+  useEffect(() => {
+    if (isOpen) {
+      form.reset()
+      setSelectedTagIds(initialTagIds)
+      setTagSearchQuery("")
+      setShowDropdown(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialTagIds])
 
   // Initialize TanStack Form with Zod validation
   const form = useForm({
@@ -180,7 +191,12 @@ export function EditFeedDialog({
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-foreground text-xl font-bold">Edit Feed</h2>
           <Button
-            onClick={onClose}
+            onClick={() => {
+              form.reset()
+              setSelectedTagIds(initialTagIds)
+              setTagSearchQuery("")
+              onClose()
+            }}
             variant="ghost"
             size="icon"
             aria-label="Close"
@@ -378,7 +394,12 @@ export function EditFeedDialog({
               <div className="flex justify-end gap-3">
                 <Button
                   type="button"
-                  onClick={onClose}
+                  onClick={() => {
+                    form.reset()
+                    setSelectedTagIds(initialTagIds)
+                    setTagSearchQuery("")
+                    onClose()
+                  }}
                   variant="secondary"
                   disabled={updateFeed.isPending || assignTags.isPending}
                 >

@@ -72,12 +72,24 @@ const formSchema = z.object({
         // Validate URL format
         try {
           const url = new URL(val)
-          return url.protocol === "http:" || url.protocol === "https:"
+          // Must be HTTP or HTTPS
+          if (url.protocol !== "http:" && url.protocol !== "https:") {
+            return false
+          }
+          // Must have a valid hostname
+          if (!url.hostname || url.hostname.length === 0) {
+            return false
+          }
+          // Hostname should contain at least one dot (domain.tld)
+          if (!url.hostname.includes(".") && url.hostname !== "localhost") {
+            return false
+          }
+          return true
         } catch {
           return false
         }
       },
-      { message: "Please enter a valid HTTP or HTTPS URL" },
+      { message: "Please enter a valid HTTP or HTTPS URL with a valid domain" },
     ),
 })
 type FormData = z.infer<typeof formSchema>
@@ -223,7 +235,12 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-foreground text-xl font-bold">Add New Feed</h2>
           <Button
-            onClick={onClose}
+            onClick={() => {
+              form.reset()
+              setSelectedTagIds([])
+              setTagSearchQuery("")
+              onClose()
+            }}
             variant="ghost"
             size="icon"
             aria-label="Close"
@@ -395,7 +412,12 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
               <div className="flex justify-end gap-3">
                 <Button
                   type="button"
-                  onClick={onClose}
+                  onClick={() => {
+                    form.reset()
+                    setSelectedTagIds([])
+                    setTagSearchQuery("")
+                    onClose()
+                  }}
                   variant="secondary"
                   disabled={
                     createFeed.isPending ||
