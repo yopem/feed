@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1762390843595,
-      "tag": "0000_familiar_stick",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1762398217635,
-      "tag": "0001_nappy_whizzer",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1762408214297,
-      "tag": "0002_high_gamma_corps",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1762481931371,
-      "tag": "0003_next_rhodey",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1762488957005,
-      "tag": "0004_lyrical_wallflower",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1762489014590,
-      "tag": "0005_exotic_mystique",
+      "when": 1762492398269,
+      "tag": "0000_ambiguous_marauders",
       "breakpoints": true
     }
   ]

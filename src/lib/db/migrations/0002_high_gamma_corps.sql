@@ -1,1 +1,0 @@
-ALTER TABLE "feeds" ADD CONSTRAINT "feed_user_url_unique" UNIQUE("user_id","url");
