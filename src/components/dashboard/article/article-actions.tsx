@@ -20,6 +20,7 @@ interface ArticleActionsProps {
   link: string
   feedSlug?: string
   articleSlug?: string
+  username?: string
 }
 
 export function ArticleActions({
@@ -29,6 +30,7 @@ export function ArticleActions({
   link,
   feedSlug,
   articleSlug,
+  username,
 }: ArticleActionsProps) {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
@@ -52,12 +54,12 @@ export function ArticleActions({
   )
 
   const handleShare = async () => {
-    if (!feedSlug || !articleSlug) {
+    if (!feedSlug || !articleSlug || !username) {
       toast.error("Unable to share this article")
       return
     }
 
-    const shareUrl = `${window.location.origin}/dashboard/${feedSlug}/${articleSlug}`
+    const shareUrl = `${window.location.origin}/${username}/${feedSlug}/${articleSlug}`
 
     try {
       await navigator.clipboard.writeText(shareUrl)
@@ -116,7 +118,7 @@ export function ArticleActions({
         </Button>
 
         {/* Share */}
-        {feedSlug && articleSlug && (
+        {feedSlug && articleSlug && username && (
           <Button
             variant="ghost"
             size="icon"

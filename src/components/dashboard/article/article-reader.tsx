@@ -33,9 +33,10 @@ interface ArticleWithFeed {
 
 interface ArticleReaderProps {
   articleId: string | null
+  username: string
 }
 
-export function ArticleReader({ articleId }: ArticleReaderProps) {
+export function ArticleReader({ articleId, username }: ArticleReaderProps) {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const { data: article, isLoading } = useQuery({
@@ -103,6 +104,7 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
         link={article.link}
         feedSlug={article.feed.slug}
         articleSlug={article.slug}
+        username={username}
       />
 
       <div className="flex-1 overflow-y-auto">
