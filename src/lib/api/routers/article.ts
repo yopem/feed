@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server"
-import { and, count, desc, eq } from "drizzle-orm"
+import { and, count, eq, lt } from "drizzle-orm"
 import z from "zod"
 
 import { handleTRPCError } from "@/lib/api/error"
@@ -207,7 +207,10 @@ export const articleRouter = createTRPCRouter({
           where: and(...conditions),
           offset: (input.page - 1) * input.perPage,
           limit: input.perPage,
-          orderBy: desc(articleTable.pubDate),
+          orderBy: (articles, { desc }) => [
+            desc(articles.pubDate),
+            desc(articles.id),
+          ],
           with: {
             feed: {
               columns: {
@@ -248,6 +251,7 @@ export const articleRouter = createTRPCRouter({
         await ctx.redis.invalidatePattern(
           `feed:articles:*:user:${ctx.session.id}`,
         )
+        await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
 
         return updated
       } catch (error) {
@@ -277,6 +281,7 @@ export const articleRouter = createTRPCRouter({
         await ctx.redis.invalidatePattern(
           `feed:articles:*:user:${ctx.session.id}`,
         )
+        await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
 
         return updated
       } catch (error) {
@@ -306,6 +311,7 @@ export const articleRouter = createTRPCRouter({
         await ctx.redis.invalidatePattern(
           `feed:articles:*:user:${ctx.session.id}`,
         )
+        await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
 
         return updated
       } catch (error) {
@@ -336,6 +342,91 @@ export const articleRouter = createTRPCRouter({
         )
 
         return { success: true }
+      } catch (error) {
+        handleTRPCError(error)
+      }
+    }),
+
+  byFilterInfinite: protectedProcedure
+    .input(
+      z.object({
+        filter: z
+          .enum(["all", "unread", "starred", "readLater"])
+          .default("all"),
+        feedId: z.string().optional(),
+        limit: z.number().default(50),
+        cursor: z.string().nullable().optional(), // ISO date string
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        // Parse cursor if provided
+        let cursorDate: Date | undefined
+        if (input.cursor) {
+          cursorDate = new Date(input.cursor)
+
+          // Validate date
+          if (isNaN(cursorDate.getTime())) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Invalid cursor date format",
+            })
+          }
+        }
+
+        // Build base conditions
+        const conditions = [eq(articleTable.userId, ctx.session.id)]
+
+        // Add feed filter
+        if (input.feedId) {
+          conditions.push(eq(articleTable.feedId, input.feedId))
+        }
+
+        // Add status filter
+        if (input.filter === "unread") {
+          conditions.push(eq(articleTable.isRead, false))
+        } else if (input.filter === "starred") {
+          conditions.push(eq(articleTable.isStarred, true))
+        } else if (input.filter === "readLater") {
+          conditions.push(eq(articleTable.isReadLater, true))
+        }
+
+        // Add cursor condition for pagination
+        if (cursorDate) {
+          conditions.push(lt(articleTable.pubDate, cursorDate))
+        }
+
+        // Fetch articles (limit + 1 to determine if there are more)
+        const articles = await ctx.db.query.articleTable.findMany({
+          where: and(...conditions),
+          limit: input.limit + 1,
+          orderBy: (articles, { desc }) => [
+            desc(articles.pubDate),
+            desc(articles.id),
+          ],
+          with: {
+            feed: {
+              columns: {
+                title: true,
+                slug: true,
+                imageUrl: true,
+              },
+            },
+          },
+        })
+
+        // Determine if there are more results
+        const hasMore = articles.length > input.limit
+        const items = hasMore ? articles.slice(0, -1) : articles
+
+        // Generate next cursor from last item
+        const lastItem = items[items.length - 1]
+        const nextCursor = hasMore ? lastItem.pubDate.toISOString() : undefined
+
+        return {
+          articles: items,
+          nextCursor,
+        }
       } catch (error) {
         handleTRPCError(error)
       }

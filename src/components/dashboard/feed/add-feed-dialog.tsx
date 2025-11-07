@@ -21,6 +21,40 @@ import { Input } from "@/components/ui/input"
 import { insertFeedSchema } from "@/lib/db/schema"
 import { useTRPC } from "@/lib/trpc/client"
 
+/**
+ * AddFeedDialog - Form for adding new RSS/Atom feeds
+ *
+ * This component demonstrates the TanStack Form pattern used in this project:
+ *
+ * 1. Schema Definition:
+ *    - Import database schema from @/lib/db/schema
+ *    - Create form schema inline using .pick() or .extend()
+ *    - No separate schema files needed
+ *
+ * 2. Form Initialization:
+ *    - Use useForm() from @tanstack/react-form
+ *    - Set defaultValues matching the form schema type
+ *    - Define onSubmit handler with async mutation logic
+ *
+ * 3. Field Validation:
+ *    - Use form.Field component with render prop pattern
+ *    - Add validators.onSubmit for field-level validation
+ *    - Validate using schema.shape.fieldName.safeParse()
+ *    - Return error message string or undefined
+ *
+ * 4. Field Rendering:
+ *    - Wrap each field in <Field data-invalid={hasErrors}>
+ *    - Use FieldLabel, FieldDescription, FieldError components
+ *    - Connect input to field.state.value and field.handleChange
+ *    - Display field.state.meta.errors for validation feedback
+ *
+ * 5. Form Submission:
+ *    - Use form.Subscribe to access isSubmitting/canSubmit state
+ *    - Disable submit button based on form state
+ *    - Call form.handleSubmit() in onSubmit handler
+ *    - Handle success/error in mutation callbacks
+ */
+
 interface AddFeedDialogProps {
   isOpen: boolean
   onClose: () => void
@@ -86,6 +120,7 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
     trpc.feed.create.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries(trpc.feed.pathFilter())
+        await queryClient.invalidateQueries(trpc.article.pathFilter())
         toast.success("Feed added successfully")
       },
       onError: (err: { message: string }) => {

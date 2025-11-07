@@ -2,9 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
-  CheckCircle2Icon,
-  CircleIcon,
-  ClockIcon,
+  BookmarkIcon,
   ExternalLinkIcon,
   Share2Icon,
   StarIcon,
@@ -16,7 +14,6 @@ import { useTRPC } from "@/lib/trpc/client"
 
 interface ArticleActionsProps {
   articleId: string
-  isRead: boolean
   isStarred: boolean
   isReadLater: boolean
   link: string
@@ -26,7 +23,6 @@ interface ArticleActionsProps {
 
 export function ArticleActions({
   articleId,
-  isRead,
   isStarred,
   isReadLater,
   link,
@@ -36,19 +32,11 @@ export function ArticleActions({
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
-  const updateRead = useMutation(
-    trpc.article.updateReadStatus.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.article.pathFilter())
-        await queryClient.invalidateQueries(trpc.feed.pathFilter())
-      },
-    }),
-  )
-
   const updateStarred = useMutation(
     trpc.article.updateStarred.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries(trpc.article.pathFilter())
+        await queryClient.invalidateQueries(trpc.feed.pathFilter())
       },
     }),
   )
@@ -57,6 +45,7 @@ export function ArticleActions({
     trpc.article.updateReadLater.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries(trpc.article.pathFilter())
+        await queryClient.invalidateQueries(trpc.feed.pathFilter())
       },
     }),
   )
@@ -80,21 +69,6 @@ export function ArticleActions({
   return (
     <div className="panel-header flex items-center justify-between">
       <div className="flex items-center gap-2">
-        {/* Mark as Read/Unread */}
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={() => updateRead.mutate({ id: articleId, isRead: !isRead })}
-          title={isRead ? "Mark as unread" : "Mark as read"}
-          aria-label={isRead ? "Mark as unread" : "Mark as read"}
-        >
-          {isRead ? (
-            <CheckCircle2Icon className="text-muted-foreground h-5 w-5" />
-          ) : (
-            <CircleIcon className="text-muted-foreground h-5 w-5" />
-          )}
-        </Button>
-
         {/* Star/Unstar */}
         <Button
           variant="ghost"
@@ -124,7 +98,7 @@ export function ArticleActions({
           title={isReadLater ? "Remove from read later" : "Read later"}
           aria-label={isReadLater ? "Remove from read later" : "Read later"}
         >
-          <ClockIcon
+          <BookmarkIcon
             className="text-primary h-5 w-5"
             fill={isReadLater ? "currentColor" : "none"}
           />

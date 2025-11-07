@@ -71,6 +71,7 @@ export function ArticleCard({
     trpc.article.updateStarred.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries(trpc.article.pathFilter())
+        await queryClient.invalidateQueries(trpc.feed.pathFilter())
         toast.success(isStarred ? "Removed from starred" : "Added to starred")
       },
       onError: () => {
@@ -83,6 +84,7 @@ export function ArticleCard({
     trpc.article.updateReadLater.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries(trpc.article.pathFilter())
+        await queryClient.invalidateQueries(trpc.feed.pathFilter())
         toast.success(
           isReadLater ? "Removed from read later" : "Added to read later",
         )

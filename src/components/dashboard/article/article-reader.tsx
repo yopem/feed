@@ -97,7 +97,6 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
     <div className="flex h-full flex-col">
       <ArticleActions
         articleId={article.id}
-        isRead={article.isRead}
         isStarred={article.isStarred}
         isReadLater={article.isReadLater}
         link={article.link}

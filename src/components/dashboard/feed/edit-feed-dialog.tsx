@@ -20,6 +20,26 @@ import { Input } from "@/components/ui/input"
 import { updateFeedSchema } from "@/lib/db/schema"
 import { useTRPC } from "@/lib/trpc/client"
 
+/**
+ * EditFeedDialog - Form for editing existing feed details
+ *
+ * This component follows the TanStack Form pattern used throughout the project.
+ * For detailed pattern documentation, see AddFeedDialog.
+ *
+ * Key differences from AddFeedDialog:
+ * - Uses updateFeedSchema instead of insertFeedSchema
+ * - Picks multiple fields (title, description)
+ * - Populates defaultValues from initialProps
+ * - Updates existing feed instead of creating new one
+ *
+ * Pattern Summary:
+ * 1. Import database schema, create form schema inline with .pick()
+ * 2. Initialize useForm with defaultValues and onSubmit handler
+ * 3. Add field-level validation using validators.onSubmit
+ * 4. Render fields using form.Field render prop pattern
+ * 5. Use form.Subscribe for submit button state management
+ */
+
 interface EditFeedDialogProps {
   isOpen: boolean
   onClose: () => void
