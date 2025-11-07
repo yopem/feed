@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { PlusIcon, RssIcon, TagIcon } from "lucide-react"
+import { toast } from "sonner"
 
 import { AddFeedDialog } from "@/components/dashboard/feed/add-feed-dialog"
 import { DeleteFeedDialog } from "@/components/dashboard/feed/delete-feed-dialog"
@@ -61,6 +62,7 @@ export function FeedSidebar({
     id: string
     title: string
   } | null>(null)
+  const [refreshingFeedId, setRefreshingFeedId] = useState<string | null>(null)
   const trpc = useTRPC()
 
   const { data: feeds, isLoading: feedsLoading } = useQuery(
@@ -69,6 +71,29 @@ export function FeedSidebar({
       perPage: 100,
     }),
   )
+
+  const refreshMutation = useMutation(trpc.feed.refresh.mutationOptions())
+
+  const handleRefreshFeed = async (feedId: string) => {
+    setRefreshingFeedId(feedId)
+    try {
+      const result = await refreshMutation.mutateAsync(feedId)
+      if (result && result.newArticles === 0) {
+        toast.success("Feed is up to date")
+      } else if (result) {
+        toast.success(
+          `Added ${result.newArticles} new article${result.newArticles > 1 ? "s" : ""}`,
+        )
+      }
+    } catch (error) {
+      toast.error("Failed to refresh feed", {
+        description:
+          error instanceof Error ? error.message : "Please try again",
+      })
+    } finally {
+      setRefreshingFeedId(null)
+    }
+  }
 
   const { data: statistics } = useQuery(trpc.feed.statistics.queryOptions())
 
@@ -209,6 +234,8 @@ export function FeedSidebar({
                   isSelected={selectedFeedId === feed.id}
                   onSelect={onFeedSelect}
                   tags={feed.tags?.map((t) => t.tag) ?? []}
+                  onRefresh={handleRefreshFeed}
+                  isRefreshing={refreshingFeedId === feed.id}
                   onEdit={(id) => {
                     const feedToEdit = (
                       feeds as FeedWithTags[] | undefined

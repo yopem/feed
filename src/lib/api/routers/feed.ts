@@ -453,4 +453,103 @@ export const feedRouter = {
         handleTRPCError(error)
       }
     }),
+
+  refresh: protectedProcedure
+    .input(z.string())
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const { eq, and } = await import("drizzle-orm")
+
+        // Verify feed belongs to user
+        const existingFeed = await ctx.db.query.feedTable.findFirst({
+          where: and(
+            eq(feedTable.id, input),
+            eq(feedTable.userId, ctx.session.id),
+          ),
+        })
+
+        if (!existingFeed) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Feed not found.",
+          })
+        }
+
+        // Parse feed to get latest articles
+        const feedData = await parseFeed(existingFeed.url)
+
+        if (feedData.articles.length === 0) {
+          return { newArticles: 0 }
+        }
+
+        // Get existing article links for this feed to avoid duplicates
+        const existingArticles = await ctx.db.query.articleTable.findMany({
+          where: eq(articleTable.feedId, input),
+          columns: {
+            link: true,
+          },
+        })
+
+        const existingLinks = new Set(existingArticles.map((a) => a.link))
+
+        // Filter out articles that already exist
+        const newArticles = feedData.articles.filter(
+          (article) => !existingLinks.has(article.link),
+        )
+
+        if (newArticles.length === 0) {
+          return { newArticles: 0 }
+        }
+
+        // Prepare articles for insertion
+        const articlesToInsert = newArticles.map((article) => {
+          const articleSlug = slugify(article.title)
+          return {
+            title: article.title,
+            slug: articleSlug,
+            description: article.description,
+            content: article.content,
+            link: article.link,
+            imageUrl: article.imageUrl,
+            source: article.source,
+            pubDate: new Date(article.pubDate),
+            userId: ctx.session.id,
+            feedId: input,
+            isRead: false,
+            isReadLater: false,
+            isStarred: false,
+          }
+        })
+
+        // Handle duplicate slugs
+        const slugCounts = new Map<string, number>()
+        const finalArticles = articlesToInsert.map((article) => {
+          let finalSlug = article.slug
+          const count = slugCounts.get(article.slug) ?? 0
+
+          if (count > 0) {
+            finalSlug = `${article.slug}-${count}`
+          }
+
+          slugCounts.set(article.slug, count + 1)
+
+          return {
+            ...article,
+            slug: finalSlug,
+          }
+        })
+
+        // Insert new articles
+        await ctx.db.insert(articleTable).values(finalArticles)
+
+        // Invalidate caches
+        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
+        await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
+
+        return { newArticles: newArticles.length }
+      } catch (error) {
+        handleTRPCError(error)
+      }
+    }),
 } satisfies TRPCRouterRecord

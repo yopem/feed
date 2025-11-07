@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { EditIcon, TrashIcon } from "lucide-react"
+import { EditIcon, RefreshCwIcon, TrashIcon } from "lucide-react"
 
 import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
 import { Badge } from "@/components/ui/badge"
@@ -17,6 +17,8 @@ interface FeedItemProps {
   onSelect: (id: string) => void
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
+  onRefresh?: (id: string) => void
+  isRefreshing?: boolean
   tags?: { id: string; name: string }[]
 }
 
@@ -29,6 +31,8 @@ export function FeedItem({
   onSelect,
   onEdit,
   onDelete,
+  onRefresh,
+  isRefreshing = false,
   tags = [],
 }: FeedItemProps) {
   return (
@@ -79,6 +83,23 @@ export function FeedItem({
 
         {/* Action buttons - shown on hover */}
         <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          {onRefresh && (
+            <Button
+              onClick={(e) => {
+                e.stopPropagation()
+                onRefresh(id)
+              }}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              aria-label="Refresh feed"
+              disabled={isRefreshing}
+            >
+              <RefreshCwIcon
+                className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")}
+              />
+            </Button>
+          )}
           {onEdit && (
             <Button
               onClick={(e) => {
