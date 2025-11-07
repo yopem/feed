@@ -1,6 +1,6 @@
 "use client"
 
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   BookmarkIcon,
   ExternalLinkIcon,
@@ -20,7 +20,6 @@ interface ArticleActionsProps {
   link: string
   feedSlug?: string
   articleSlug?: string
-  username?: string
 }
 
 export function ArticleActions({
@@ -30,10 +29,12 @@ export function ArticleActions({
   link,
   feedSlug,
   articleSlug,
-  username,
 }: ArticleActionsProps) {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+
+  // Fetch current user data
+  const { data: user } = useQuery(trpc.user.getCurrentUser.queryOptions())
 
   const updateStarred = useMutation(
     trpc.article.updateStarred.mutationOptions({
@@ -54,12 +55,12 @@ export function ArticleActions({
   )
 
   const handleShare = async () => {
-    if (!feedSlug || !articleSlug || !username) {
+    if (!feedSlug || !articleSlug || !user?.username) {
       toast.error("Unable to share this article")
       return
     }
 
-    const shareUrl = `${window.location.origin}/${username}/${feedSlug}/${articleSlug}`
+    const shareUrl = `${window.location.origin}/${user.username}/${feedSlug}/${articleSlug}`
 
     try {
       await navigator.clipboard.writeText(shareUrl)
@@ -118,7 +119,7 @@ export function ArticleActions({
         </Button>
 
         {/* Share */}
-        {feedSlug && articleSlug && username && (
+        {feedSlug && articleSlug && user?.username && (
           <Button
             variant="ghost"
             size="icon"

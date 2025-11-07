@@ -179,7 +179,6 @@ export default async function ArticlePage({ params }: PageProps) {
             link={article.link}
             feedSlug={feedSlug}
             articleSlug={articleSlug}
-            username={username}
           />
         </div>
       </div>
