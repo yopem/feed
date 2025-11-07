@@ -16,6 +16,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { insertTagSchema } from "@/lib/db/schema"
 import { useTRPC } from "@/lib/trpc/client"
 
@@ -146,10 +147,9 @@ export function AddTagDialog({ isOpen, onClose }: AddTagDialogProps) {
                   <FieldLabel htmlFor={field.name}>
                     Description (optional)
                   </FieldLabel>
-                  <Input
+                  <Textarea
                     id={field.name}
                     name={field.name}
-                    type="text"
                     value={field.state.value ?? ""}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
