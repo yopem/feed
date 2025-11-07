@@ -103,7 +103,7 @@ export function ArticleCard({
   return (
     <Card
       className={cn(
-        "cursor-pointer gap-0 transition-all hover:shadow-md",
+        "group cursor-pointer gap-0 transition-all hover:shadow-md hover:border-primary/20",
         isSelected && "ring-ring bg-accent ring-2",
       )}
       onMouseEnter={() => setIsHovered(true)}
@@ -165,29 +165,29 @@ export function ArticleCard({
 
       <CardFooter
         className={cn(
-          "justify-between pt-0 pb-3 transition-all",
-          isHovered ? "flex" : "hidden",
+          "justify-between pt-2 pb-3 transition-all",
+          isHovered || isStarred || isReadLater ? "flex" : "hidden md:group-hover:flex",
         )}
       >
         <div className="flex items-center gap-2">
           {isStarred && (
-            <span className="text-primary" title="Starred">
-              <StarIcon className="h-3.5 w-3.5 fill-current" />
+            <span className="text-yellow-500 dark:text-yellow-400" title="Starred">
+              <StarIcon className="h-4 w-4 fill-current" />
             </span>
           )}
           {isReadLater && (
-            <span className="text-primary" title="Read Later">
-              <BookmarkIcon className="h-3.5 w-3.5 fill-current" />
+            <span className="text-blue-500 dark:text-blue-400" title="Read Later">
+              <BookmarkIcon className="h-4 w-4 fill-current" />
             </span>
           )}
         </div>
 
         {/* Hover Actions */}
-        <div className="flex gap-1">
+        <div className="flex gap-1.5">
           <Button
             size="sm"
             variant={isReadLater ? "default" : "outline"}
-            className="h-7 gap-1 px-2"
+            className="h-8 gap-1.5 px-2.5 text-xs"
             onClick={(e) =>
               handleActionClick(e, () =>
                 updateReadLater.mutate({ id, isReadLater: !isReadLater }),
@@ -195,13 +195,16 @@ export function ArticleCard({
             }
             title={isReadLater ? "Remove from read later" : "Read later"}
           >
-            <BookmarkIcon className="h-3 w-3" />
+            <BookmarkIcon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">
+              {isReadLater ? "Saved" : "Save"}
+            </span>
           </Button>
 
           <Button
             size="sm"
             variant={isStarred ? "default" : "outline"}
-            className="h-7 gap-1 px-2"
+            className="h-8 gap-1.5 px-2.5 text-xs"
             onClick={(e) =>
               handleActionClick(e, () =>
                 updateStarred.mutate({ id, isStarred: !isStarred }),
@@ -209,13 +212,16 @@ export function ArticleCard({
             }
             title={isStarred ? "Remove from starred" : "Star"}
           >
-            <StarIcon className="h-3 w-3" />
+            <StarIcon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">
+              {isStarred ? "Starred" : "Star"}
+            </span>
           </Button>
 
           <Button
             size="sm"
             variant={isRead ? "outline" : "default"}
-            className="h-7 gap-1 px-2"
+            className="h-8 gap-1.5 px-2.5 text-xs"
             onClick={(e) =>
               handleActionClick(e, () =>
                 updateReadStatus.mutate({ id, isRead: !isRead }),
@@ -223,7 +229,10 @@ export function ArticleCard({
             }
             title={isRead ? "Mark as unread" : "Mark as read"}
           >
-            <CheckIcon className="h-3 w-3" />
+            <CheckIcon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">
+              {isRead ? "Read" : "Unread"}
+            </span>
           </Button>
         </div>
       </CardFooter>

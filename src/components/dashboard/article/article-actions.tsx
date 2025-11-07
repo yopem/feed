@@ -11,6 +11,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { useTRPC } from "@/lib/trpc/client"
+import { cn } from "@/lib/utils"
 
 interface ArticleActionsProps {
   articleId: string
@@ -67,12 +68,13 @@ export function ArticleActions({
   }
 
   return (
-    <div className="panel-header flex items-center justify-between">
-      <div className="flex items-center gap-2">
+    <div className="panel-header flex items-center justify-between border-b px-4 py-3 md:px-6">
+      <div className="flex items-center gap-1.5">
         {/* Star/Unstar */}
         <Button
           variant="ghost"
-          size="icon-xs"
+          size="icon"
+          className="h-9 w-9"
           onClick={() =>
             updateStarred.mutate({ id: articleId, isStarred: !isStarred })
           }
@@ -80,15 +82,20 @@ export function ArticleActions({
           aria-label={isStarred ? "Remove star" : "Add star"}
         >
           <StarIcon
-            className="text-primary h-5 w-5"
-            fill={isStarred ? "currentColor" : "none"}
+            className={cn(
+              "h-5 w-5 transition-colors",
+              isStarred
+                ? "fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400"
+                : "text-muted-foreground hover:text-foreground",
+            )}
           />
         </Button>
 
         {/* Read Later */}
         <Button
           variant="ghost"
-          size="icon-xs"
+          size="icon"
+          className="h-9 w-9"
           onClick={() =>
             updateReadLater.mutate({
               id: articleId,
@@ -99,8 +106,12 @@ export function ArticleActions({
           aria-label={isReadLater ? "Remove from read later" : "Read later"}
         >
           <BookmarkIcon
-            className="text-primary h-5 w-5"
-            fill={isReadLater ? "currentColor" : "none"}
+            className={cn(
+              "h-5 w-5 transition-colors",
+              isReadLater
+                ? "fill-blue-500 text-blue-500 dark:fill-blue-400 dark:text-blue-400"
+                : "text-muted-foreground hover:text-foreground",
+            )}
           />
         </Button>
 
@@ -108,12 +119,13 @@ export function ArticleActions({
         {feedSlug && articleSlug && (
           <Button
             variant="ghost"
-            size="icon-xs"
+            size="icon"
+            className="h-9 w-9"
             onClick={handleShare}
             title="Share article"
             aria-label="Share article"
           >
-            <Share2Icon className="text-muted-foreground h-5 w-5" />
+            <Share2Icon className="text-muted-foreground hover:text-foreground h-5 w-5 transition-colors" />
           </Button>
         )}
       </div>

@@ -81,8 +81,8 @@ export function FeedItem({
         </div>
         {unreadCount > 0 && <Badge className="shrink-0">{unreadCount}</Badge>}
 
-        {/* Action buttons - shown on hover */}
-        <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        {/* Action buttons - shown on hover or on mobile */}
+        <div className="flex shrink-0 gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
           {onRefresh && (
             <Button
               onClick={(e) => {
@@ -91,12 +91,12 @@ export function FeedItem({
               }}
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-8 w-8"
               aria-label="Refresh feed"
               disabled={isRefreshing}
             >
               <RefreshCwIcon
-                className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")}
+                className={cn("h-4 w-4", isRefreshing && "animate-spin")}
               />
             </Button>
           )}
@@ -108,10 +108,10 @@ export function FeedItem({
               }}
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-8 w-8"
               aria-label="Edit feed"
             >
-              <EditIcon className="h-3.5 w-3.5" />
+              <EditIcon className="h-4 w-4" />
             </Button>
           )}
           {onDelete && (
@@ -122,10 +122,10 @@ export function FeedItem({
               }}
               variant="ghost"
               size="icon"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 w-7"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8"
               aria-label="Delete feed"
             >
-              <TrashIcon className="h-3.5 w-3.5" />
+              <TrashIcon className="h-4 w-4" />
             </Button>
           )}
         </div>
