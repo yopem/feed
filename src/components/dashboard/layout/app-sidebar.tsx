@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 import { AddFeedDialog } from "@/components/dashboard/feed/add-feed-dialog"
+import { AddTagDialog } from "@/components/dashboard/feed/add-tag-dialog"
 import { DeleteFeedDialog } from "@/components/dashboard/feed/delete-feed-dialog"
 import { DeleteTagDialog } from "@/components/dashboard/feed/delete-tag-dialog"
 import { EditFeedDialog } from "@/components/dashboard/feed/edit-feed-dialog"
@@ -83,9 +84,12 @@ export function AppSidebar({
   onFeedSelect,
 }: AppSidebarProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isAddTagDialogOpen, setIsAddTagDialogOpen] = useState(false)
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null)
   const [hoveredTagId, setHoveredTagId] = useState<string | null>(null)
   const [hoveredFeedId, setHoveredFeedId] = useState<string | null>(null)
+  const [isFeedsHeaderHovered, setIsFeedsHeaderHovered] = useState(false)
+  const [isTagsHeaderHovered, setIsTagsHeaderHovered] = useState(false)
   const [editingFeed, setEditingFeed] = useState<{
     id: string
     title: string
@@ -165,6 +169,20 @@ export function AppSidebar({
     <>
       <Sidebar collapsible="offcanvas">
         <SidebarContent>
+          {/* Add Feed Button */}
+          <SidebarGroup>
+            <SidebarGroupContent className="px-2 pt-2">
+              <Button
+                onClick={() => setIsAddDialogOpen(true)}
+                className="w-full"
+                size="sm"
+              >
+                <PlusIcon className="h-4 w-4" />
+                <span>Add Feed</span>
+              </Button>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
           {/* Filters Section */}
           <SidebarGroup>
             <SidebarGroupLabel>Filters</SidebarGroupLabel>
@@ -178,19 +196,28 @@ export function AppSidebar({
                   return (
                     <SidebarMenuItem key={filter.value}>
                       <SidebarMenuButton
+                        asChild
                         isActive={isActive}
                         onClick={() => onFilterChange(filter.value)}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span>{filter.label}</span>
-                        {count > 0 && (
-                          <Badge
-                            variant={isActive ? "secondary" : "outline"}
-                            className="ml-auto"
-                          >
-                            {count}
-                          </Badge>
+                        className={cn(
+                          "group cursor-pointer",
+                          isActive && "bg-accent",
                         )}
+                      >
+                        <div>
+                          <Icon className="h-4 w-4" />
+                          <span className="truncate text-sm font-medium">
+                            {filter.label}
+                          </span>
+                          {count > 0 && (
+                            <Badge
+                              variant={isActive ? "secondary" : "outline"}
+                              className="ml-auto"
+                            >
+                              {count}
+                            </Badge>
+                          )}
+                        </div>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )
@@ -202,15 +229,43 @@ export function AppSidebar({
           {/* Tags Section */}
           {tags && tags.length > 0 && (
             <SidebarGroup>
-              <SidebarGroupLabel>Tags</SidebarGroupLabel>
+              <SidebarGroupLabel
+                onMouseEnter={() => setIsTagsHeaderHovered(true)}
+                onMouseLeave={() => setIsTagsHeaderHovered(false)}
+              >
+                <span>Tags</span>
+                {isTagsHeaderHovered && (
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    onClick={() => setIsAddTagDialogOpen(true)}
+                    className="ml-auto"
+                  >
+                    <PlusIcon className="h-4 w-4" />
+                    <span>Add</span>
+                  </Button>
+                )}
+              </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  <SidebarMenuItem>
+                  <SidebarMenuItem
+                    onMouseEnter={() => setHoveredTagId("all")}
+                    onMouseLeave={() => setHoveredTagId(null)}
+                  >
                     <SidebarMenuButton
+                      asChild
                       isActive={selectedTagId === null}
                       onClick={() => setSelectedTagId(null)}
+                      className={cn(
+                        "group cursor-pointer",
+                        selectedTagId === null && "bg-accent",
+                      )}
                     >
-                      <span>All</span>
+                      <div>
+                        <span className="truncate text-sm font-medium">
+                          All
+                        </span>
+                      </div>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
 
@@ -297,26 +352,32 @@ export function AppSidebar({
 
           {/* Feeds Section */}
           <SidebarGroup className="flex-1">
-            <SidebarGroupLabel>
+            <SidebarGroupLabel
+              onMouseEnter={() => setIsFeedsHeaderHovered(true)}
+              onMouseLeave={() => setIsFeedsHeaderHovered(false)}
+            >
               <span>Feeds</span>
-              <Button
-                size="xs"
-                variant={selectedFeedId === null ? "secondary" : "ghost"}
-                onClick={() => onFeedSelect(null)}
-                className="ml-auto"
-              >
-                All
-              </Button>
+              {isFeedsHeaderHovered && (
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => setIsAddDialogOpen(true)}
+                  className="ml-auto"
+                >
+                  <PlusIcon className="h-4 w-4" />
+                  <span>Add</span>
+                </Button>
+              )}
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    onClick={() => setIsAddDialogOpen(true)}
+                    onClick={() => onFeedSelect(null)}
                     className="w-full"
+                    isActive={selectedFeedId === null}
                   >
-                    <PlusIcon className="h-4 w-4" />
-                    <span>Add Feed</span>
+                    <span>All</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
@@ -442,6 +503,11 @@ export function AppSidebar({
       <AddFeedDialog
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
+      />
+
+      <AddTagDialog
+        isOpen={isAddTagDialogOpen}
+        onClose={() => setIsAddTagDialogOpen(false)}
       />
 
       {editingFeed && (
