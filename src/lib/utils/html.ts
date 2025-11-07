@@ -47,27 +47,3 @@ export function sanitizeHtml(html: string | null | undefined): string {
 
   return sanitized
 }
-
-/**
- * Truncates HTML content to a specific length while preserving complete words
- * @param html - HTML string to truncate
- * @param maxLength - Maximum length in characters
- * @returns Truncated plain text with ellipsis if needed
- */
-export function truncateHtml(
-  html: string | null | undefined,
-  maxLength: number,
-): string {
-  const text = stripHtml(html)
-
-  if (text.length <= maxLength) return text
-
-  const truncated = text.slice(0, maxLength)
-  const lastSpace = truncated.lastIndexOf(" ")
-
-  if (lastSpace > 0) {
-    return truncated.slice(0, lastSpace) + "..."
-  }
-
-  return truncated + "..."
-}
