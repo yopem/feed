@@ -6,21 +6,31 @@ import {
   BookmarkIcon,
   InboxIcon,
   ListIcon,
+  MoreHorizontalIcon,
+  PencilIcon,
   PlusIcon,
   RssIcon,
   StarIcon,
-  TagIcon,
+  Trash2Icon,
 } from "lucide-react"
 
 import { AddFeedDialog } from "@/components/dashboard/feed/add-feed-dialog"
 import { DeleteFeedDialog } from "@/components/dashboard/feed/delete-feed-dialog"
+import { DeleteTagDialog } from "@/components/dashboard/feed/delete-tag-dialog"
 import { EditFeedDialog } from "@/components/dashboard/feed/edit-feed-dialog"
+import { EditTagDialog } from "@/components/dashboard/feed/edit-tag-dialog"
 import type { FilterType } from "@/components/dashboard/feed/feed-filter"
 import { EmptyState } from "@/components/dashboard/shared/empty-state"
 import { LoadingSkeleton } from "@/components/dashboard/shared/loading-skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Sidebar,
   SidebarContent,
@@ -74,6 +84,8 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null)
+  const [hoveredTagId, setHoveredTagId] = useState<string | null>(null)
+  const [hoveredFeedId, setHoveredFeedId] = useState<string | null>(null)
   const [editingFeed, setEditingFeed] = useState<{
     id: string
     title: string
@@ -83,6 +95,15 @@ export function AppSidebar({
   const [deletingFeed, setDeletingFeed] = useState<{
     id: string
     title: string
+  } | null>(null)
+  const [editingTag, setEditingTag] = useState<{
+    id: string
+    name: string
+    description?: string
+  } | null>(null)
+  const [deletingTag, setDeletingTag] = useState<{
+    id: string
+    name: string
   } | null>(null)
   const trpc = useTRPC()
 
@@ -183,28 +204,93 @@ export function AppSidebar({
             <SidebarGroup>
               <SidebarGroupLabel>Tags</SidebarGroupLabel>
               <SidebarGroupContent>
-                <div className="flex flex-wrap gap-1.5 px-2">
-                  <Button
-                    size="xs"
-                    variant={selectedTagId === null ? "secondary" : "outline"}
-                    onClick={() => setSelectedTagId(null)}
-                  >
-                    All
-                  </Button>
-                  {tags.map((tag) => (
-                    <Button
-                      key={tag.id}
-                      size="xs"
-                      variant={
-                        selectedTagId === tag.id ? "secondary" : "outline"
-                      }
-                      onClick={() => setSelectedTagId(tag.id)}
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={selectedTagId === null}
+                      onClick={() => setSelectedTagId(null)}
                     >
-                      <TagIcon className="mr-1 h-3 w-3" />
-                      {tag.name}
-                    </Button>
-                  ))}
-                </div>
+                      <span>All</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+
+                  {tags.map((tag) => {
+                    const isSelected = selectedTagId === tag.id
+                    const isHovered = hoveredTagId === tag.id
+
+                    return (
+                      <SidebarMenuItem
+                        key={tag.id}
+                        onMouseEnter={() => setHoveredTagId(tag.id)}
+                        onMouseLeave={() => setHoveredTagId(null)}
+                      >
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isSelected}
+                          onClick={() => setSelectedTagId(tag.id)}
+                          className={cn(
+                            "group cursor-pointer",
+                            isSelected && "bg-accent",
+                          )}
+                        >
+                          <div>
+                            <span className="truncate text-sm font-medium">
+                              {tag.name}
+                            </span>
+                            <DropdownMenu modal={false}>
+                              <DropdownMenuTrigger asChild>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                  }}
+                                  className={cn(
+                                    "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring ml-auto h-6 w-6 shrink-0 items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:ring-1 focus-visible:outline-none",
+                                    isHovered ? "inline-flex" : "hidden",
+                                  )}
+                                >
+                                  <span className="sr-only">More options</span>
+                                  <MoreHorizontalIcon className="h-4 w-4" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="end"
+                                side="bottom"
+                                sideOffset={4}
+                              >
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setEditingTag({
+                                      id: tag.id,
+                                      name: tag.name,
+                                      description: tag.description ?? undefined,
+                                    })
+                                  }}
+                                >
+                                  <PencilIcon className="h-4 w-4" />
+                                  <span>Edit</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  variant="destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setDeletingTag({
+                                      id: tag.id,
+                                      name: tag.name,
+                                    })
+                                  }}
+                                >
+                                  <Trash2Icon className="h-4 w-4" />
+                                  <span>Delete</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
+                </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
           )}
@@ -249,9 +335,14 @@ export function AppSidebar({
                 ) : (
                   feedsWithStats.map((feed) => {
                     const isSelected = selectedFeedId === feed.id
+                    const isHovered = hoveredFeedId === feed.id
 
                     return (
-                      <SidebarMenuItem key={feed.id}>
+                      <SidebarMenuItem
+                        key={feed.id}
+                        onMouseEnter={() => setHoveredFeedId(feed.id)}
+                        onMouseLeave={() => setHoveredFeedId(null)}
+                      >
                         <SidebarMenuButton
                           asChild
                           isActive={isSelected}
@@ -272,88 +363,70 @@ export function AppSidebar({
                               <span className="truncate text-sm font-medium">
                                 {feed.title}
                               </span>
-                              {feed.tags && feed.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {feed.tags.map((t) => (
-                                    <Badge
-                                      key={t.tag.id}
-                                      variant="outline"
-                                      className="h-4 px-1 text-[10px]"
-                                    >
-                                      {t.tag.name}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                             {feed.unreadCount > 0 && (
                               <Badge className="ml-auto shrink-0">
                                 {feed.unreadCount}
                               </Badge>
                             )}
-                            <div className="ml-2 hidden shrink-0 gap-1 group-hover:flex">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  const feedToEdit = (
-                                    feeds as FeedWithTags[] | undefined
-                                  )?.find((f) => f.id === feed.id)
-                                  if (feedToEdit) {
-                                    const tagIds =
-                                      feedToEdit.tags?.map((t) => t.tag.id) ??
-                                      []
-                                    setEditingFeed({
-                                      id: feedToEdit.id,
-                                      title: feedToEdit.title,
-                                      description:
-                                        feedToEdit.description ?? undefined,
-                                      tagIds,
+                            <DropdownMenu modal={false}>
+                              <DropdownMenuTrigger asChild>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                  }}
+                                  className={cn(
+                                    "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring ml-2 h-6 w-6 shrink-0 items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:ring-1 focus-visible:outline-none",
+                                    isHovered ? "inline-flex" : "hidden",
+                                  )}
+                                >
+                                  <span className="sr-only">More options</span>
+                                  <MoreHorizontalIcon className="h-4 w-4" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="end"
+                                side="bottom"
+                                sideOffset={4}
+                              >
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    const feedToEdit = (
+                                      feeds as FeedWithTags[] | undefined
+                                    )?.find((f) => f.id === feed.id)
+                                    if (feedToEdit) {
+                                      const tagIds =
+                                        feedToEdit.tags?.map((t) => t.tag.id) ??
+                                        []
+                                      setEditingFeed({
+                                        id: feedToEdit.id,
+                                        title: feedToEdit.title,
+                                        description:
+                                          feedToEdit.description ?? undefined,
+                                        tagIds,
+                                      })
+                                    }
+                                  }}
+                                >
+                                  <PencilIcon className="h-4 w-4" />
+                                  <span>Edit</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  variant="destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setDeletingFeed({
+                                      id: feed.id,
+                                      title: feed.title,
                                     })
-                                  }
-                                }}
-                                className="hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:ring-1 focus-visible:outline-none"
-                              >
-                                <span className="sr-only">Edit</span>
-                                <svg
-                                  className="h-3.5 w-3.5"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
+                                  }}
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                                  />
-                                </svg>
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setDeletingFeed({
-                                    id: feed.id,
-                                    title: feed.title,
-                                  })
-                                }}
-                                className="text-destructive hover:bg-destructive/10 hover:text-destructive focus-visible:ring-ring inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:ring-1 focus-visible:outline-none"
-                              >
-                                <span className="sr-only">Delete</span>
-                                <svg
-                                  className="h-3.5 w-3.5"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
+                                  <Trash2Icon className="h-4 w-4" />
+                                  <span>Delete</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -388,6 +461,25 @@ export function AppSidebar({
           onClose={() => setDeletingFeed(null)}
           feedId={deletingFeed.id}
           feedTitle={deletingFeed.title}
+        />
+      )}
+
+      {editingTag && (
+        <EditTagDialog
+          isOpen={true}
+          onClose={() => setEditingTag(null)}
+          tagId={editingTag.id}
+          initialName={editingTag.name}
+          initialDescription={editingTag.description}
+        />
+      )}
+
+      {deletingTag && (
+        <DeleteTagDialog
+          isOpen={true}
+          onClose={() => setDeletingTag(null)}
+          tagId={deletingTag.id}
+          tagName={deletingTag.name}
         />
       )}
     </>
