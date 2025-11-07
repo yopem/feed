@@ -262,7 +262,7 @@ export function AppSidebar({
                       )}
                     >
                       <div>
-                        <span className="truncate text-sm font-medium">
+                        <span className="cursor-pointer truncate text-sm font-medium">
                           All
                         </span>
                       </div>
@@ -374,7 +374,7 @@ export function AppSidebar({
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     onClick={() => onFeedSelect(null)}
-                    className="w-full"
+                    className="w-full cursor-pointer"
                     isActive={selectedFeedId === null}
                   >
                     <span>All</span>
@@ -426,7 +426,10 @@ export function AppSidebar({
                               </span>
                             </div>
                             {feed.unreadCount > 0 && (
-                              <Badge className="ml-auto shrink-0">
+                              <Badge
+                                variant={isSelected ? "secondary" : "outline"}
+                                className="ml-auto shrink-0"
+                              >
                                 {feed.unreadCount}
                               </Badge>
                             )}
