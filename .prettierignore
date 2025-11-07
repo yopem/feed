@@ -44,3 +44,9 @@ next-env.d.ts
 
 # migrations
 migrations/
+
+# ai
+.opencode/
+openspec/
+opencode.jsonc
+AGENTS.md

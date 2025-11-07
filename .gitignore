@@ -41,3 +41,9 @@ yarn-error.log*
 tsconfig.tsbuildinfo
 *.tsbuildinfo
 next-env.d.ts
+
+# ai
+.opencode/
+openspec/
+opencode.jsonc
+AGENTS.md
