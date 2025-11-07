@@ -98,25 +98,31 @@ export function ArticleList() {
           </div>
         ) : (
           <>
-            {articles.map((article) => (
-              <ArticleCard
-                key={article.id}
-                id={article.id}
-                title={article.title}
-                slug={article.slug}
-                description={article.description}
-                feedTitle={article.feed.title}
-                feedSlug={article.feed.slug}
-                feedImageUrl={article.feed.imageUrl}
-                imageUrl={article.imageUrl}
-                pubDate={article.pubDate}
-                isRead={article.isRead}
-                isStarred={article.isStarred}
-                isReadLater={article.isReadLater}
-                isSelected={selectedArticleId === article.id}
-                onSelect={setSelectedArticleId}
-              />
-            ))}
+            {articles
+              .filter((article) => {
+                // Runtime check: filter out articles with null/undefined feed
+                // This can occur when feeds are deleted but articles remain orphaned
+                return (article.feed as unknown) !== null
+              })
+              .map((article) => (
+                <ArticleCard
+                  key={article.id}
+                  id={article.id}
+                  title={article.title}
+                  slug={article.slug}
+                  description={article.description}
+                  feedTitle={article.feed.title}
+                  feedSlug={article.feed.slug}
+                  feedImageUrl={article.feed.imageUrl}
+                  imageUrl={article.imageUrl}
+                  pubDate={article.pubDate}
+                  isRead={article.isRead}
+                  isStarred={article.isStarred}
+                  isReadLater={article.isReadLater}
+                  isSelected={selectedArticleId === article.id}
+                  onSelect={setSelectedArticleId}
+                />
+              ))}
 
             {/* Sentinel element for infinite scroll */}
             <div ref={observerTarget} className="h-4" />
