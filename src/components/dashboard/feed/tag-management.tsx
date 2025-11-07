@@ -110,7 +110,7 @@ export function TagManagement() {
   return (
     <>
       <SurfaceCard className="flex flex-col overflow-hidden">
-        <div className="panel-header">
+        <div className="border-b px-4 py-3">
           <div className="flex items-center justify-between">
             <h2 className="text-foreground text-sm leading-5 font-medium">
               Tags

@@ -96,7 +96,7 @@ function DashboardContent() {
                   : "glass !w-[70vw] overflow-hidden sm:!max-w-none"
               }
             >
-              <SheetHeader className="panel-header">
+              <SheetHeader>
                 <SheetTitle className="text-sm leading-5 font-medium">
                   Reader
                 </SheetTitle>

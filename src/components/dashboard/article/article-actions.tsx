@@ -71,7 +71,7 @@ export function ArticleActions({
   }
 
   return (
-    <div className="panel-header flex items-center justify-between border-b px-4 py-3 md:px-6">
+    <div className="flex items-center justify-between border-b px-4 py-3 md:px-6">
       <div className="flex items-center gap-1.5">
         {/* Star/Unstar */}
         <Button
