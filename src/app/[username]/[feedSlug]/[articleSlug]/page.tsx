@@ -43,7 +43,6 @@ export async function generateMetadata({
 
   const { username, feedSlug, articleSlug } = await params
 
-  // Only allow viewing own articles
   if (session.username !== username) {
     return {
       title: "Article Not Found",
@@ -112,18 +111,15 @@ export default async function ArticlePage({ params }: PageProps) {
 
   const { username, feedSlug, articleSlug } = await params
 
-  // Only allow viewing own articles
   if (session.username !== username) {
     redirect("/dashboard")
   }
 
-  // Create server-side tRPC context and caller
   const ctx = await createTRPCContext({
     headers: new Headers(),
   })
   const caller = appRouter.createCaller(ctx)
 
-  // Fetch article using the new slug-based query
   const article = await caller.article.byFeedAndArticleSlug({
     feedSlug,
     articleSlug,
@@ -137,7 +133,6 @@ export default async function ArticlePage({ params }: PageProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Header with navigation */}
       <header className="glass sticky top-0 z-10 border-b px-4 py-3">
         <div className="mx-auto flex max-w-6xl items-center gap-4">
           <Button variant="ghost" size="sm" asChild>
@@ -169,7 +164,6 @@ export default async function ArticlePage({ params }: PageProps) {
         </div>
       </header>
 
-      {/* Article Actions */}
       <div className="border-b px-4 py-2">
         <div className="mx-auto max-w-4xl">
           <ArticleActions
@@ -183,10 +177,8 @@ export default async function ArticlePage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Article Content */}
       <main className="flex-1">
         <article className="mx-auto max-w-4xl px-6 py-8 lg:px-8">
-          {/* Article Header */}
           <header className="mb-8 space-y-4">
             <h1 className="text-foreground text-4xl leading-tight font-bold tracking-tight lg:text-5xl">
               {article.title}
@@ -212,7 +204,6 @@ export default async function ArticlePage({ params }: PageProps) {
             <Separator />
           </header>
 
-          {/* Article Image */}
           {article.imageUrl && (
             <figure className="mb-8 overflow-hidden rounded-xl">
               <Image
@@ -226,7 +217,6 @@ export default async function ArticlePage({ params }: PageProps) {
             </figure>
           )}
 
-          {/* Article Description */}
           {article.description && (
             <div className="mb-8">
               <p className="text-foreground/90 text-xl leading-relaxed">
@@ -235,7 +225,6 @@ export default async function ArticlePage({ params }: PageProps) {
             </div>
           )}
 
-          {/* Article Content */}
           {article.content ? (
             <div className="border-border bg-card rounded-xl border p-6 lg:p-8">
               <div
@@ -262,7 +251,6 @@ export default async function ArticlePage({ params }: PageProps) {
             </div>
           )}
 
-          {/* Footer Spacing */}
           <div className="h-16" />
         </article>
       </main>

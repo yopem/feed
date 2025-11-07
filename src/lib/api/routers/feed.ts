@@ -13,6 +13,10 @@ import {
 import { parseFeed } from "@/lib/utils/scraping"
 import { slugify } from "@/lib/utils/slug"
 
+/**
+ * Feed management router providing operations for RSS/Atom feed subscriptions
+ * including parsing, refreshing, and tag assignment
+ */
 export const feedRouter = {
   create: protectedProcedure
     .input(
@@ -20,7 +24,6 @@ export const feedRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        // Validate URL format
         const trimmedInput = input.trim()
         if (!trimmedInput) {
           throw new TRPCError({
@@ -29,7 +32,6 @@ export const feedRouter = {
           })
         }
 
-        // Check for duplicate feed URL for this user
         const existingFeed = await ctx.db.query.feedTable.findFirst({
           where: (feedTable, { eq, and }) =>
             and(
@@ -45,7 +47,6 @@ export const feedRouter = {
           })
         }
 
-        // Parse feed with timeout (15 seconds)
         const timeoutPromise = new Promise<never>((_, reject) => {
           setTimeout(() => {
             reject(
@@ -61,12 +62,10 @@ export const feedRouter = {
           timeoutPromise,
         ])
 
-        // Generate unique slug for feed
         const baseSlug = slugify(feedData.title)
         let slug = baseSlug
         let suffix = 1
 
-        // Check for slug uniqueness and append suffix if needed
         while (true) {
           const existingSlug = await ctx.db.query.feedTable.findFirst({
             where: (feedTable, { eq, and }) =>
@@ -94,7 +93,6 @@ export const feedRouter = {
           .returning()
         if (feedData.articles.length > 0) {
           const articlesToInsert = feedData.articles.map((article) => {
-            // Generate unique slug for each article
             const articleSlug = slugify(article.title)
             return {
               title: article.title,
@@ -113,7 +111,6 @@ export const feedRouter = {
             }
           })
 
-          // Handle duplicate slugs within the same feed
           const slugCounts = new Map<string, number>()
           const finalArticles = articlesToInsert.map((article) => {
             let finalSlug = article.slug
@@ -134,14 +131,11 @@ export const feedRouter = {
           await ctx.db.insert(articleTable).values(finalArticles)
         }
 
-        // Invalidate cache
         await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
 
         return feed
       } catch (error) {
-        // Handle specific error cases with user-friendly messages
         if (error instanceof Error) {
-          // If it's a parseFeed error, use its message directly
           if (
             error.message.includes("feed") ||
             error.message.includes("URL") ||
@@ -170,7 +164,6 @@ export const feedRouter = {
       try {
         const { eq, and } = await import("drizzle-orm")
 
-        // Verify feed belongs to user
         const existingFeed = await ctx.db.query.feedTable.findFirst({
           where: and(
             eq(feedTable.id, input.id),
@@ -195,7 +188,6 @@ export const feedRouter = {
           .where(eq(feedTable.id, input.id))
           .returning()
 
-        // Invalidate cache
         await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
 
         return updatedFeed
@@ -210,7 +202,6 @@ export const feedRouter = {
       try {
         const { eq, and } = await import("drizzle-orm")
 
-        // Verify feed belongs to user
         const existingFeed = await ctx.db.query.feedTable.findFirst({
           where: and(
             eq(feedTable.id, input),
@@ -225,18 +216,14 @@ export const feedRouter = {
           })
         }
 
-        // Delete feed-tag associations first (defensive - CASCADE handles this)
         await ctx.db
           .delete(feedTagsTable)
           .where(eq(feedTagsTable.feedId, input))
 
-        // Delete articles
         await ctx.db.delete(articleTable).where(eq(articleTable.feedId, input))
 
-        // Delete feed
         await ctx.db.delete(feedTable).where(eq(feedTable.id, input))
 
-        // Invalidate cache
         await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
         await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
 
@@ -394,7 +381,6 @@ export const feedRouter = {
       try {
         const { eq, and, inArray } = await import("drizzle-orm")
 
-        // Verify feed belongs to user
         const existingFeed = await ctx.db.query.feedTable.findFirst({
           where: and(
             eq(feedTable.id, input.feedId),
@@ -409,7 +395,6 @@ export const feedRouter = {
           })
         }
 
-        // Verify all tags belong to user
         if (input.tagIds.length > 0) {
           const tags = await ctx.db.query.tagTable.findMany({
             where: and(
@@ -425,25 +410,21 @@ export const feedRouter = {
             })
           }
 
-          // Remove existing tag assignments
           await ctx.db
             .delete(feedTagsTable)
             .where(eq(feedTagsTable.feedId, input.feedId))
 
-          // Insert new tag assignments
           const tagAssignments = input.tagIds.map((tagId) => ({
             feedId: input.feedId,
             tagId,
           }))
           await ctx.db.insert(feedTagsTable).values(tagAssignments)
         } else {
-          // If no tags provided, remove all existing assignments
           await ctx.db
             .delete(feedTagsTable)
             .where(eq(feedTagsTable.feedId, input.feedId))
         }
 
-        // Invalidate cache
         await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
 
         return { success: true }
@@ -463,7 +444,6 @@ export const feedRouter = {
       try {
         const { eq, and } = await import("drizzle-orm")
 
-        // Verify feed belongs to user
         const existingFeed = await ctx.db.query.feedTable.findFirst({
           where: and(
             eq(feedTable.id, input.feedId),
@@ -478,7 +458,6 @@ export const feedRouter = {
           })
         }
 
-        // Remove tag assignment
         await ctx.db
           .delete(feedTagsTable)
           .where(
@@ -488,7 +467,6 @@ export const feedRouter = {
             ),
           )
 
-        // Invalidate cache
         await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
 
         return { success: true }
@@ -503,7 +481,6 @@ export const feedRouter = {
       try {
         const { eq, and } = await import("drizzle-orm")
 
-        // Verify feed belongs to user
         const existingFeed = await ctx.db.query.feedTable.findFirst({
           where: and(
             eq(feedTable.id, input),
@@ -518,14 +495,12 @@ export const feedRouter = {
           })
         }
 
-        // Parse feed to get latest articles
         const feedData = await parseFeed(existingFeed.url)
 
         if (feedData.articles.length === 0) {
           return { newArticles: 0 }
         }
 
-        // Get existing article links for this feed to avoid duplicates
         const existingArticles = await ctx.db.query.articleTable.findMany({
           where: eq(articleTable.feedId, input),
           columns: {
@@ -535,7 +510,6 @@ export const feedRouter = {
 
         const existingLinks = new Set(existingArticles.map((a) => a.link))
 
-        // Filter out articles that already exist
         const newArticles = feedData.articles.filter(
           (article) => !existingLinks.has(article.link),
         )
@@ -544,7 +518,6 @@ export const feedRouter = {
           return { newArticles: 0 }
         }
 
-        // Prepare articles for insertion
         const articlesToInsert = newArticles.map((article) => {
           const articleSlug = slugify(article.title)
           return {
@@ -564,7 +537,6 @@ export const feedRouter = {
           }
         })
 
-        // Handle duplicate slugs
         const slugCounts = new Map<string, number>()
         const finalArticles = articlesToInsert.map((article) => {
           let finalSlug = article.slug
@@ -582,10 +554,8 @@ export const feedRouter = {
           }
         })
 
-        // Insert new articles
         await ctx.db.insert(articleTable).values(finalArticles)
 
-        // Invalidate caches
         await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
         await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
         await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)

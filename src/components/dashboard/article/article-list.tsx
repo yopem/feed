@@ -23,7 +23,6 @@ export function ArticleList() {
   const trpc = useTRPC()
   const observerTarget = useRef<HTMLDivElement>(null)
 
-  // Get feedId from feedSlug if needed
   const { data: allFeeds } = useQuery(
     trpc.feed.all.queryOptions({
       page: 1,
@@ -37,7 +36,6 @@ export function ArticleList() {
     return feed?.id
   }, [feedSlug, allFeeds])
 
-  // Use infinite query for article list
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
       ...trpc.article.byFilterInfinite.infiniteQueryOptions({
@@ -49,13 +47,11 @@ export function ArticleList() {
       initialPageParam: null as string | null,
     })
 
-  // Flatten pages to get all articles
   const articles = useMemo(
     () => data?.pages.flatMap((page) => page?.articles ?? []) ?? [],
     [data],
   )
 
-  // Set up intersection observer for infinite scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -124,17 +120,14 @@ export function ArticleList() {
                 />
               ))}
 
-            {/* Sentinel element for infinite scroll */}
             <div ref={observerTarget} className="h-4" />
 
-            {/* Loading indicator for next page */}
             {isFetchingNextPage && (
               <div className="flex items-center justify-center py-4">
                 <Loader2Icon className="text-muted-foreground h-6 w-6 animate-spin" />
               </div>
             )}
 
-            {/* End of list message */}
             {!hasNextPage && articles.length > 0 && (
               <div className="text-muted-foreground py-4 text-center text-sm">
                 No more articles
@@ -144,7 +137,6 @@ export function ArticleList() {
         )}
       </div>
 
-      {/* Scroll to top button */}
       <ScrollToTopButton />
     </div>
   )

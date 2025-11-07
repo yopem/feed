@@ -12,12 +12,10 @@ export function ScrollToTopButton() {
     let timeoutId: NodeJS.Timeout | null = null
 
     const handleScroll = () => {
-      // Clear existing timeout
       if (timeoutId) {
         clearTimeout(timeoutId)
       }
 
-      // Debounce scroll event
       timeoutId = setTimeout(() => {
         const scrollY = window.scrollY || document.documentElement.scrollTop
         setIsVisible(scrollY > 400)
@@ -26,7 +24,6 @@ export function ScrollToTopButton() {
 
     window.addEventListener("scroll", handleScroll, { passive: true })
 
-    // Check initial scroll position
     handleScroll()
 
     return () => {

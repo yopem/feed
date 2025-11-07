@@ -52,7 +52,6 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
     }),
   )
 
-  // Automatically mark article as read when opened
   useEffect(() => {
     if (article && !article.isRead) {
       markAsRead.mutate({ id: article.id, isRead: true })
@@ -107,7 +106,6 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
 
       <div className="flex-1 overflow-y-auto">
         <article className="mx-auto max-w-3xl px-4 py-6 md:px-6 md:py-8 lg:px-8">
-          {/* Article Header */}
           <header className="mb-6 space-y-4 md:mb-8">
             <h1 className="text-foreground text-3xl leading-tight font-bold tracking-tight md:text-4xl lg:text-5xl">
               {article.title}
@@ -133,7 +131,6 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
             <Separator />
           </header>
 
-          {/* Article Image */}
           {article.imageUrl && (
             <figure className="mb-6 overflow-hidden rounded-lg md:mb-8 md:rounded-xl">
               <Image
@@ -147,7 +144,6 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
             </figure>
           )}
 
-          {/* Article Description */}
           {article.description && (
             <div className="mb-6 md:mb-8">
               <p className="text-foreground/90 text-lg leading-relaxed md:text-xl">
@@ -156,7 +152,6 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
             </div>
           )}
 
-          {/* Article Content */}
           {article.content ? (
             <div className="border-border bg-card rounded-lg border p-4 md:rounded-xl md:p-6 lg:p-8">
               <div
@@ -183,7 +178,6 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
             </div>
           )}
 
-          {/* Footer Spacing */}
           <div className="h-12 md:h-16" />
         </article>
       </div>

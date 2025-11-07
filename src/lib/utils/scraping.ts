@@ -172,7 +172,6 @@ export async function parseFeed(url: string) {
             entry.published ?? entry.updated ?? new Date().toISOString()
           const imageUrl = extractImageUrl(entry)
 
-          // Validate article has minimum required fields
           if (!title || !link) {
             console.warn(
               `Skipping invalid article at index ${idx}: missing title or link`,
@@ -222,7 +221,6 @@ export async function parseFeed(url: string) {
       const feedImageUrl =
         channel.image?.url ?? channel["itunes:image"]?.["@_href"]
 
-      // Validate that this is actually a valid RSS feed
       if (
         !feedTitle ||
         typeof feedTitle !== "string" ||
@@ -247,7 +245,6 @@ export async function parseFeed(url: string) {
           const pubDate = item.pubDate ?? new Date().toISOString()
           const imageUrl = extractImageUrl(item)
 
-          // Validate article has minimum required fields
           if (!title || !link) {
             console.warn(
               `Skipping invalid article at index ${idx}: missing title or link`,

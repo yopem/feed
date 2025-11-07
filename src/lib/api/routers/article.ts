@@ -15,6 +15,10 @@ type ArticleWithFeed = SelectArticle & {
   feed: Pick<SelectFeed, "title" | "slug" | "imageUrl">
 }
 
+/**
+ * Article management router providing CRUD operations and filtering
+ * for articles with caching support via Redis
+ */
 export const articleRouter = createTRPCRouter({
   all: protectedProcedure
     .input(z.object({ page: z.number(), perPage: z.number() }))
@@ -101,7 +105,6 @@ export const articleRouter = createTRPCRouter({
           return cached
         }
 
-        // First find the feed by slug
         const feed = await ctx.db.query.feedTable.findFirst({
           where: and(
             eq(feedTable.slug, input.feedSlug),
@@ -116,7 +119,6 @@ export const articleRouter = createTRPCRouter({
           })
         }
 
-        // Then find the article by slug within that feed
         const data = await ctx.db.query.articleTable.findFirst({
           where: and(
             eq(articleTable.slug, input.articleSlug),
@@ -245,7 +247,6 @@ export const articleRouter = createTRPCRouter({
           .returning()
         const updated = updatedArray[0]
 
-        // Invalidate all article caches (including slug-based lookups)
         await ctx.redis.invalidatePattern(
           `feed:article:*:user:${ctx.session.id}`,
         )
@@ -276,7 +277,6 @@ export const articleRouter = createTRPCRouter({
           .returning()
         const updated = updatedArray[0]
 
-        // Invalidate all article caches (including slug-based lookups)
         await ctx.redis.invalidatePattern(
           `feed:article:*:user:${ctx.session.id}`,
         )
@@ -307,7 +307,6 @@ export const articleRouter = createTRPCRouter({
           .returning()
         const updated = updatedArray[0]
 
-        // Invalidate all article caches (including slug-based lookups)
         await ctx.redis.invalidatePattern(
           `feed:article:*:user:${ctx.session.id}`,
         )
@@ -337,7 +336,6 @@ export const articleRouter = createTRPCRouter({
           .set({ isRead: true, updatedAt: new Date() })
           .where(and(...conditions))
 
-        // Invalidate all article caches and statistics
         await ctx.redis.invalidatePattern(
           `feed:articles:*:user:${ctx.session.id}`,
         )
@@ -365,12 +363,10 @@ export const articleRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       try {
-        // Parse cursor if provided
         let cursorDate: Date | undefined
         if (input.cursor) {
           cursorDate = new Date(input.cursor)
 
-          // Validate date
           if (isNaN(cursorDate.getTime())) {
             throw new TRPCError({
               code: "BAD_REQUEST",
@@ -379,15 +375,12 @@ export const articleRouter = createTRPCRouter({
           }
         }
 
-        // Build base conditions
         const conditions = [eq(articleTable.userId, ctx.session.id)]
 
-        // Add feed filter
         if (input.feedId) {
           conditions.push(eq(articleTable.feedId, input.feedId))
         }
 
-        // Add status filter
         if (input.filter === "unread") {
           conditions.push(eq(articleTable.isRead, false))
         } else if (input.filter === "starred") {
@@ -396,12 +389,10 @@ export const articleRouter = createTRPCRouter({
           conditions.push(eq(articleTable.isReadLater, true))
         }
 
-        // Add cursor condition for pagination
         if (cursorDate) {
           conditions.push(lt(articleTable.pubDate, cursorDate))
         }
 
-        // Fetch articles (limit + 1 to determine if there are more)
         const articles = await ctx.db.query.articleTable.findMany({
           where: and(...conditions),
           limit: input.limit + 1,
@@ -420,11 +411,9 @@ export const articleRouter = createTRPCRouter({
           },
         })
 
-        // Determine if there are more results
         const hasMore = articles.length > input.limit
         const items = hasMore ? articles.slice(0, -1) : articles
 
-        // Generate next cursor from last item
         const lastItem = items[items.length - 1]
         const nextCursor = hasMore ? lastItem.pubDate.toISOString() : undefined
 

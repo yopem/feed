@@ -80,7 +80,6 @@ export function FeedItem({
         </div>
         {unreadCount > 0 && <Badge className="shrink-0">{unreadCount}</Badge>}
 
-        {/* Action buttons - shown on hover or on mobile */}
         <div className="flex shrink-0 gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
           {onRefresh && (
             <Button

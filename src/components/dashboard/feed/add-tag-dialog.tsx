@@ -45,9 +45,8 @@ export function AddTagDialog({ isOpen, onClose }: AddTagDialogProps) {
 
         form.reset()
         onClose()
-      } catch {
-        // Error already handled by mutation's onError callback with toast notification
-      }
+        // eslint-disable-next-line no-empty
+      } catch {}
     },
   })
 
@@ -88,7 +87,6 @@ export function AddTagDialog({ isOpen, onClose }: AddTagDialogProps) {
           }}
           className="space-y-4"
         >
-          {/* Name Field */}
           <form.Field
             name="name"
             validators={{
@@ -127,7 +125,6 @@ export function AddTagDialog({ isOpen, onClose }: AddTagDialogProps) {
             )}
           </form.Field>
 
-          {/* Description Field */}
           <form.Field
             name="description"
             validators={{

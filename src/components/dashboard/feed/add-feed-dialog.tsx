@@ -59,7 +59,6 @@ interface AddFeedDialogProps {
   onClose: () => void
 }
 
-// Create form schema with proper URL validation
 const formSchema = z.object({
   url: z
     .string()
@@ -67,20 +66,15 @@ const formSchema = z.object({
     .trim()
     .refine(
       (val) => {
-        // Check for whitespace-only strings
         if (val.length === 0) return false
-        // Validate URL format
         try {
           const url = new URL(val)
-          // Must be HTTP or HTTPS
           if (url.protocol !== "http:" && url.protocol !== "https:") {
             return false
           }
-          // Must have a valid hostname
           if (!url.hostname || url.hostname.length === 0) {
             return false
           }
-          // Hostname should contain at least one dot (domain.tld)
           if (!url.hostname.includes(".") && url.hostname !== "localhost") {
             return false
           }
@@ -101,7 +95,6 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
-  // Initialize TanStack Form with Zod validation
   const form = useForm({
     defaultValues: {
       url: "",
@@ -110,11 +103,9 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
       try {
         const trimmedUrl = value.url.trim()
 
-        // Validate with schema before making backend request
         const validationResult = formSchema.safeParse({ url: trimmedUrl })
 
         if (!validationResult.success) {
-          // Don't send request if frontend validation fails
           const errorMessage =
             validationResult.error.issues[0]?.message || "Invalid URL"
           toast.error(errorMessage)
@@ -123,7 +114,6 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
 
         const feed = await createFeed.mutateAsync(trimmedUrl)
 
-        // Assign tags if any selected
         if (selectedTagIds.length > 0 && feed) {
           await assignTags.mutateAsync({
             feedId: feed.id,
@@ -131,31 +121,25 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
           })
         }
 
-        // Reset form and close
         form.reset()
         setSelectedTagIds([])
         onClose()
-      } catch {
-        // Error already handled by mutation's onError callback with toast notification
-      }
+        // eslint-disable-next-line no-empty
+      } catch {}
     },
   })
 
-  // Fetch all tags
   const { data: tags } = useQuery(trpc.tag.all.queryOptions())
 
-  // Filter tags based on search query
   const filteredTags =
     tags?.filter((tag) =>
       tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase()),
     ) ?? []
 
-  // Check if search query matches an existing tag exactly
   const exactMatch = filteredTags.find(
     (tag) => tag.name.toLowerCase() === tagSearchQuery.toLowerCase(),
   )
 
-  // Get selected tag objects
   const selectedTags =
     tags?.filter((tag) => selectedTagIds.includes(tag.id)) ?? []
 
@@ -190,11 +174,9 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
     trpc.tag.create.mutationOptions({
       onSuccess: async (newTag) => {
         if (newTag) {
-          // Add new tag to selected IDs immediately
           setSelectedTagIds((prev) => [...prev, newTag.id])
         }
 
-        // Wait for backend to refresh with the new tag
         await queryClient.invalidateQueries(trpc.tag.pathFilter())
 
         setTagSearchQuery("")
@@ -257,12 +239,10 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
           }}
           className="space-y-4"
         >
-          {/* URL Field with TanStack Form */}
           <form.Field
             name="url"
             validators={{
               onChange: ({ value }) => {
-                // Real-time validation for immediate feedback
                 const result = formSchema.shape.url.safeParse(value)
                 if (!result.success) {
                   return result.error.issues[0]?.message || "Invalid URL"
@@ -312,7 +292,6 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
               Tags (optional)
             </label>
             <div className="space-y-2">
-              {/* Selected tags */}
               {selectedTags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {selectedTags.map((tag) => (
@@ -329,7 +308,6 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
                 </div>
               )}
 
-              {/* Search input */}
               <div className="relative">
                 <Input
                   placeholder="Search or create tag..."
@@ -340,13 +318,11 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
                   }}
                   onFocus={() => setShowDropdown(true)}
                   onBlur={() => {
-                    // Delay to allow clicking on dropdown items
                     setTimeout(() => setShowDropdown(false), 200)
                   }}
                   disabled={createTag.isPending}
                 />
 
-                {/* Dropdown */}
                 {showDropdown && tagSearchQuery && (
                   <div className="bg-popover text-popover-foreground border-border absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border shadow-md">
                     {filteredTags.length > 0 ? (

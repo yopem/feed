@@ -119,12 +119,10 @@ export function AppSidebar() {
 
   const { data: tags } = useQuery(trpc.tag.all.queryOptions())
 
-  // Find selected tag by slug
   const selectedTag = tagSlug
     ? tags?.find((t) => t.id === tagSlug || t.name === tagSlug)
     : null
 
-  // Filter feeds by selected tag
   const filteredFeeds = selectedTag
     ? (feeds as FeedWithTags[] | undefined)?.filter((feed) =>
         feed.tags?.some((t) => t.tag.id === selectedTag.id),
@@ -171,7 +169,6 @@ export function AppSidebar() {
     <>
       <Sidebar collapsible="offcanvas">
         <SidebarContent>
-          {/* Add Feed Button */}
           <SidebarGroup>
             <SidebarGroupContent className="px-2 pt-2">
               <Button
@@ -185,7 +182,6 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          {/* Filters Section */}
           <SidebarGroup>
             <SidebarGroupLabel>Filters</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -228,7 +224,6 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          {/* Tags Section */}
           {tags && tags.length > 0 && (
             <SidebarGroup>
               <SidebarGroupLabel
@@ -352,7 +347,6 @@ export function AppSidebar() {
             </SidebarGroup>
           )}
 
-          {/* Feeds Section */}
           <SidebarGroup className="flex-1">
             <SidebarGroupLabel
               onMouseEnter={() => setIsFeedsHeaderHovered(true)}

@@ -11,6 +11,9 @@ import {
   type SelectTag,
 } from "@/lib/db/schema"
 
+/**
+ * Tag management router for organizing feeds into categories
+ */
 export const tagRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
@@ -30,7 +33,6 @@ export const tagRouter = createTRPCRouter({
           })
           .returning()
 
-        // Invalidate cache
         await ctx.redis.invalidatePattern(`feed:tags:user:${ctx.session.id}`)
 
         return tag
@@ -50,7 +52,6 @@ export const tagRouter = createTRPCRouter({
           })
         }
 
-        // Verify tag belongs to user
         const existingTag = await ctx.db.query.tagTable.findFirst({
           where: (tag, { eq, and }) =>
             and(eq(tag.id, input.id!), eq(tag.userId, ctx.session.id)),
@@ -72,7 +73,6 @@ export const tagRouter = createTRPCRouter({
           .where(eq(tagTable.id, input.id))
           .returning()
 
-        // Invalidate cache - tags affect feed displays
         await ctx.redis.invalidatePattern(`feed:tags:*:user:${ctx.session.id}`)
         await ctx.redis.invalidatePattern(`feed:tag:*:user:${ctx.session.id}`)
         await ctx.redis.invalidatePattern(`feed:feeds:*:user:${ctx.session.id}`)
@@ -90,7 +90,6 @@ export const tagRouter = createTRPCRouter({
       try {
         const { eq, and } = await import("drizzle-orm")
 
-        // Verify tag belongs to user
         const existingTag = await ctx.db.query.tagTable.findFirst({
           where: and(
             eq(tagTable.id, input),
@@ -105,13 +104,10 @@ export const tagRouter = createTRPCRouter({
           })
         }
 
-        // Delete tag-feed associations first (defensive - CASCADE handles this)
         await ctx.db.delete(feedTagsTable).where(eq(feedTagsTable.tagId, input))
 
-        // Delete tag
         await ctx.db.delete(tagTable).where(eq(tagTable.id, input))
 
-        // Invalidate cache - tags affect feed displays
         await ctx.redis.invalidatePattern(`feed:tags:*:user:${ctx.session.id}`)
         await ctx.redis.invalidatePattern(`feed:tag:*:user:${ctx.session.id}`)
         await ctx.redis.invalidatePattern(`feed:feeds:*:user:${ctx.session.id}`)
@@ -134,7 +130,6 @@ export const tagRouter = createTRPCRouter({
         where: (tag, { eq }) => eq(tag.userId, ctx.session.id),
         orderBy: (tag, { desc }) => desc(tag.createdAt),
       })
-      // Return empty array instead of throwing error when no tags exist
       await ctx.redis.setCache(cacheKey, tags, 1800)
       return tags
     } catch (error) {

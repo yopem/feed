@@ -26,7 +26,6 @@ interface EditTagDialogProps {
   initialDescription?: string
 }
 
-// Create form schema from updateTagSchema
 const formSchema = updateTagSchema.pick({ name: true, description: true })
 type FormData = z.infer<typeof formSchema>
 
@@ -40,7 +39,6 @@ export function EditTagDialog({
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
-  // Initialize TanStack Form with Zod validation
   const form = useForm({
     defaultValues: {
       name: initialName,
@@ -53,9 +51,8 @@ export function EditTagDialog({
           name: (value.name ?? "").trim(),
           description: value.description?.trim() ?? undefined,
         })
-      } catch {
-        // Errors are already handled by mutation callbacks
-      }
+        // eslint-disable-next-line no-empty
+      } catch {}
     },
   })
 
@@ -98,7 +95,6 @@ export function EditTagDialog({
           }}
           className="space-y-4"
         >
-          {/* Name Field with TanStack Form */}
           <form.Field
             name="name"
             validators={{
@@ -134,7 +130,6 @@ export function EditTagDialog({
             )}
           </form.Field>
 
-          {/* Description Field with TanStack Form */}
           <form.Field
             name="description"
             validators={{

@@ -49,7 +49,6 @@ interface EditFeedDialogProps {
   initialTagIds?: string[]
 }
 
-// Create form schema inline by picking the title and description fields from updateFeedSchema
 const formSchema = updateFeedSchema.pick({ title: true, description: true })
 type FormData = z.infer<typeof formSchema>
 
@@ -78,7 +77,6 @@ export function EditFeedDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, initialTagIds])
 
-  // Initialize TanStack Form with Zod validation
   const form = useForm({
     defaultValues: {
       title: initialTitle,
@@ -86,39 +84,32 @@ export function EditFeedDialog({
     } as FormData,
     onSubmit: async ({ value }) => {
       try {
-        // Update feed details
         await updateFeed.mutateAsync({
           id: feedId,
           title: (value.title ?? "").trim(),
           description: value.description?.trim() ?? undefined,
         })
 
-        // Update tag assignments
         await assignTags.mutateAsync({
           feedId,
           tagIds: selectedTagIds,
         })
-      } catch {
-        // Errors are already handled by mutation callbacks
-      }
+        // eslint-disable-next-line no-empty
+      } catch {}
     },
   })
 
-  // Fetch all tags
   const { data: tags } = useQuery(trpc.tag.all.queryOptions())
 
-  // Filter tags based on search query
   const filteredTags =
     tags?.filter((tag) =>
       tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase()),
     ) ?? []
 
-  // Check if search query matches an existing tag exactly
   const exactMatch = filteredTags.find(
     (tag) => tag.name.toLowerCase() === tagSearchQuery.toLowerCase(),
   )
 
-  // Get selected tag objects
   const selectedTags =
     tags?.filter((tag) => selectedTagIds.includes(tag.id)) ?? []
 
@@ -213,7 +204,6 @@ export function EditFeedDialog({
           }}
           className="space-y-4"
         >
-          {/* Title Field with TanStack Form */}
           <form.Field
             name="title"
             validators={{
@@ -249,7 +239,6 @@ export function EditFeedDialog({
             )}
           </form.Field>
 
-          {/* Description Field with TanStack Form */}
           <form.Field
             name="description"
             validators={{
@@ -294,7 +283,6 @@ export function EditFeedDialog({
               Tags (optional)
             </label>
             <div className="space-y-2">
-              {/* Selected tags */}
               {selectedTags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {selectedTags.map((tag) => (
@@ -311,7 +299,6 @@ export function EditFeedDialog({
                 </div>
               )}
 
-              {/* Search input */}
               <div className="relative">
                 <Input
                   placeholder="Search or create tag..."
@@ -322,13 +309,11 @@ export function EditFeedDialog({
                   }}
                   onFocus={() => setShowDropdown(true)}
                   onBlur={() => {
-                    // Delay to allow clicking on dropdown items
                     setTimeout(() => setShowDropdown(false), 200)
                   }}
                   disabled={createTag.isPending}
                 />
 
-                {/* Dropdown */}
                 {showDropdown && tagSearchQuery && (
                   <div className="bg-popover text-popover-foreground border-border absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border shadow-md">
                     {filteredTags.length > 0 ? (

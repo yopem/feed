@@ -33,7 +33,6 @@ export function ArticleActions({
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
-  // Fetch current user data
   const { data: user } = useQuery(trpc.user.getCurrentUser.queryOptions())
 
   const updateStarred = useMutation(
@@ -73,7 +72,6 @@ export function ArticleActions({
   return (
     <div className="flex items-center justify-between border-b px-4 py-3 md:px-6">
       <div className="flex items-center gap-1.5">
-        {/* Star/Unstar */}
         <Button
           variant="ghost"
           size="icon"
@@ -94,7 +92,6 @@ export function ArticleActions({
           />
         </Button>
 
-        {/* Read Later */}
         <Button
           variant="ghost"
           size="icon"
@@ -118,7 +115,6 @@ export function ArticleActions({
           />
         </Button>
 
-        {/* Share */}
         {feedSlug && articleSlug && user?.username && (
           <Button
             variant="ghost"
@@ -133,7 +129,6 @@ export function ArticleActions({
         )}
       </div>
 
-      {/* Open Original Link */}
       <Button asChild variant="secondary">
         <a href={link} target="_blank" rel="noopener noreferrer">
           <span>Open Original</span>
