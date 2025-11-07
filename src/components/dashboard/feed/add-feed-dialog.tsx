@@ -5,7 +5,7 @@ import { useForm } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { PlusIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
-import type { z } from "zod"
+import { z } from "zod"
 
 import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
 import { Badge } from "@/components/ui/badge"
@@ -18,7 +18,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { insertFeedSchema } from "@/lib/db/schema"
 import { useTRPC } from "@/lib/trpc/client"
 
 /**
@@ -60,8 +59,27 @@ interface AddFeedDialogProps {
   onClose: () => void
 }
 
-// Create form schema inline by picking the url field from insertFeedSchema
-const formSchema = insertFeedSchema.pick({ url: true })
+// Create form schema with proper URL validation
+const formSchema = z.object({
+  url: z
+    .string()
+    .min(1, "Feed URL is required")
+    .trim()
+    .refine(
+      (val) => {
+        // Check for whitespace-only strings
+        if (val.length === 0) return false
+        // Validate URL format
+        try {
+          const url = new URL(val)
+          return url.protocol === "http:" || url.protocol === "https:"
+        } catch {
+          return false
+        }
+      },
+      { message: "Please enter a valid HTTP or HTTPS URL" },
+    ),
+})
 type FormData = z.infer<typeof formSchema>
 
 export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
@@ -78,7 +96,20 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
     } as FormData,
     onSubmit: async ({ value }) => {
       try {
-        const feed = await createFeed.mutateAsync(value.url.trim())
+        const trimmedUrl = value.url.trim()
+
+        // Validate with schema before making backend request
+        const validationResult = formSchema.safeParse({ url: trimmedUrl })
+
+        if (!validationResult.success) {
+          // Don't send request if frontend validation fails
+          const errorMessage =
+            validationResult.error.issues[0]?.message || "Invalid URL"
+          toast.error(errorMessage)
+          return
+        }
+
+        const feed = await createFeed.mutateAsync(trimmedUrl)
 
         // Assign tags if any selected
         if (selectedTagIds.length > 0 && feed) {
@@ -92,8 +123,8 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
         form.reset()
         setSelectedTagIds([])
         onClose()
-      } catch {
-        // Errors are already handled by mutation callbacks
+      } catch (error) {
+        console.error("Failed to create feed:", error)
       }
     },
   })
@@ -124,7 +155,11 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
         toast.success("Feed added successfully")
       },
       onError: (err: { message: string }) => {
-        toast.error(err.message)
+        const errorMessage =
+          err.message ||
+          "Failed to add feed. Please check the URL and try again."
+        toast.error(errorMessage)
+        console.error("Feed creation error:", err)
       },
     }),
   )
@@ -143,10 +178,14 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
   const createTag = useMutation(
     trpc.tag.create.mutationOptions({
       onSuccess: async (newTag) => {
-        await queryClient.invalidateQueries(trpc.tag.pathFilter())
         if (newTag) {
+          // Add new tag to selected IDs immediately
           setSelectedTagIds((prev) => [...prev, newTag.id])
         }
+
+        // Wait for backend to refresh with the new tag
+        await queryClient.invalidateQueries(trpc.tag.pathFilter())
+
         setTagSearchQuery("")
         setShowDropdown(false)
         toast.success("Tag created and added")
@@ -206,6 +245,14 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
           <form.Field
             name="url"
             validators={{
+              onChange: ({ value }) => {
+                // Real-time validation for immediate feedback
+                const result = formSchema.shape.url.safeParse(value)
+                if (!result.success) {
+                  return result.error.issues[0]?.message || "Invalid URL"
+                }
+                return undefined
+              },
               onSubmit: ({ value }) => {
                 const result = formSchema.shape.url.safeParse(value)
                 if (!result.success) {
@@ -351,7 +398,11 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
                   type="button"
                   onClick={onClose}
                   variant="secondary"
-                  disabled={createFeed.isPending || assignTags.isPending}
+                  disabled={
+                    createFeed.isPending ||
+                    assignTags.isPending ||
+                    createTag.isPending
+                  }
                 >
                   Cancel
                 </Button>
@@ -361,12 +412,15 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
                     isSubmitting ||
                     !canSubmit ||
                     createFeed.isPending ||
-                    assignTags.isPending
+                    assignTags.isPending ||
+                    createTag.isPending
                   }
                 >
                   {createFeed.isPending || assignTags.isPending
                     ? "Adding..."
-                    : "Add Feed"}
+                    : createTag.isPending
+                      ? "Creating tag..."
+                      : "Add Feed"}
                 </Button>
               </div>
             )}

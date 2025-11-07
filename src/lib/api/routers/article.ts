@@ -245,8 +245,9 @@ export const articleRouter = createTRPCRouter({
           .returning()
         const updated = updatedArray[0]
 
-        await ctx.redis.deleteCache(
-          `feed:article:${input.id}:user:${ctx.session.id}`,
+        // Invalidate all article caches (including slug-based lookups)
+        await ctx.redis.invalidatePattern(
+          `feed:article:*:user:${ctx.session.id}`,
         )
         await ctx.redis.invalidatePattern(
           `feed:articles:*:user:${ctx.session.id}`,
@@ -275,8 +276,9 @@ export const articleRouter = createTRPCRouter({
           .returning()
         const updated = updatedArray[0]
 
-        await ctx.redis.deleteCache(
-          `feed:article:${input.id}:user:${ctx.session.id}`,
+        // Invalidate all article caches (including slug-based lookups)
+        await ctx.redis.invalidatePattern(
+          `feed:article:*:user:${ctx.session.id}`,
         )
         await ctx.redis.invalidatePattern(
           `feed:articles:*:user:${ctx.session.id}`,
@@ -305,8 +307,9 @@ export const articleRouter = createTRPCRouter({
           .returning()
         const updated = updatedArray[0]
 
-        await ctx.redis.deleteCache(
-          `feed:article:${input.id}:user:${ctx.session.id}`,
+        // Invalidate all article caches (including slug-based lookups)
+        await ctx.redis.invalidatePattern(
+          `feed:article:*:user:${ctx.session.id}`,
         )
         await ctx.redis.invalidatePattern(
           `feed:articles:*:user:${ctx.session.id}`,
@@ -334,12 +337,14 @@ export const articleRouter = createTRPCRouter({
           .set({ isRead: true, updatedAt: new Date() })
           .where(and(...conditions))
 
+        // Invalidate all article caches and statistics
         await ctx.redis.invalidatePattern(
           `feed:articles:*:user:${ctx.session.id}`,
         )
         await ctx.redis.invalidatePattern(
           `feed:article:*:user:${ctx.session.id}`,
         )
+        await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
 
         return { success: true }
       } catch (error) {

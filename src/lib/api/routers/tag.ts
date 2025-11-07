@@ -31,7 +31,7 @@ export const tagRouter = createTRPCRouter({
           .returning()
 
         // Invalidate cache
-        await ctx.redis.invalidatePattern(`feed:tags:*:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`feed:tags:user:${ctx.session.id}`)
 
         return tag
       } catch (error) {
@@ -72,8 +72,11 @@ export const tagRouter = createTRPCRouter({
           .where(eq(tagTable.id, input.id))
           .returning()
 
-        // Invalidate cache
-        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+        // Invalidate cache - tags affect feed displays
+        await ctx.redis.invalidatePattern(`feed:tags:*:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`feed:tag:*:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`feed:feeds:*:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`feed:feed:*:user:${ctx.session.id}`)
 
         return tag
       } catch (error) {
@@ -108,8 +111,11 @@ export const tagRouter = createTRPCRouter({
         // Delete tag
         await ctx.db.delete(tagTable).where(eq(tagTable.id, input))
 
-        // Invalidate cache
-        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+        // Invalidate cache - tags affect feed displays
+        await ctx.redis.invalidatePattern(`feed:tags:*:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`feed:tag:*:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`feed:feeds:*:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`feed:feed:*:user:${ctx.session.id}`)
 
         return { success: true }
       } catch (error) {

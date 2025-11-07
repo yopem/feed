@@ -57,7 +57,8 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
     if (article && !article.isRead) {
       markAsRead.mutate({ id: article.id, isRead: true })
     }
-  }, [article, markAsRead])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [article?.id, article?.isRead])
 
   if (!articleId) {
     return (

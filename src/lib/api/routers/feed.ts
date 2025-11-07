@@ -15,13 +15,27 @@ import { slugify } from "@/lib/utils/slug"
 
 export const feedRouter = {
   create: protectedProcedure
-    .input(z.string())
+    .input(
+      z.string().url("Please provide a valid URL").min(1, "URL is required"),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
+        // Validate URL format
+        const trimmedInput = input.trim()
+        if (!trimmedInput) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Feed URL cannot be empty.",
+          })
+        }
+
         // Check for duplicate feed URL for this user
         const existingFeed = await ctx.db.query.feedTable.findFirst({
           where: (feedTable, { eq, and }) =>
-            and(eq(feedTable.userId, ctx.session.id), eq(feedTable.url, input)),
+            and(
+              eq(feedTable.userId, ctx.session.id),
+              eq(feedTable.url, trimmedInput),
+            ),
         })
 
         if (existingFeed) {
@@ -31,7 +45,21 @@ export const feedRouter = {
           })
         }
 
-        const feedData = await parseFeed(input)
+        // Parse feed with timeout (15 seconds)
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(
+              new Error(
+                "Feed parsing timed out. The feed may be too slow to respond.",
+              ),
+            )
+          }, 15000)
+        })
+
+        const feedData = await Promise.race([
+          parseFeed(trimmedInput),
+          timeoutPromise,
+        ])
 
         // Generate unique slug for feed
         const baseSlug = slugify(feedData.title)
@@ -58,7 +86,7 @@ export const feedRouter = {
           .values({
             title: feedData.title,
             description: feedData.description,
-            url: input,
+            url: trimmedInput,
             slug,
             imageUrl: feedData.imageUrl,
             userId: ctx.session.id,
@@ -107,10 +135,25 @@ export const feedRouter = {
         }
 
         // Invalidate cache
-        await ctx.redis.invalidatePattern(`feed:feeds:*:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
 
         return feed
       } catch (error) {
+        // Handle specific error cases with user-friendly messages
+        if (error instanceof Error) {
+          // If it's a parseFeed error, use its message directly
+          if (
+            error.message.includes("feed") ||
+            error.message.includes("URL") ||
+            error.message.includes("timed out") ||
+            error.message.includes("fetch")
+          ) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: error.message,
+            })
+          }
+        }
         handleTRPCError(error)
       }
     }),
