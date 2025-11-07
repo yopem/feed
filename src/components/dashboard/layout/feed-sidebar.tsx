@@ -142,7 +142,7 @@ export function FeedSidebar({
                 Tags
               </h2>
             </div>
-            <div className="flex flex-wrap gap-2 p-3">
+            <div className="flex cursor-pointer flex-wrap gap-2 p-3">
               <Button
                 size="xs"
                 variant={selectedTagId === null ? "secondary" : "outline"}

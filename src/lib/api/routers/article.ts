@@ -4,7 +4,16 @@ import z from "zod"
 
 import { handleTRPCError } from "@/lib/api/error"
 import { createTRPCRouter, protectedProcedure } from "@/lib/api/trpc"
-import { articleTable, type SelectArticle } from "@/lib/db/schema"
+import {
+  articleTable,
+  feedTable,
+  type SelectArticle,
+  type SelectFeed,
+} from "@/lib/db/schema"
+
+type ArticleWithFeed = SelectArticle & {
+  feed: Pick<SelectFeed, "title" | "slug" | "imageUrl">
+}
 
 export const articleRouter = createTRPCRouter({
   all: protectedProcedure
@@ -26,6 +35,7 @@ export const articleRouter = createTRPCRouter({
             feed: {
               columns: {
                 title: true,
+                slug: true,
                 imageUrl: true,
               },
             },
@@ -47,7 +57,7 @@ export const articleRouter = createTRPCRouter({
   byId: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
     try {
       const cacheKey = `feed:article:${input}:user:${ctx.session.id}`
-      const cached = await ctx.redis.getCache<SelectArticle>(cacheKey)
+      const cached = await ctx.redis.getCache<ArticleWithFeed>(cacheKey)
       if (cached) {
         return cached
       }
@@ -57,6 +67,7 @@ export const articleRouter = createTRPCRouter({
           feed: {
             columns: {
               title: true,
+              slug: true,
               imageUrl: true,
             },
           },
@@ -74,6 +85,67 @@ export const articleRouter = createTRPCRouter({
       handleTRPCError(error)
     }
   }),
+
+  byFeedAndArticleSlug: protectedProcedure
+    .input(
+      z.object({
+        feedSlug: z.string(),
+        articleSlug: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const cacheKey = `feed:article:feed:${input.feedSlug}:article:${input.articleSlug}:user:${ctx.session.id}`
+        const cached = await ctx.redis.getCache<ArticleWithFeed>(cacheKey)
+        if (cached) {
+          return cached
+        }
+
+        // First find the feed by slug
+        const feed = await ctx.db.query.feedTable.findFirst({
+          where: and(
+            eq(feedTable.slug, input.feedSlug),
+            eq(feedTable.userId, ctx.session.id),
+          ),
+        })
+
+        if (!feed) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Feed not found.",
+          })
+        }
+
+        // Then find the article by slug within that feed
+        const data = await ctx.db.query.articleTable.findFirst({
+          where: and(
+            eq(articleTable.slug, input.articleSlug),
+            eq(articleTable.feedId, feed.id),
+          ),
+          with: {
+            feed: {
+              columns: {
+                title: true,
+                imageUrl: true,
+                slug: true,
+              },
+            },
+          },
+        })
+
+        if (!data) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Article not found.",
+          })
+        }
+
+        await ctx.redis.setCache(cacheKey, data, 1800)
+        return data
+      } catch (error) {
+        handleTRPCError(error)
+      }
+    }),
 
   countByFeedId: protectedProcedure
     .input(z.string())
@@ -140,6 +212,7 @@ export const articleRouter = createTRPCRouter({
             feed: {
               columns: {
                 title: true,
+                slug: true,
                 imageUrl: true,
               },
             },

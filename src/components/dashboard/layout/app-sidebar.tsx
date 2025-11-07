@@ -13,6 +13,7 @@ import {
   StarIcon,
   Trash2Icon,
 } from "lucide-react"
+import { parseAsString, useQueryState } from "nuqs"
 
 import { AddFeedDialog } from "@/components/dashboard/feed/add-feed-dialog"
 import { AddTagDialog } from "@/components/dashboard/feed/add-tag-dialog"
@@ -20,7 +21,6 @@ import { DeleteFeedDialog } from "@/components/dashboard/feed/delete-feed-dialog
 import { DeleteTagDialog } from "@/components/dashboard/feed/delete-tag-dialog"
 import { EditFeedDialog } from "@/components/dashboard/feed/edit-feed-dialog"
 import { EditTagDialog } from "@/components/dashboard/feed/edit-tag-dialog"
-import type { FilterType } from "@/components/dashboard/feed/feed-filter"
 import { EmptyState } from "@/components/dashboard/shared/empty-state"
 import { LoadingSkeleton } from "@/components/dashboard/shared/loading-skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -47,6 +47,7 @@ import { cn } from "@/lib/utils"
 
 interface FeedWithTags {
   id: string
+  slug: string
   title: string
   description: string | null
   imageUrl: string | null
@@ -63,13 +64,6 @@ interface FeedWithTags {
   }[]
 }
 
-interface AppSidebarProps {
-  activeFilter: FilterType
-  onFilterChange: (filter: FilterType) => void
-  selectedFeedId: string | null
-  onFeedSelect: (feedId: string | null) => void
-}
-
 const filterItems = [
   { value: "all" as const, label: "All Articles", icon: ListIcon },
   { value: "unread" as const, label: "Unread", icon: InboxIcon },
@@ -77,15 +71,18 @@ const filterItems = [
   { value: "readLater" as const, label: "Read Later", icon: BookmarkIcon },
 ]
 
-export function AppSidebar({
-  activeFilter,
-  onFilterChange,
-  selectedFeedId,
-  onFeedSelect,
-}: AppSidebarProps) {
+export function AppSidebar() {
+  const [feedSlug, setFeedSlug] = useQueryState(
+    "feed",
+    parseAsString.withDefault(""),
+  )
+  const [filter, setFilter] = useQueryState(
+    "filter",
+    parseAsString.withDefault("all"),
+  )
+  const [tagSlug, setTagSlug] = useQueryState("tag", parseAsString)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isAddTagDialogOpen, setIsAddTagDialogOpen] = useState(false)
-  const [selectedTagId, setSelectedTagId] = useState<string | null>(null)
   const [hoveredTagId, setHoveredTagId] = useState<string | null>(null)
   const [hoveredFeedId, setHoveredFeedId] = useState<string | null>(null)
   const [isFeedsHeaderHovered, setIsFeedsHeaderHovered] = useState(false)
@@ -122,10 +119,15 @@ export function AppSidebar({
 
   const { data: tags } = useQuery(trpc.tag.all.queryOptions())
 
+  // Find selected tag by slug
+  const selectedTag = tagSlug
+    ? tags?.find((t) => t.id === tagSlug || t.name === tagSlug)
+    : null
+
   // Filter feeds by selected tag
-  const filteredFeeds = selectedTagId
+  const filteredFeeds = selectedTag
     ? (feeds as FeedWithTags[] | undefined)?.filter((feed) =>
-        feed.tags?.some((t) => t.tag.id === selectedTagId),
+        feed.tags?.some((t) => t.tag.id === selectedTag.id),
       )
     : feeds
 
@@ -188,17 +190,17 @@ export function AppSidebar({
             <SidebarGroupLabel>Filters</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {filterItems.map((filter) => {
-                  const isActive = activeFilter === filter.value
-                  const count = filterCounts[filter.value]
-                  const Icon = filter.icon
+                {filterItems.map((filterItem) => {
+                  const isActive = filter === filterItem.value
+                  const count = filterCounts[filterItem.value]
+                  const Icon = filterItem.icon
 
                   return (
-                    <SidebarMenuItem key={filter.value}>
+                    <SidebarMenuItem key={filterItem.value}>
                       <SidebarMenuButton
                         asChild
                         isActive={isActive}
-                        onClick={() => onFilterChange(filter.value)}
+                        onClick={() => setFilter(filterItem.value)}
                         className={cn(
                           "group cursor-pointer",
                           isActive && "bg-accent",
@@ -207,7 +209,7 @@ export function AppSidebar({
                         <div>
                           <Icon className="h-4 w-4" />
                           <span className="truncate text-sm font-medium">
-                            {filter.label}
+                            {filterItem.label}
                           </span>
                           {count > 0 && (
                             <Badge
@@ -254,11 +256,11 @@ export function AppSidebar({
                   >
                     <SidebarMenuButton
                       asChild
-                      isActive={selectedTagId === null}
-                      onClick={() => setSelectedTagId(null)}
+                      isActive={!selectedTag}
+                      onClick={() => setTagSlug(null)}
                       className={cn(
                         "group cursor-pointer",
-                        selectedTagId === null && "bg-accent",
+                        !selectedTag && "bg-accent",
                       )}
                     >
                       <div>
@@ -270,7 +272,7 @@ export function AppSidebar({
                   </SidebarMenuItem>
 
                   {tags.map((tag) => {
-                    const isSelected = selectedTagId === tag.id
+                    const isSelected = selectedTag?.id === tag.id
                     const isHovered = hoveredTagId === tag.id
 
                     return (
@@ -282,7 +284,7 @@ export function AppSidebar({
                         <SidebarMenuButton
                           asChild
                           isActive={isSelected}
-                          onClick={() => setSelectedTagId(tag.id)}
+                          onClick={() => setTagSlug(tag.id)}
                           className={cn(
                             "group cursor-pointer",
                             isSelected && "bg-accent",
@@ -373,9 +375,9 @@ export function AppSidebar({
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    onClick={() => onFeedSelect(null)}
+                    onClick={() => setFeedSlug("")}
                     className="w-full cursor-pointer"
-                    isActive={selectedFeedId === null}
+                    isActive={feedSlug === ""}
                   >
                     <span>All</span>
                   </SidebarMenuButton>
@@ -395,7 +397,7 @@ export function AppSidebar({
                   </div>
                 ) : (
                   feedsWithStats.map((feed) => {
-                    const isSelected = selectedFeedId === feed.id
+                    const isSelected = feedSlug === feed.slug
                     const isHovered = hoveredFeedId === feed.id
 
                     return (
@@ -407,7 +409,7 @@ export function AppSidebar({
                         <SidebarMenuButton
                           asChild
                           isActive={isSelected}
-                          onClick={() => onFeedSelect(feed.id)}
+                          onClick={() => setFeedSlug(feed.slug)}
                           className={cn(
                             "group h-auto cursor-pointer py-2",
                             isSelected && "bg-accent",

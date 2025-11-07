@@ -11,6 +11,7 @@ import {
   type SelectFeed,
 } from "@/lib/db/schema"
 import { parseFeed } from "@/lib/utils/scraping"
+import { slugify } from "@/lib/utils/slug"
 
 export const feedRouter = {
   create: protectedProcedure
@@ -31,32 +32,78 @@ export const feedRouter = {
         }
 
         const feedData = await parseFeed(input)
+
+        // Generate unique slug for feed
+        const baseSlug = slugify(feedData.title)
+        let slug = baseSlug
+        let suffix = 1
+
+        // Check for slug uniqueness and append suffix if needed
+        while (true) {
+          const existingSlug = await ctx.db.query.feedTable.findFirst({
+            where: (feedTable, { eq, and }) =>
+              and(
+                eq(feedTable.userId, ctx.session.id),
+                eq(feedTable.slug, slug),
+              ),
+          })
+
+          if (!existingSlug) break
+          slug = `${baseSlug}-${suffix}`
+          suffix++
+        }
+
         const [feed] = await ctx.db
           .insert(feedTable)
           .values({
             title: feedData.title,
-            description: feedData.description || "",
+            description: feedData.description,
             url: input,
+            slug,
             imageUrl: feedData.imageUrl,
             userId: ctx.session.id,
           })
           .returning()
         if (feedData.articles.length > 0) {
-          const articlesToInsert = feedData.articles.map((article) => ({
-            title: article.title,
-            description: article.description,
-            content: article.content,
-            link: article.link,
-            imageUrl: article.imageUrl,
-            source: article.source,
-            pubDate: new Date(article.pubDate),
-            userId: ctx.session.id,
-            feedId: feed.id,
-            isRead: false,
-            isReadLater: false,
-            isStarred: false,
-          }))
-          await ctx.db.insert(articleTable).values(articlesToInsert)
+          const articlesToInsert = feedData.articles.map((article) => {
+            // Generate unique slug for each article
+            const articleSlug = slugify(article.title)
+            return {
+              title: article.title,
+              slug: articleSlug,
+              description: article.description,
+              content: article.content,
+              link: article.link,
+              imageUrl: article.imageUrl,
+              source: article.source,
+              pubDate: new Date(article.pubDate),
+              userId: ctx.session.id,
+              feedId: feed.id,
+              isRead: false,
+              isReadLater: false,
+              isStarred: false,
+            }
+          })
+
+          // Handle duplicate slugs within the same feed
+          const slugCounts = new Map<string, number>()
+          const finalArticles = articlesToInsert.map((article) => {
+            let finalSlug = article.slug
+            const count = slugCounts.get(article.slug) ?? 0
+
+            if (count > 0) {
+              finalSlug = `${article.slug}-${count}`
+            }
+
+            slugCounts.set(article.slug, count + 1)
+
+            return {
+              ...article,
+              slug: finalSlug,
+            }
+          })
+
+          await ctx.db.insert(articleTable).values(finalArticles)
         }
 
         // Invalidate cache
@@ -200,6 +247,40 @@ export const feedRouter = {
       }
       const data = await ctx.db.query.feedTable.findFirst({
         where: (feedTable, { eq }) => eq(feedTable.id, input),
+        with: {
+          tags: {
+            with: {
+              tag: true,
+            },
+          },
+        },
+      })
+      if (!data) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Feed not found.",
+        })
+      }
+      await ctx.redis.setCache(cacheKey, data, 1800)
+      return data
+    } catch (error) {
+      handleTRPCError(error)
+    }
+  }),
+
+  bySlug: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
+    try {
+      const cacheKey = `feed:feed:slug:${input}:user:${ctx.session.id}`
+      const cached = await ctx.redis.getCache<SelectFeed>(cacheKey)
+      if (cached) {
+        return cached
+      }
+      const { eq, and } = await import("drizzle-orm")
+      const data = await ctx.db.query.feedTable.findFirst({
+        where: and(
+          eq(feedTable.slug, input),
+          eq(feedTable.userId, ctx.session.id),
+        ),
         with: {
           tags: {
             with: {

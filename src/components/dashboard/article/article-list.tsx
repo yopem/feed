@@ -1,7 +1,9 @@
 "use client"
 
+import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { FileTextIcon } from "lucide-react"
+import { parseAsString, useQueryState } from "nuqs"
 
 import type { FilterType } from "@/components/dashboard/feed/feed-filter"
 import { EmptyState } from "@/components/dashboard/shared/empty-state"
@@ -12,6 +14,7 @@ import { ArticleCard } from "./article-card"
 interface ArticleWithFeed {
   id: string
   title: string
+  slug: string
   description: string | null
   imageUrl: string | null
   pubDate: Date
@@ -20,29 +23,39 @@ interface ArticleWithFeed {
   isReadLater: boolean
   feed: {
     title: string
+    slug: string
     imageUrl: string | null
   } | null
 }
 
-interface ArticleListProps {
-  activeFilter: FilterType
-  selectedFeedId: string | null
-  selectedArticleId: string | null
-  onArticleSelect: (articleId: string) => void
-}
+export function ArticleList() {
+  const [feedSlug] = useQueryState("feed", parseAsString.withDefault(""))
+  const [filter] = useQueryState("filter", parseAsString.withDefault("all"))
+  const [selectedArticleId, setSelectedArticleId] = useQueryState(
+    "article",
+    parseAsString,
+  )
 
-export function ArticleList({
-  activeFilter,
-  selectedFeedId,
-  selectedArticleId,
-  onArticleSelect,
-}: ArticleListProps) {
   const trpc = useTRPC()
+
+  // Get feedId from feedSlug if needed
+  const { data: allFeeds } = useQuery(
+    trpc.feed.all.queryOptions({
+      page: 1,
+      perPage: 100,
+    }),
+  )
+
+  const selectedFeedId = useMemo(() => {
+    if (!feedSlug || !allFeeds) return undefined
+    const feed = allFeeds.find((f: { slug: string }) => f.slug === feedSlug)
+    return feed?.id
+  }, [feedSlug, allFeeds])
 
   const { data: articles, isLoading } = useQuery(
     trpc.article.byFilter.queryOptions({
-      filter: activeFilter,
-      feedId: selectedFeedId ?? undefined,
+      filter: filter as FilterType,
+      feedId: selectedFeedId,
     }),
   ) as { data: ArticleWithFeed[] | undefined; isLoading: boolean }
 
@@ -69,8 +82,10 @@ export function ArticleList({
               key={article.id}
               id={article.id}
               title={article.title}
+              slug={article.slug}
               description={article.description ?? ""}
               feedTitle={article.feed?.title ?? "Unknown Feed"}
+              feedSlug={article.feed?.slug ?? ""}
               feedImageUrl={article.feed?.imageUrl ?? null}
               imageUrl={article.imageUrl}
               pubDate={article.pubDate}
@@ -78,7 +93,7 @@ export function ArticleList({
               isStarred={article.isStarred}
               isReadLater={article.isReadLater}
               isSelected={selectedArticleId === article.id}
-              onSelect={onArticleSelect}
+              onSelect={setSelectedArticleId}
             />
           ))
         )}

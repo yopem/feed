@@ -1,10 +1,12 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { Suspense, useMemo } from "react"
+import { parseAsString, useQueryState } from "nuqs"
 
 import { ArticleList } from "@/components/dashboard/article/article-list"
 import { ArticleReader } from "@/components/dashboard/article/article-reader"
 import { AppSidebar } from "@/components/dashboard/layout/app-sidebar"
+import { LoadingSkeleton } from "@/components/dashboard/shared/loading-skeleton"
 import ThemeSwitcher from "@/components/theme/theme-switcher"
 import {
   Breadcrumb,
@@ -27,13 +29,11 @@ import {
 } from "@/components/ui/sidebar"
 import { useIsMobile } from "@/hooks/use-mobile"
 
-export default function DashboardPage() {
-  const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null)
-  const [filter, setFilter] = useState<
-    "all" | "unread" | "starred" | "readLater"
-  >("all")
-  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
-    null,
+function DashboardContent() {
+  const [filter] = useQueryState("filter", parseAsString.withDefault("all"))
+  const [selectedArticleId, setSelectedArticleId] = useQueryState(
+    "article",
+    parseAsString,
   )
 
   const isMobile = useIsMobile()
@@ -57,12 +57,7 @@ export default function DashboardPage() {
 
   return (
     <SidebarProvider>
-      <AppSidebar
-        selectedFeedId={selectedFeedId}
-        onFeedSelect={setSelectedFeedId}
-        activeFilter={filter}
-        onFilterChange={setFilter}
-      />
+      <AppSidebar />
       <SidebarInset>
         <header className="glass sticky top-0 z-10 flex h-14 items-center gap-4 px-4">
           <SidebarTrigger />
@@ -83,43 +78,44 @@ export default function DashboardPage() {
         </header>
 
         <div className="flex h-[calc(100vh-3.5rem)] w-full overflow-hidden">
-          {/* Middle Panel - Article List */}
-          <main className="border-border min-w-0 flex-1 overflow-y-auto border-r">
-            <ArticleList
-              selectedFeedId={selectedFeedId}
-              activeFilter={filter}
-              selectedArticleId={selectedArticleId}
-              onArticleSelect={setSelectedArticleId}
-            />
+          {/* Article List - Full Width */}
+          <main className="min-w-0 flex-1 overflow-y-auto">
+            <ArticleList />
           </main>
 
-          {/* Right Panel - Article Reader */}
-          {!isMobile ? (
-            <aside className="w-full max-w-3xl flex-shrink-0 overflow-hidden">
-              <ArticleReader articleId={selectedArticleId} />
-            </aside>
-          ) : (
-            <Sheet
-              open={isReaderOpen}
-              onOpenChange={(open) => !open && setSelectedArticleId(null)}
+          {/* Article Reader - Sheet Overlay for both Mobile and Desktop */}
+          <Sheet
+            open={isReaderOpen}
+            onOpenChange={(open) => !open && setSelectedArticleId(null)}
+          >
+            <SheetContent
+              side={isMobile ? "bottom" : "right"}
+              className={
+                isMobile
+                  ? "glass max-h-[85vh] overflow-hidden rounded-t-xl border-t"
+                  : "glass !w-[70vw] overflow-hidden sm:!max-w-none"
+              }
             >
-              <SheetContent
-                side="bottom"
-                className="glass max-h-[85vh] overflow-hidden rounded-t-xl border-t"
-              >
-                <SheetHeader className="panel-header">
-                  <SheetTitle className="text-sm leading-5 font-medium">
-                    Reader
-                  </SheetTitle>
-                </SheetHeader>
-                <div className="flex-1 overflow-y-auto">
-                  <ArticleReader articleId={selectedArticleId} />
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
+              <SheetHeader className="panel-header">
+                <SheetTitle className="text-sm leading-5 font-medium">
+                  Reader
+                </SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto">
+                <ArticleReader articleId={selectedArticleId} />
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </SidebarInset>
     </SidebarProvider>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<LoadingSkeleton variant="list" count={10} />}>
+      <DashboardContent />
+    </Suspense>
   )
 }

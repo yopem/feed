@@ -15,6 +15,7 @@ import { ArticleActions } from "./article-actions"
 interface ArticleWithFeed {
   id: string
   title: string
+  slug: string
   description: string | null
   content: string | null
   imageUrl: string | null
@@ -25,6 +26,7 @@ interface ArticleWithFeed {
   isReadLater: boolean
   feed: {
     title: string
+    slug: string
     imageUrl: string | null
   }
 }
@@ -99,6 +101,8 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
         isStarred={article.isStarred}
         isReadLater={article.isReadLater}
         link={article.link}
+        feedSlug={article.feed.slug}
+        articleSlug={article.slug}
       />
 
       <div className="flex-1 overflow-y-auto">

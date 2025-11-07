@@ -6,8 +6,10 @@ import {
   CircleIcon,
   ClockIcon,
   ExternalLinkIcon,
+  Share2Icon,
   StarIcon,
 } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { useTRPC } from "@/lib/trpc/client"
@@ -18,6 +20,8 @@ interface ArticleActionsProps {
   isStarred: boolean
   isReadLater: boolean
   link: string
+  feedSlug?: string
+  articleSlug?: string
 }
 
 export function ArticleActions({
@@ -26,6 +30,8 @@ export function ArticleActions({
   isStarred,
   isReadLater,
   link,
+  feedSlug,
+  articleSlug,
 }: ArticleActionsProps) {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
@@ -54,6 +60,22 @@ export function ArticleActions({
       },
     }),
   )
+
+  const handleShare = async () => {
+    if (!feedSlug || !articleSlug) {
+      toast.error("Unable to share this article")
+      return
+    }
+
+    const shareUrl = `${window.location.origin}/dashboard/${feedSlug}/${articleSlug}`
+
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      toast.success("Link copied to clipboard!")
+    } catch {
+      toast.error("Failed to copy link")
+    }
+  }
 
   return (
     <div className="panel-header flex items-center justify-between">
@@ -107,6 +129,19 @@ export function ArticleActions({
             fill={isReadLater ? "currentColor" : "none"}
           />
         </Button>
+
+        {/* Share */}
+        {feedSlug && articleSlug && (
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={handleShare}
+            title="Share article"
+            aria-label="Share article"
+          >
+            <Share2Icon className="text-muted-foreground h-5 w-5" />
+          </Button>
+        )}
       </div>
 
       {/* Open Original Link */}

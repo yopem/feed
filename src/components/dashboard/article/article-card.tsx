@@ -20,8 +20,10 @@ dayjs.extend(relativeTime)
 interface ArticleCardProps {
   id: string
   title: string
+  slug: string
   description: string
   feedTitle: string
+  feedSlug: string
   feedImageUrl?: string | null
   imageUrl?: string | null
   pubDate: Date
@@ -35,8 +37,10 @@ interface ArticleCardProps {
 export function ArticleCard({
   id,
   title,
+  slug: _slug, // Reserved for future navigation implementation
   description,
   feedTitle,
+  feedSlug: _feedSlug, // Reserved for future navigation implementation
   feedImageUrl,
   imageUrl,
   pubDate,

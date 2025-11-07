@@ -20,6 +20,7 @@ export const feedTable = pgTable(
       .$defaultFn(() => createCustomId()),
     title: text("title").notNull(),
     url: text("url").notNull(),
+    slug: text("slug").notNull(),
     description: text("description"),
     imageUrl: text("image_url"),
     lastUpdated: timestamp("last_updated").defaultNow(),
@@ -27,7 +28,10 @@ export const feedTable = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
-  (t) => [unique("feed_user_url_unique").on(t.userId, t.url)],
+  (t) => [
+    unique("feed_user_url_unique").on(t.userId, t.url),
+    unique("feed_user_slug_unique").on(t.userId, t.slug),
+  ],
 )
 
 export const feedRelations = relations(feedTable, ({ many }) => ({
