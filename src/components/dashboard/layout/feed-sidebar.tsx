@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { PlusIcon, RssIcon, TagIcon } from "lucide-react"
 import { toast } from "sonner"
 
@@ -64,6 +64,7 @@ export function FeedSidebar({
   } | null>(null)
   const [refreshingFeedId, setRefreshingFeedId] = useState<string | null>(null)
   const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
   const { data: feeds, isLoading: feedsLoading } = useQuery(
     trpc.feed.all.queryOptions({
@@ -78,6 +79,13 @@ export function FeedSidebar({
     setRefreshingFeedId(feedId)
     try {
       const result = await refreshMutation.mutateAsync(feedId)
+
+      // Invalidate React Query caches
+      await queryClient.invalidateQueries({ queryKey: [["article"]] })
+      await queryClient.invalidateQueries({
+        queryKey: [["feed", "statistics"]],
+      })
+
       if (result && result.newArticles === 0) {
         toast.success("Feed is up to date")
       } else if (result) {
