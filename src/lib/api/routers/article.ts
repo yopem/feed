@@ -30,8 +30,11 @@ export const articleRouter = createTRPCRouter({
           return cached
         }
         const data = await ctx.db.query.articleTable.findMany({
-          where: (articleTable, { eq }) =>
-            eq(articleTable.userId, ctx.session.id),
+          where: (articleTable, { eq, and }) =>
+            and(
+              eq(articleTable.userId, ctx.session.id),
+              eq(articleTable.status, "published"),
+            ),
           offset: (input.page - 1) * input.perPage,
           limit: input.perPage,
           orderBy: (articles, { desc }) => [desc(articles.createdAt)],
@@ -66,7 +69,8 @@ export const articleRouter = createTRPCRouter({
         return cached
       }
       const data = await ctx.db.query.articleTable.findFirst({
-        where: (articleTable, { eq }) => eq(articleTable.id, input),
+        where: (articleTable, { eq, and }) =>
+          and(eq(articleTable.id, input), eq(articleTable.status, "published")),
         with: {
           feed: {
             columns: {
@@ -109,6 +113,7 @@ export const articleRouter = createTRPCRouter({
           where: and(
             eq(feedTable.slug, input.feedSlug),
             eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.status, "published"),
           ),
         })
 
@@ -123,6 +128,7 @@ export const articleRouter = createTRPCRouter({
           where: and(
             eq(articleTable.slug, input.articleSlug),
             eq(articleTable.feedId, feed.id),
+            eq(articleTable.status, "published"),
           ),
           with: {
             feed: {
@@ -165,6 +171,7 @@ export const articleRouter = createTRPCRouter({
             and(
               eq(articleTable.feedId, input),
               eq(articleTable.userId, ctx.session.id),
+              eq(articleTable.status, "published"),
             ),
           )
         await ctx.redis.setCache(cacheKey, count, 1800)
@@ -191,7 +198,10 @@ export const articleRouter = createTRPCRouter({
           return cached
         }
 
-        const conditions = [eq(articleTable.userId, ctx.session.id)]
+        const conditions = [
+          eq(articleTable.userId, ctx.session.id),
+          eq(articleTable.status, "published"),
+        ]
 
         if (input.feedId) {
           conditions.push(eq(articleTable.feedId, input.feedId))
@@ -325,7 +335,10 @@ export const articleRouter = createTRPCRouter({
     .input(z.object({ feedId: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const conditions = [eq(articleTable.userId, ctx.session.id)]
+        const conditions = [
+          eq(articleTable.userId, ctx.session.id),
+          eq(articleTable.status, "published"),
+        ]
 
         if (input.feedId) {
           conditions.push(eq(articleTable.feedId, input.feedId))
@@ -375,7 +388,10 @@ export const articleRouter = createTRPCRouter({
           }
         }
 
-        const conditions = [eq(articleTable.userId, ctx.session.id)]
+        const conditions = [
+          eq(articleTable.userId, ctx.session.id),
+          eq(articleTable.status, "published"),
+        ]
 
         if (input.feedId) {
           conditions.push(eq(articleTable.feedId, input.feedId))

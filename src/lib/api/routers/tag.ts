@@ -4,12 +4,7 @@ import z from "zod"
 
 import { handleTRPCError } from "@/lib/api/error"
 import { createTRPCRouter, protectedProcedure } from "@/lib/api/trpc"
-import {
-  feedTagsTable,
-  tagTable,
-  updateTagSchema,
-  type SelectTag,
-} from "@/lib/db/schema"
+import { tagTable, updateTagSchema, type SelectTag } from "@/lib/db/schema"
 
 /**
  * Tag management router for organizing feeds into categories
@@ -54,7 +49,11 @@ export const tagRouter = createTRPCRouter({
 
         const existingTag = await ctx.db.query.tagTable.findFirst({
           where: (tag, { eq, and }) =>
-            and(eq(tag.id, input.id!), eq(tag.userId, ctx.session.id)),
+            and(
+              eq(tag.id, input.id!),
+              eq(tag.userId, ctx.session.id),
+              eq(tag.status, "published"),
+            ),
         })
 
         if (!existingTag) {
@@ -84,6 +83,17 @@ export const tagRouter = createTRPCRouter({
       }
     }),
 
+  /**
+   * Soft-deletes a tag by updating its status to 'deleted'
+   *
+   * This operation does not permanently remove the tag from the database.
+   * Instead, it marks the tag as deleted. Deleted tags are filtered from
+   * all queries and will not appear in feed-tag associations.
+   *
+   * @param input - Tag ID to delete
+   * @returns Success status
+   * @throws TRPCError if tag not found or user lacks permission
+   */
   delete: protectedProcedure
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
@@ -94,6 +104,7 @@ export const tagRouter = createTRPCRouter({
           where: and(
             eq(tagTable.id, input),
             eq(tagTable.userId, ctx.session.id),
+            eq(tagTable.status, "published"),
           ),
         })
 
@@ -104,9 +115,10 @@ export const tagRouter = createTRPCRouter({
           })
         }
 
-        await ctx.db.delete(feedTagsTable).where(eq(feedTagsTable.tagId, input))
-
-        await ctx.db.delete(tagTable).where(eq(tagTable.id, input))
+        await ctx.db
+          .update(tagTable)
+          .set({ status: "deleted", updatedAt: new Date() })
+          .where(eq(tagTable.id, input))
 
         await ctx.redis.invalidatePattern(`feed:tags:*:user:${ctx.session.id}`)
         await ctx.redis.invalidatePattern(`feed:tag:*:user:${ctx.session.id}`)
@@ -127,7 +139,8 @@ export const tagRouter = createTRPCRouter({
         return cached
       }
       const tags = await ctx.db.query.tagTable.findMany({
-        where: (tag, { eq }) => eq(tag.userId, ctx.session.id),
+        where: (tag, { eq, and }) =>
+          and(eq(tag.userId, ctx.session.id), eq(tag.status, "published")),
         orderBy: (tag, { desc }) => desc(tag.createdAt),
       })
       await ctx.redis.setCache(cacheKey, tags, 1800)
@@ -145,7 +158,8 @@ export const tagRouter = createTRPCRouter({
         return cached
       }
       const tag = await ctx.db.query.tagTable.findFirst({
-        where: (tag, { eq }) => eq(tag.id, input),
+        where: (tag, { eq, and }) =>
+          and(eq(tag.id, input), eq(tag.status, "published")),
       })
       if (!tag) {
         throw new TRPCError({

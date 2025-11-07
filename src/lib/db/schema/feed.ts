@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm"
 import {
+  index,
   pgTable,
   primaryKey,
   text,
@@ -10,6 +11,7 @@ import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 
 import { createCustomId } from "@/lib/utils/custom-id"
 import { articleTable } from "./article"
+import { entityStatusEnum } from "./enums"
 import { tagTable } from "./tag"
 
 export const feedTable = pgTable(
@@ -25,12 +27,16 @@ export const feedTable = pgTable(
     imageUrl: text("image_url"),
     lastUpdated: timestamp("last_updated").defaultNow(),
     userId: text("user_id").notNull(),
+    /** Entity status for soft-delete: published (visible), draft (hidden), deleted (soft-deleted) */
+    status: entityStatusEnum("status").notNull().default("published"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (t) => [
     unique("feed_user_url_unique").on(t.userId, t.url),
     unique("feed_user_slug_unique").on(t.userId, t.slug),
+    index("feed_status_idx").on(t.status),
+    index("feed_user_status_idx").on(t.userId, t.status),
   ],
 )
 

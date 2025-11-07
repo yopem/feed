@@ -1,8 +1,16 @@
 import { relations } from "drizzle-orm"
-import { boolean, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core"
+import {
+  boolean,
+  index,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+} from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 
 import { createCustomId } from "@/lib/utils/custom-id"
+import { entityStatusEnum } from "./enums"
 import { feedTable } from "./feed"
 
 export const articleTable = pgTable(
@@ -26,10 +34,17 @@ export const articleTable = pgTable(
     feedId: text("feed_id")
       .notNull()
       .references(() => feedTable.id, { onDelete: "cascade" }),
+    /** Entity status for soft-delete: published (visible), draft (hidden), deleted (soft-deleted) */
+    status: entityStatusEnum("status").notNull().default("published"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
-  (t) => [unique("article_feed_slug_unique").on(t.feedId, t.slug)],
+  (t) => [
+    unique("article_feed_slug_unique").on(t.feedId, t.slug),
+    index("article_status_idx").on(t.status),
+    index("article_feed_status_idx").on(t.feedId, t.status),
+    index("article_user_status_idx").on(t.userId, t.status),
+  ],
 )
 
 export const articleRelations = relations(articleTable, ({ one }) => ({

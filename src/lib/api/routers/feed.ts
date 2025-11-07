@@ -37,6 +37,7 @@ export const feedRouter = {
             and(
               eq(feedTable.userId, ctx.session.id),
               eq(feedTable.url, trimmedInput),
+              eq(feedTable.status, "published"),
             ),
         })
 
@@ -72,6 +73,7 @@ export const feedRouter = {
               and(
                 eq(feedTable.userId, ctx.session.id),
                 eq(feedTable.slug, slug),
+                eq(feedTable.status, "published"),
               ),
           })
 
@@ -168,6 +170,7 @@ export const feedRouter = {
           where: and(
             eq(feedTable.id, input.id),
             eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.status, "published"),
           ),
         })
 
@@ -196,6 +199,17 @@ export const feedRouter = {
       }
     }),
 
+  /**
+   * Soft-deletes a feed by updating its status to 'deleted'
+   *
+   * This operation does not permanently remove the feed from the database.
+   * Instead, it marks the feed as deleted and cascades the deletion to all
+   * associated articles. Deleted feeds and articles are filtered from all queries.
+   *
+   * @param input - Feed ID to delete
+   * @returns Success status
+   * @throws TRPCError if feed not found or user lacks permission
+   */
   delete: protectedProcedure
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
@@ -206,6 +220,7 @@ export const feedRouter = {
           where: and(
             eq(feedTable.id, input),
             eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.status, "published"),
           ),
         })
 
@@ -217,12 +232,14 @@ export const feedRouter = {
         }
 
         await ctx.db
-          .delete(feedTagsTable)
-          .where(eq(feedTagsTable.feedId, input))
+          .update(feedTable)
+          .set({ status: "deleted", updatedAt: new Date() })
+          .where(eq(feedTable.id, input))
 
-        await ctx.db.delete(articleTable).where(eq(articleTable.feedId, input))
-
-        await ctx.db.delete(feedTable).where(eq(feedTable.id, input))
+        await ctx.db
+          .update(articleTable)
+          .set({ status: "deleted", updatedAt: new Date() })
+          .where(eq(articleTable.feedId, input))
 
         await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
         await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
@@ -243,7 +260,11 @@ export const feedRouter = {
           return cached
         }
         const data = await ctx.db.query.feedTable.findMany({
-          where: (feedTable, { eq }) => eq(feedTable.userId, ctx.session.id),
+          where: (feedTable, { eq, and }) =>
+            and(
+              eq(feedTable.userId, ctx.session.id),
+              eq(feedTable.status, "published"),
+            ),
           offset: (input.page - 1) * input.perPage,
           limit: input.perPage,
           orderBy: (feeds, { desc }) => [desc(feeds.createdAt)],
@@ -255,14 +276,18 @@ export const feedRouter = {
             },
           },
         })
-        if (data.length === 0) {
+        const filteredData = data.map((feed) => ({
+          ...feed,
+          tags: feed.tags.filter((ft) => ft.tag.status === "published"),
+        }))
+        if (filteredData.length === 0) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "No feeds found for the user.",
           })
         }
-        await ctx.redis.setCache(cacheKey, data, 1800)
-        return data
+        await ctx.redis.setCache(cacheKey, filteredData, 1800)
+        return filteredData
       } catch (error) {
         handleTRPCError(error)
       }
@@ -276,7 +301,8 @@ export const feedRouter = {
         return cached
       }
       const data = await ctx.db.query.feedTable.findFirst({
-        where: (feedTable, { eq }) => eq(feedTable.id, input),
+        where: (feedTable, { eq, and }) =>
+          and(eq(feedTable.id, input), eq(feedTable.status, "published")),
         with: {
           tags: {
             with: {
@@ -291,8 +317,12 @@ export const feedRouter = {
           message: "Feed not found.",
         })
       }
-      await ctx.redis.setCache(cacheKey, data, 1800)
-      return data
+      const filteredData = {
+        ...data,
+        tags: data.tags.filter((ft) => ft.tag.status === "published"),
+      }
+      await ctx.redis.setCache(cacheKey, filteredData, 1800)
+      return filteredData
     } catch (error) {
       handleTRPCError(error)
     }
@@ -310,6 +340,7 @@ export const feedRouter = {
         where: and(
           eq(feedTable.slug, input),
           eq(feedTable.userId, ctx.session.id),
+          eq(feedTable.status, "published"),
         ),
         with: {
           tags: {
@@ -325,8 +356,12 @@ export const feedRouter = {
           message: "Feed not found.",
         })
       }
-      await ctx.redis.setCache(cacheKey, data, 1800)
-      return data
+      const filteredData = {
+        ...data,
+        tags: data.tags.filter((ft) => ft.tag.status === "published"),
+      }
+      await ctx.redis.setCache(cacheKey, filteredData, 1800)
+      return filteredData
     } catch (error) {
       handleTRPCError(error)
     }
@@ -349,7 +384,7 @@ export const feedRouter = {
       }
 
       const { db } = await import("@/lib/db")
-      const { eq, sql } = await import("drizzle-orm")
+      const { eq, sql, and } = await import("drizzle-orm")
 
       const stats = await db
         .select({
@@ -360,7 +395,12 @@ export const feedRouter = {
           readLaterCount: sql<number>`COUNT(*) FILTER (WHERE ${articleTable.isReadLater} = true)::int`,
         })
         .from(articleTable)
-        .where(eq(articleTable.userId, ctx.session.id))
+        .where(
+          and(
+            eq(articleTable.userId, ctx.session.id),
+            eq(articleTable.status, "published"),
+          ),
+        )
         .groupBy(articleTable.feedId)
 
       await ctx.redis.setCache(cacheKey, stats, 1800)
@@ -385,6 +425,7 @@ export const feedRouter = {
           where: and(
             eq(feedTable.id, input.feedId),
             eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.status, "published"),
           ),
         })
 
@@ -400,6 +441,7 @@ export const feedRouter = {
             where: and(
               inArray(tagTable.id, input.tagIds),
               eq(tagTable.userId, ctx.session.id),
+              eq(tagTable.status, "published"),
             ),
           })
 
@@ -448,6 +490,7 @@ export const feedRouter = {
           where: and(
             eq(feedTable.id, input.feedId),
             eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.status, "published"),
           ),
         })
 
@@ -485,6 +528,7 @@ export const feedRouter = {
           where: and(
             eq(feedTable.id, input),
             eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.status, "published"),
           ),
         })
 
@@ -502,7 +546,11 @@ export const feedRouter = {
         }
 
         const existingArticles = await ctx.db.query.articleTable.findMany({
-          where: eq(articleTable.feedId, input),
+          where: (articleTable, { eq, and }) =>
+            and(
+              eq(articleTable.feedId, input),
+              eq(articleTable.status, "published"),
+            ),
           columns: {
             link: true,
           },

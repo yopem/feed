@@ -15,6 +15,13 @@
       "when": 1762505385414,
       "tag": "0001_nostalgic_betty_brant",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762530078038,
+      "tag": "0002_regular_vapor",
+      "breakpoints": true
     }
   ]
 }
