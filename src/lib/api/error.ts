@@ -4,7 +4,7 @@ export const handleTRPCError = (error: unknown): never => {
   if (error instanceof TRPCError) {
     throw error
   } else {
-    console.error("TRPC Error:", error)
+    // Error is handled by mutation's onError callback with toast notification
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: "An internal error occurred",

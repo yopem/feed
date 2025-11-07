@@ -123,8 +123,8 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
         form.reset()
         setSelectedTagIds([])
         onClose()
-      } catch (error) {
-        console.error("Failed to create feed:", error)
+      } catch {
+        // Error already handled by mutation's onError callback with toast notification
       }
     },
   })
@@ -159,7 +159,6 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
           err.message ||
           "Failed to add feed. Please check the URL and try again."
         toast.error(errorMessage)
-        console.error("Feed creation error:", err)
       },
     }),
   )

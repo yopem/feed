@@ -45,8 +45,8 @@ export function AddTagDialog({ isOpen, onClose }: AddTagDialogProps) {
 
         form.reset()
         onClose()
-      } catch (e) {
-        console.error("Failed to create tag:", e)
+      } catch {
+        // Error already handled by mutation's onError callback with toast notification
       }
     },
   })
