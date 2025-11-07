@@ -23,7 +23,9 @@ export const articleTable = pgTable(
     isReadLater: boolean("is_read_later").notNull().default(false),
     isStarred: boolean("is_starred").notNull().default(false),
     userId: text("user_id").notNull(),
-    feedId: text("feed_id").notNull(),
+    feedId: text("feed_id")
+      .notNull()
+      .references(() => feedTable.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
