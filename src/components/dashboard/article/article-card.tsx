@@ -103,7 +103,7 @@ export function ArticleCard({
   return (
     <Card
       className={cn(
-        "group cursor-pointer gap-0 transition-all hover:shadow-md hover:border-primary/20",
+        "group hover:border-primary/20 cursor-pointer gap-0 transition-all hover:shadow-md",
         isSelected && "ring-ring bg-accent ring-2",
       )}
       onMouseEnter={() => setIsHovered(true)}
@@ -166,17 +166,25 @@ export function ArticleCard({
       <CardFooter
         className={cn(
           "justify-between pt-2 pb-3 transition-all",
-          isHovered || isStarred || isReadLater ? "flex" : "hidden md:group-hover:flex",
+          isHovered || isStarred || isReadLater
+            ? "flex"
+            : "hidden md:group-hover:flex",
         )}
       >
         <div className="flex items-center gap-2">
           {isStarred && (
-            <span className="text-yellow-500 dark:text-yellow-400" title="Starred">
+            <span
+              className="text-yellow-500 dark:text-yellow-400"
+              title="Starred"
+            >
               <StarIcon className="h-4 w-4 fill-current" />
             </span>
           )}
           {isReadLater && (
-            <span className="text-blue-500 dark:text-blue-400" title="Read Later">
+            <span
+              className="text-blue-500 dark:text-blue-400"
+              title="Read Later"
+            >
               <BookmarkIcon className="h-4 w-4 fill-current" />
             </span>
           )}
