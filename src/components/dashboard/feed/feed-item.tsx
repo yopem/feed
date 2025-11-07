@@ -3,9 +3,9 @@
 import Image from "next/image"
 import { EditIcon, RefreshCwIcon, TrashIcon } from "lucide-react"
 
-import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
 interface FeedItemProps {
@@ -36,11 +36,10 @@ export function FeedItem({
   tags = [],
 }: FeedItemProps) {
   return (
-    <SurfaceCard
-      hover
+    <Card
       onClick={() => onSelect(id)}
       className={cn(
-        "group p-3 transition-all",
+        "group hover:bg-accent cursor-pointer p-3 transition-all hover:scale-[1.02] hover:shadow-xl",
         isSelected && "bg-accent ring-ring ring-2",
       )}
     >
@@ -130,6 +129,6 @@ export function FeedItem({
           )}
         </div>
       </div>
-    </SurfaceCard>
+    </Card>
   )
 }

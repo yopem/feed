@@ -7,7 +7,6 @@ import { toast } from "sonner"
 
 import { EmptyState } from "@/components/dashboard/shared/empty-state"
 import { LoadingSkeleton } from "@/components/dashboard/shared/loading-skeleton"
-import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useTRPC } from "@/lib/trpc/client"
 
@@ -109,7 +109,7 @@ export function TagManagement() {
 
   return (
     <>
-      <SurfaceCard className="flex flex-col overflow-hidden">
+      <Card className="flex flex-col overflow-hidden">
         <div className="border-b px-4 py-3">
           <div className="flex items-center justify-between">
             <h2 className="text-foreground text-sm leading-5 font-medium">
@@ -128,7 +128,7 @@ export function TagManagement() {
 
         <div className="flex-1 space-y-3 overflow-y-auto p-3">
           {isAddingTag && (
-            <SurfaceCard className="space-y-3 p-3">
+            <Card className="space-y-3 p-3">
               <Input
                 placeholder="Tag name"
                 value={newTagName}
@@ -162,7 +162,7 @@ export function TagManagement() {
                   {createTag.isPending ? "Creating..." : "Create"}
                 </Button>
               </div>
-            </SurfaceCard>
+            </Card>
           )}
 
           {isLoading ? (
@@ -190,7 +190,7 @@ export function TagManagement() {
             ))
           )}
         </div>
-      </SurfaceCard>
+      </Card>
 
       {deletingTag && (
         <AlertDialog open={true} onOpenChange={() => setDeletingTag(null)}>
@@ -249,7 +249,7 @@ function TagItem({
 
   if (isEditing) {
     return (
-      <SurfaceCard className="space-y-3 p-3">
+      <Card className="space-y-3 p-3">
         <Input
           placeholder="Tag name"
           value={name}
@@ -279,12 +279,12 @@ function TagItem({
             {isSaving ? "Saving..." : "Save"}
           </Button>
         </div>
-      </SurfaceCard>
+      </Card>
     )
   }
 
   return (
-    <SurfaceCard hover className="group p-3 transition-all">
+    <Card className="group hover:bg-accent cursor-pointer p-3 transition-all hover:scale-[1.02] hover:shadow-xl">
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <h4 className="text-foreground truncate text-sm font-semibold">
@@ -318,6 +318,6 @@ function TagItem({
           </Button>
         </div>
       </div>
-    </SurfaceCard>
+    </Card>
   )
 }

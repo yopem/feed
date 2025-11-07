@@ -6,8 +6,8 @@ import { XIcon } from "lucide-react"
 import { toast } from "sonner"
 import type { z } from "zod"
 
-import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import {
   Field,
   FieldContent,
@@ -67,7 +67,7 @@ export function AddTagDialog({ isOpen, onClose }: AddTagDialogProps) {
 
   return (
     <div className="bg-background/80 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-      <SurfaceCard className="w-full max-w-md p-6">
+      <Card className="w-full max-w-md p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-foreground text-xl font-bold">Add New Tag</h2>
           <Button
@@ -194,7 +194,7 @@ export function AddTagDialog({ isOpen, onClose }: AddTagDialogProps) {
             )}
           </form.Subscribe>
         </form>
-      </SurfaceCard>
+      </Card>
     </div>
   )
 }

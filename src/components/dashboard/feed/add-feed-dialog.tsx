@@ -7,9 +7,9 @@ import { PlusIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 import { z } from "zod"
 
-import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import {
   Field,
   FieldContent,
@@ -231,7 +231,7 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
 
   return (
     <div className="bg-background/80 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-      <SurfaceCard className="w-full max-w-md p-6">
+      <Card className="w-full max-w-md p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-foreground text-xl font-bold">Add New Feed</h2>
           <Button
@@ -447,7 +447,7 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
             )}
           </form.Subscribe>
         </form>
-      </SurfaceCard>
+      </Card>
     </div>
   )
 }
