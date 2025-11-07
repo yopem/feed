@@ -4,7 +4,12 @@ import z from "zod"
 
 import { handleTRPCError } from "@/lib/api/error"
 import { createTRPCRouter, protectedProcedure } from "@/lib/api/trpc"
-import { tagTable, updateTagSchema, type SelectTag } from "@/lib/db/schema"
+import {
+  feedTagsTable,
+  tagTable,
+  updateTagSchema,
+  type SelectTag,
+} from "@/lib/db/schema"
 
 export const tagRouter = createTRPCRouter({
   create: protectedProcedure
@@ -97,7 +102,10 @@ export const tagRouter = createTRPCRouter({
           })
         }
 
-        // Delete tag (feedTags junction will cascade delete)
+        // Delete tag-feed associations first (defensive - CASCADE handles this)
+        await ctx.db.delete(feedTagsTable).where(eq(feedTagsTable.tagId, input))
+
+        // Delete tag
         await ctx.db.delete(tagTable).where(eq(tagTable.id, input))
 
         // Invalidate cache

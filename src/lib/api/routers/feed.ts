@@ -135,7 +135,12 @@ export const feedRouter = {
           })
         }
 
-        // Delete articles first (cascade)
+        // Delete feed-tag associations first (defensive - CASCADE handles this)
+        await ctx.db
+          .delete(feedTagsTable)
+          .where(eq(feedTagsTable.feedId, input))
+
+        // Delete articles
         await ctx.db.delete(articleTable).where(eq(articleTable.feedId, input))
 
         // Delete feed

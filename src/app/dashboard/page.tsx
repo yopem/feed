@@ -4,8 +4,16 @@ import { useMemo, useState } from "react"
 
 import { ArticleList } from "@/components/dashboard/article/article-list"
 import { ArticleReader } from "@/components/dashboard/article/article-reader"
-import { FeedSidebar } from "@/components/dashboard/layout/feed-sidebar"
+import { AppSidebar } from "@/components/dashboard/layout/app-sidebar"
 import ThemeSwitcher from "@/components/theme/theme-switcher"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import {
   Sheet,
   SheetContent,
@@ -13,8 +21,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import {
-  Sidebar,
-  SidebarContent,
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
@@ -36,22 +42,41 @@ export default function DashboardPage() {
     [selectedArticleId],
   )
 
+  const getFilterLabel = () => {
+    switch (filter) {
+      case "unread":
+        return "Unread"
+      case "starred":
+        return "Starred"
+      case "readLater":
+        return "Read Later"
+      default:
+        return "All Articles"
+    }
+  }
+
   return (
     <SidebarProvider>
-      <Sidebar collapsible="offcanvas">
-        <SidebarContent>
-          <FeedSidebar
-            selectedFeedId={selectedFeedId}
-            onFeedSelect={setSelectedFeedId}
-            activeFilter={filter}
-            onFilterChange={setFilter}
-          />
-        </SidebarContent>
-      </Sidebar>
+      <AppSidebar
+        selectedFeedId={selectedFeedId}
+        onFeedSelect={setSelectedFeedId}
+        activeFilter={filter}
+        onFilterChange={setFilter}
+      />
       <SidebarInset>
-        <header className="glass sticky top-0 z-10 flex h-14 items-center gap-2 px-4">
+        <header className="glass sticky top-0 z-10 flex h-14 items-center gap-4 px-4">
           <SidebarTrigger />
-          <h1 className="text-lg font-semibold">Dashboard</h1>
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{getFilterLabel()}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
           <div className="ml-auto flex items-center gap-2">
             <ThemeSwitcher />
           </div>

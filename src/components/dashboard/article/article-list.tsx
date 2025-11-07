@@ -6,7 +6,6 @@ import { FileTextIcon } from "lucide-react"
 import type { FilterType } from "@/components/dashboard/feed/feed-filter"
 import { EmptyState } from "@/components/dashboard/shared/empty-state"
 import { LoadingSkeleton } from "@/components/dashboard/shared/loading-skeleton"
-import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
 import { useTRPC } from "@/lib/trpc/client"
 import { ArticleCard } from "./article-card"
 
@@ -48,22 +47,22 @@ export function ArticleList({
   ) as { data: ArticleWithFeed[] | undefined; isLoading: boolean }
 
   return (
-    <SurfaceCard className="flex flex-1 flex-col overflow-hidden">
-      <div className="panel-header">
-        <h2 className="text-foreground text-xs leading-4 font-medium">
-          Articles
-        </h2>
+    <div className="flex h-full flex-col">
+      <div className="border-border bg-background/95 supports-[backdrop-filter]:bg-background/60 border-b px-4 py-3 backdrop-blur">
+        <h2 className="text-foreground text-sm font-semibold">Articles</h2>
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto p-3">
+      <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {isLoading ? (
           <LoadingSkeleton variant="list" count={5} />
         ) : !articles || articles.length === 0 ? (
-          <EmptyState
-            title="No articles found"
-            description="Try changing your filter or adding more feeds"
-            icon={<FileTextIcon className="h-12 w-12" />}
-          />
+          <div className="flex h-full items-center justify-center">
+            <EmptyState
+              title="No articles found"
+              description="Try changing your filter or adding more feeds"
+              icon={<FileTextIcon className="h-12 w-12" />}
+            />
+          </div>
         ) : (
           articles.map((article) => (
             <ArticleCard
@@ -84,6 +83,6 @@ export function ArticleList({
           ))
         )}
       </div>
-    </SurfaceCard>
+    </div>
   )
 }

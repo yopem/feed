@@ -40,10 +40,10 @@ export const feedTagsTable = pgTable(
   {
     feedId: text("feed_id")
       .notNull()
-      .references(() => feedTable.id),
+      .references(() => feedTable.id, { onDelete: "cascade" }),
     tagId: text("tag_id")
       .notNull()
-      .references(() => tagTable.id),
+      .references(() => tagTable.id, { onDelete: "cascade" }),
   },
   (t) => [
     primaryKey({

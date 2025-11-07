@@ -7,7 +7,7 @@ import dayjs from "dayjs"
 
 import { EmptyState } from "@/components/dashboard/shared/empty-state"
 import { LoadingSkeleton } from "@/components/dashboard/shared/loading-skeleton"
-import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
+import { Separator } from "@/components/ui/separator"
 import { useTRPC } from "@/lib/trpc/client"
 import { sanitizeHtml, stripHtml } from "@/lib/utils/html"
 import { ArticleActions } from "./article-actions"
@@ -102,10 +102,10 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl p-3 md:p-6 lg:p-8">
+        <article className="mx-auto max-w-3xl px-6 py-8 lg:px-8">
           {/* Article Header */}
-          <div className="mb-6">
-            <h1 className="text-foreground mb-4 text-3xl font-bold">
+          <header className="mb-8 space-y-4">
+            <h1 className="text-foreground text-4xl leading-tight font-bold tracking-tight lg:text-5xl">
               {article.title}
             </h1>
 
@@ -119,29 +119,34 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
                   className="h-5 w-5 rounded"
                 />
               )}
-              <span>{feed.title}</span>
-              <span>•</span>
-              <span>{dayjs(article.pubDate).format("MMM D, YYYY")}</span>
+              <span className="font-medium">{feed.title}</span>
+              <span className="text-muted-foreground/60">•</span>
+              <time dateTime={article.pubDate.toISOString()}>
+                {dayjs(article.pubDate).format("MMMM D, YYYY")}
+              </time>
             </div>
-          </div>
+
+            <Separator />
+          </header>
 
           {/* Article Image */}
           {article.imageUrl && (
-            <div className="mb-6 overflow-hidden rounded-lg">
+            <figure className="mb-8 overflow-hidden rounded-xl">
               <Image
                 src={article.imageUrl}
                 alt={article.title}
                 width={800}
-                height={400}
-                className="h-auto w-full"
+                height={450}
+                className="h-auto w-full object-cover"
+                priority
               />
-            </div>
+            </figure>
           )}
 
           {/* Article Description */}
           {article.description && (
-            <div className="mb-6">
-              <p className="text-foreground/90 text-lg leading-relaxed">
+            <div className="mb-8">
+              <p className="text-foreground/90 text-xl leading-relaxed">
                 {stripHtml(article.description)}
               </p>
             </div>
@@ -149,26 +154,34 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
 
           {/* Article Content */}
           {article.content ? (
-            <SurfaceCard className="p-6 md:p-8">
+            <div className="border-border bg-card rounded-xl border p-6 lg:p-8">
               <div
-                className="prose prose-invert prose-lg prose-headings:tracking-tight prose-headings:text-foreground prose-p:text-foreground/90 prose-a:text-primary hover:prose-a:text-primary/80 prose-strong:text-foreground prose-code:text-foreground/90 prose-pre:bg-muted prose-img:rounded-lg max-w-none"
+                className="prose prose-neutral dark:prose-invert prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-semibold prose-img:rounded-lg prose-img:shadow-md max-w-none"
                 dangerouslySetInnerHTML={{
                   __html: sanitizeHtml(article.content),
                 }}
               />
-            </SurfaceCard>
+            </div>
           ) : (
-            <SurfaceCard className="p-6 md:p-8">
-              <p className="text-muted-foreground text-center">
-                No content available. Click "Open Original" to read the full
-                article.
+            <div className="border-border bg-muted/30 rounded-xl border p-8 text-center">
+              <p className="text-muted-foreground text-base">
+                No content available. Click{" "}
+                <a
+                  href={article.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary font-medium hover:underline"
+                >
+                  Open Original
+                </a>{" "}
+                to read the full article.
               </p>
-            </SurfaceCard>
+            </div>
           )}
 
           {/* Footer Spacing */}
-          <div className="h-12" />
-        </div>
+          <div className="h-16" />
+        </article>
       </div>
     </div>
   )

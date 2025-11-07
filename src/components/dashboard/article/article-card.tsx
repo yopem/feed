@@ -9,8 +9,8 @@ import relativeTime from "dayjs/plugin/relativeTime"
 import { BookmarkIcon, CheckIcon, StarIcon } from "lucide-react"
 import { toast } from "sonner"
 
-import { SurfaceCard } from "@/components/dashboard/shared/surface-card"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { useTRPC } from "@/lib/trpc/client"
 import { cn } from "@/lib/utils"
 import { stripHtml } from "@/lib/utils/html"
@@ -95,23 +95,38 @@ export function ArticleCard({
   }
 
   return (
-    <div
-      className="relative"
+    <Card
+      className={cn(
+        "cursor-pointer gap-0 transition-all hover:shadow-md",
+        isSelected && "ring-ring bg-accent ring-2",
+      )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={() => onSelect(id)}
     >
-      <SurfaceCard
-        hover
-        onClick={() => onSelect(id)}
-        className={cn(
-          "w-full p-3 text-left",
-          isSelected && "bg-accent ring-ring ring-2",
-          !isRead && "border-primary border-l-4",
-        )}
-      >
+      <CardHeader className="space-y-0 pb-2">
+        <div className="flex items-center gap-2">
+          {feedImageUrl && (
+            <img
+              src={feedImageUrl}
+              alt={feedTitle}
+              className="h-4 w-4 rounded"
+            />
+          )}
+          <span className="text-muted-foreground truncate text-xs">
+            {feedTitle}
+          </span>
+          <span className="text-muted-foreground/60 text-xs">•</span>
+          <span className="text-muted-foreground text-xs">
+            {dayjs(pubDate).fromNow()}
+          </span>
+        </div>
+      </CardHeader>
+
+      <CardContent className="pb-2">
         <div className="flex gap-3">
           {imageUrl && (
-            <div className="bg-muted h-20 w-20 shrink-0 overflow-hidden rounded-lg">
+            <div className="bg-muted h-16 w-20 shrink-0 overflow-hidden rounded-md">
               <img
                 src={imageUrl}
                 alt={title}
@@ -120,28 +135,11 @@ export function ArticleCard({
             </div>
           )}
 
-          <div className="min-w-0 flex-1">
-            <div className="mb-1 flex items-center gap-2">
-              {feedImageUrl && (
-                <img
-                  src={feedImageUrl}
-                  alt={feedTitle}
-                  className="h-4 w-4 rounded"
-                />
-              )}
-              <span className="text-muted-foreground truncate text-xs">
-                {feedTitle}
-              </span>
-              <span className="text-muted-foreground/60 text-xs">•</span>
-              <span className="text-muted-foreground text-xs">
-                {dayjs(pubDate).fromNow()}
-              </span>
-            </div>
-
+          <div className="min-w-0 flex-1 space-y-1">
             <h3
               className={cn(
-                "mb-1 line-clamp-2 text-sm font-semibold tracking-tight",
-                isRead ? "text-muted-foreground" : "text-foreground",
+                "line-clamp-2 text-sm leading-snug font-semibold tracking-tight",
+                isRead ? "text-foreground/60" : "text-foreground",
               )}
             >
               {title}
@@ -155,26 +153,31 @@ export function ArticleCard({
             >
               {stripHtml(description)}
             </p>
-
-            <div className="mt-2 flex items-center gap-2">
-              {isStarred && (
-                <span className="text-primary" title="Starred">
-                  <StarIcon className="h-4 w-4" />
-                </span>
-              )}
-              {isReadLater && (
-                <span className="text-primary" title="Read Later">
-                  <BookmarkIcon className="h-4 w-4" />
-                </span>
-              )}
-            </div>
           </div>
         </div>
-      </SurfaceCard>
+      </CardContent>
 
-      {/* Hover Actions */}
-      {isHovered && (
-        <div className="absolute right-3 bottom-3 z-10 flex gap-1">
+      <CardFooter
+        className={cn(
+          "justify-between pt-0 pb-3 transition-all",
+          isHovered ? "flex" : "hidden",
+        )}
+      >
+        <div className="flex items-center gap-2">
+          {isStarred && (
+            <span className="text-primary" title="Starred">
+              <StarIcon className="h-3.5 w-3.5 fill-current" />
+            </span>
+          )}
+          {isReadLater && (
+            <span className="text-primary" title="Read Later">
+              <BookmarkIcon className="h-3.5 w-3.5 fill-current" />
+            </span>
+          )}
+        </div>
+
+        {/* Hover Actions */}
+        <div className="flex gap-1">
           <Button
             size="sm"
             variant={isReadLater ? "default" : "outline"}
@@ -217,7 +220,7 @@ export function ArticleCard({
             <CheckIcon className="h-3 w-3" />
           </Button>
         </div>
-      )}
-    </div>
+      </CardFooter>
+    </Card>
   )
 }
