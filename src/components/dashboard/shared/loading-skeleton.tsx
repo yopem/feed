@@ -15,7 +15,7 @@ export function LoadingSkeleton({
 
   if (variant === "card") {
     return (
-      <>
+      <div data-testid="loading-skeleton">
         {skeletons.map((i) => (
           <div
             key={i}
@@ -31,13 +31,13 @@ export function LoadingSkeleton({
             <div className="bg-muted/50 h-3 w-1/2 rounded" />
           </div>
         ))}
-      </>
+      </div>
     )
   }
 
   if (variant === "list") {
     return (
-      <>
+      <div data-testid="loading-skeleton">
         {skeletons.map((i) => (
           <div
             key={i}
@@ -53,12 +53,12 @@ export function LoadingSkeleton({
             </div>
           </div>
         ))}
-      </>
+      </div>
     )
   }
 
   return (
-    <>
+    <div data-testid="loading-skeleton">
       {skeletons.map((i) => (
         <div
           key={i}
@@ -68,6 +68,6 @@ export function LoadingSkeleton({
           )}
         />
       ))}
-    </>
+    </div>
   )
 }

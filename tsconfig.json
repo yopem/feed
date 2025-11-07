@@ -10,11 +10,20 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/test-utils/*": ["../test-utils/*"],
+      "@/test-utils": ["../test-utils"]
     },
     "target": "esnext",
     "baseUrl": "./src/"
   },
-  "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts", ".next/types/**/*.ts"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    "test-utils/**/*",
+    "__tests__/**/*"
+  ],
   "exclude": ["node_modules", ".next"]
 }

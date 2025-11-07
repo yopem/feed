@@ -14,6 +14,10 @@ node_modules
 
 # Testing
 coverage
+.env.test.local
+test-results/
+playwright-report/
+playwright/.cache/
 
 # Turbo
 .turbo
