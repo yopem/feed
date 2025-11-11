@@ -4,15 +4,20 @@ import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
   BookmarkIcon,
+  ChevronUpIcon,
   InboxIcon,
   ListIcon,
+  LogOutIcon,
+  MoonIcon,
   MoreHorizontalIcon,
   PencilIcon,
   PlusIcon,
   RssIcon,
   StarIcon,
+  SunIcon,
   Trash2Icon,
 } from "lucide-react"
+import { useTheme } from "next-themes"
 import { parseAsString, useQueryState } from "nuqs"
 
 import { AddFeedDialog } from "@/components/feed/add-feed-dialog"
@@ -30,11 +35,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -42,6 +49,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { Skeleton } from "@/components/ui/skeleton"
+import { logout } from "@/lib/auth/logout"
 import { useTRPC } from "@/lib/trpc/client"
 import { cn } from "@/lib/utils"
 
@@ -118,6 +127,12 @@ export function AppSidebar() {
   const { data: statistics } = useQuery(trpc.feed.statistics.queryOptions())
 
   const { data: tags } = useQuery(trpc.tag.all.queryOptions())
+
+  const { data: user, isLoading: userLoading } = useQuery(
+    trpc.user.getCurrentUser.queryOptions(),
+  )
+
+  const { theme, setTheme } = useTheme()
 
   const selectedTag = tagSlug
     ? tags?.find((t) => t.id === tagSlug || t.name === tagSlug)
@@ -308,7 +323,8 @@ export function AppSidebar() {
                               <DropdownMenuContent
                                 align="end"
                                 side="bottom"
-                                sideOffset={4}
+                                className="w-48"
+                                sideOffset={8}
                               >
                                 <DropdownMenuItem
                                   onClick={(e) => {
@@ -319,10 +335,12 @@ export function AppSidebar() {
                                       description: tag.description ?? undefined,
                                     })
                                   }}
+                                  className="cursor-pointer py-2.5"
                                 >
                                   <PencilIcon className="h-4 w-4" />
-                                  <span>Edit</span>
+                                  <span>Edit tag</span>
                                 </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   variant="destructive"
                                   onClick={(e) => {
@@ -332,9 +350,10 @@ export function AppSidebar() {
                                       name: tag.name,
                                     })
                                   }}
+                                  className="cursor-pointer py-2.5"
                                 >
                                   <Trash2Icon className="h-4 w-4" />
-                                  <span>Delete</span>
+                                  <span>Delete tag</span>
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -449,7 +468,8 @@ export function AppSidebar() {
                               <DropdownMenuContent
                                 align="end"
                                 side="bottom"
-                                sideOffset={4}
+                                className="w-48"
+                                sideOffset={8}
                               >
                                 <DropdownMenuItem
                                   onClick={(e) => {
@@ -470,10 +490,12 @@ export function AppSidebar() {
                                       })
                                     }
                                   }}
+                                  className="cursor-pointer py-2.5"
                                 >
                                   <PencilIcon className="h-4 w-4" />
-                                  <span>Edit</span>
+                                  <span>Edit feed</span>
                                 </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   variant="destructive"
                                   onClick={(e) => {
@@ -483,9 +505,10 @@ export function AppSidebar() {
                                       title: feed.title,
                                     })
                                   }}
+                                  className="cursor-pointer py-2.5"
                                 >
                                   <Trash2Icon className="h-4 w-4" />
-                                  <span>Delete</span>
+                                  <span>Delete feed</span>
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -499,6 +522,100 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
+
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              {userLoading ? (
+                <div className="flex items-center gap-3 px-2 py-2">
+                  <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+                  <div className="flex flex-1 flex-col gap-1.5">
+                    <Skeleton className="h-3.5 w-24" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                </div>
+              ) : user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton
+                      size="lg"
+                      className="data-[state=open]:bg-accent data-[state=open]:text-accent-foreground hover:bg-accent/50 h-auto w-full py-2.5 transition-colors"
+                    >
+                      <Avatar className="border-border/50 h-10 w-10 shrink-0 border-2">
+                        <AvatarImage src={user.image ?? undefined} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                          {user.username.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+                        <span className="truncate text-sm leading-tight font-semibold">
+                          {user.name ?? user.username}
+                        </span>
+                        <span className="text-muted-foreground truncate text-xs leading-tight">
+                          {user.email}
+                        </span>
+                      </div>
+                      <ChevronUpIcon className="text-foreground ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                    </SidebarMenuButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    side="top"
+                    className="w-64"
+                    sideOffset={8}
+                  >
+                    <div className="flex items-start gap-3 px-2 py-3">
+                      <Avatar className="border-border/50 h-10 w-10 shrink-0 border-2">
+                        <AvatarImage src={user.image ?? undefined} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                          {user.username.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <p className="truncate text-sm font-semibold">
+                          {user.name ?? user.username}
+                        </p>
+                        <p className="text-muted-foreground truncate text-xs">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() =>
+                        setTheme(theme === "dark" ? "light" : "dark")
+                      }
+                      className="cursor-pointer py-2.5"
+                    >
+                      {theme === "dark" ? (
+                        <SunIcon className="h-4 w-4" />
+                      ) : (
+                        <MoonIcon className="h-4 w-4" />
+                      )}
+                      <span>
+                        {theme === "dark"
+                          ? "Switch to light mode"
+                          : "Switch to dark mode"}
+                      </span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <form action={logout} className="w-full">
+                        <button
+                          type="submit"
+                          className="flex w-full cursor-pointer items-center gap-2 py-2.5"
+                        >
+                          <LogOutIcon className="h-4 w-4" />
+                          <span>Log out</span>
+                        </button>
+                      </form>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
       </Sidebar>
 
       <AddFeedDialog
