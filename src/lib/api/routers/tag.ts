@@ -72,7 +72,7 @@ export const tagRouter = createTRPCRouter({
           .where(eq(tagTable.id, input.id))
           .returning()
 
-        await ctx.redis.invalidatePattern(`feed:tags:*:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`feed:tags:user:${ctx.session.id}`)
         await ctx.redis.invalidatePattern(`feed:tag:*:user:${ctx.session.id}`)
         await ctx.redis.invalidatePattern(`feed:feeds:*:user:${ctx.session.id}`)
         await ctx.redis.invalidatePattern(`feed:feed:*:user:${ctx.session.id}`)
@@ -120,6 +120,7 @@ export const tagRouter = createTRPCRouter({
           .set({ status: "deleted", updatedAt: new Date() })
           .where(eq(tagTable.id, input))
 
+        await ctx.redis.invalidatePattern(`feed:tags:user:${ctx.session.id}`)
         await ctx.redis.invalidatePattern(`feed:tags:*:user:${ctx.session.id}`)
         await ctx.redis.invalidatePattern(`feed:tag:*:user:${ctx.session.id}`)
         await ctx.redis.invalidatePattern(`feed:feeds:*:user:${ctx.session.id}`)

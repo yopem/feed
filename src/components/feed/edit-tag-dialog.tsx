@@ -60,10 +60,10 @@ export function EditTagDialog({
   const updateTag = useMutation(
     trpc.tag.update.mutationOptions({
       onSuccess: async () => {
+        toast.success("Tag updated successfully")
         await queryClient.invalidateQueries(trpc.tag.pathFilter())
         await queryClient.invalidateQueries(trpc.feed.pathFilter())
         onClose()
-        toast.success("Tag updated successfully")
       },
       onError: (err: { message: string }) => {
         toast.error(err.message || "Failed to update tag")

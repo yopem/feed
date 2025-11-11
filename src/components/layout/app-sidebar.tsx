@@ -547,6 +547,11 @@ export function AppSidebar() {
           onClose={() => setDeletingTag(null)}
           tagId={deletingTag.id}
           tagName={deletingTag.name}
+          onDeleteSuccess={() => {
+            if (selectedTag?.id === deletingTag.id) {
+              void setTagSlug(null)
+            }
+          }}
         />
       )}
     </>

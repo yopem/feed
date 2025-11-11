@@ -20,6 +20,7 @@ interface DeleteTagDialogProps {
   onClose: () => void
   tagId: string
   tagName: string
+  onDeleteSuccess?: () => void
 }
 
 export function DeleteTagDialog({
@@ -27,6 +28,7 @@ export function DeleteTagDialog({
   onClose,
   tagId,
   tagName,
+  onDeleteSuccess,
 }: DeleteTagDialogProps) {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
@@ -34,8 +36,9 @@ export function DeleteTagDialog({
   const deleteTag = useMutation(
     trpc.tag.delete.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.tag.pathFilter())
+        await queryClient.invalidateQueries(trpc.tag.all.queryOptions())
         await queryClient.invalidateQueries(trpc.feed.pathFilter())
+        onDeleteSuccess?.()
         onClose()
         toast.success("Tag deleted successfully")
       },

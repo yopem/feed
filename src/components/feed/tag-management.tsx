@@ -68,7 +68,8 @@ export function TagManagement() {
   const deleteTag = useMutation(
     trpc.tag.delete.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.tag.pathFilter())
+        await queryClient.refetchQueries(trpc.tag.all.queryOptions())
+        await queryClient.refetchQueries(trpc.feed.pathFilter())
         setDeletingTag(null)
         toast.success("Tag deleted successfully")
       },
