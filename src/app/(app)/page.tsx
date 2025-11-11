@@ -1,6 +1,7 @@
 "use client"
 
 import { Suspense, useMemo } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { parseAsString, useQueryState } from "nuqs"
 
 import { ArticleList } from "@/components/article/article-list"
@@ -29,19 +30,38 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useTRPC } from "@/lib/trpc/client"
 
 function DashboardContent() {
   const [filter] = useQueryState("filter", parseAsString.withDefault("all"))
+  const [feedSlug] = useQueryState("feed", parseAsString.withDefault(""))
+  const [tagSlug] = useQueryState("tag", parseAsString)
   const [selectedArticleId, setSelectedArticleId] = useQueryState(
     "article",
     parseAsString,
   )
 
+  const trpc = useTRPC()
   const isMobile = useIsMobile()
   const isReaderOpen = useMemo(
     () => Boolean(selectedArticleId),
     [selectedArticleId],
   )
+
+  const { data: feeds } = useQuery(
+    trpc.feed.all.queryOptions({
+      page: 1,
+      perPage: 100,
+    }),
+  )
+
+  const { data: tags } = useQuery(trpc.tag.all.queryOptions())
+
+  const selectedFeed = feedSlug ? feeds?.find((f) => f.slug === feedSlug) : null
+
+  const selectedTag = tagSlug
+    ? tags?.find((t) => t.id === tagSlug || t.name === tagSlug)
+    : null
 
   const getFilterLabel = () => {
     switch (filter) {
@@ -56,6 +76,21 @@ function DashboardContent() {
     }
   }
 
+  const buildBreadcrumbUrl = (params: {
+    tag?: string | null
+    feed?: string | null
+    filter?: string
+  }) => {
+    const searchParams = new URLSearchParams()
+    if (params.tag) searchParams.set("tag", params.tag)
+    if (params.feed) searchParams.set("feed", params.feed)
+    if (params.filter && params.filter !== "all")
+      searchParams.set("filter", params.filter)
+
+    const query = searchParams.toString()
+    return query ? `/?${query}` : "/"
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -68,6 +103,37 @@ function DashboardContent() {
                 <BreadcrumbLink href="/">Home</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
+
+              {selectedTag && (
+                <>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink
+                      href={buildBreadcrumbUrl({ tag: selectedTag.id, filter })}
+                    >
+                      {selectedTag.name}
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                </>
+              )}
+
+              {selectedFeed && (
+                <>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink
+                      href={buildBreadcrumbUrl({
+                        tag: selectedTag?.id,
+                        feed: selectedFeed.slug,
+                        filter,
+                      })}
+                    >
+                      {selectedFeed.title}
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                </>
+              )}
+
               <BreadcrumbItem>
                 <BreadcrumbPage>{getFilterLabel()}</BreadcrumbPage>
               </BreadcrumbItem>
