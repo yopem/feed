@@ -14,7 +14,7 @@ export default function FinalCTASection() {
     <section className="bg-muted/30 py-16 sm:py-20 md:py-28">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-3xl">
-          <div className="bg-background border-foreground relative overflow-hidden rounded-xl border-2 p-6 text-center shadow-[6px_6px_0_0_hsl(var(--foreground))] sm:rounded-2xl sm:p-8 md:p-12">
+          <div className="bg-background border-border relative overflow-hidden rounded-xl border-2 p-6 text-center shadow-[6px_6px_0_0_hsl(var(--foreground))] sm:rounded-2xl sm:p-8 md:p-12">
             <div className="relative">
               <h2 className="text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
                 Ready to Transform Your Reading?

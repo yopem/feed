@@ -12,7 +12,7 @@ import { siteDescription, siteTagline, siteTitle } from "@/lib/env/client"
  */
 export default function HeroSection() {
   return (
-    <section className="border-foreground bg-background relative overflow-hidden border-b-2">
+    <section className="border-border bg-background relative overflow-hidden border-b-2">
       <div className="container mx-auto px-4 py-16 sm:py-24 md:py-32 lg:py-40">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl">

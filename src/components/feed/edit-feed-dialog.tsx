@@ -315,7 +315,7 @@ export function EditFeedDialog({
                 />
 
                 {showDropdown && tagSearchQuery && (
-                  <div className="bg-popover text-popover-foreground border-foreground absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border-2 shadow-[2px_2px_0_0_hsl(var(--foreground))]">
+                  <div className="bg-popover text-popover-foreground border-border absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border-2 shadow-[2px_2px_0_0_hsl(var(--foreground))]">
                     {filteredTags.length > 0 ? (
                       <>
                         {filteredTags
@@ -336,7 +336,7 @@ export function EditFeedDialog({
                         {!exactMatch && (
                           <button
                             type="button"
-                            className="hover:bg-accent border-border block w-full border-t px-3 py-2 text-left text-sm transition-colors"
+                            className="hover:bg-accent border-border block w-full border-t-2 px-3 py-2 text-left text-sm transition-colors"
                             onMouseDown={(e) => {
                               e.preventDefault()
                               handleCreateNewTag()

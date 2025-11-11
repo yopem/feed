@@ -110,7 +110,7 @@ export function TagManagement() {
   return (
     <>
       <Card className="flex flex-col overflow-hidden">
-        <div className="border-b-2 px-4 py-3">
+        <div className="border-border border-b-2 px-4 py-3">
           <div className="flex items-center justify-between">
             <h2 className="text-foreground text-sm leading-5 font-medium">
               Tags

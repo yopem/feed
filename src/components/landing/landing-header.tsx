@@ -11,7 +11,7 @@ import { siteTitle } from "@/lib/env/client"
  */
 export default function LandingHeader() {
   return (
-    <header className="bg-background/95 supports-backdrop-filter:bg-background/60 sticky top-0 z-10 w-full border-b-2 backdrop-blur">
+    <header className="bg-background border-border sticky top-0 z-10 w-full border-b-2">
       <div className="relative container flex h-14 items-center justify-center px-4 sm:h-16 md:px-8">
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center gap-2" aria-label="Home">

@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "border-foreground inline-flex shrink-0 items-center justify-center gap-2 rounded border-2 text-sm font-medium whitespace-nowrap transition-all duration-200 outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "border-border inline-flex shrink-0 items-center justify-center gap-2 rounded border-2 text-sm font-medium whitespace-nowrap transition-all duration-200 outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -18,7 +18,7 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary text-secondary-foreground shadow-[4px_4px_0_0_hsl(var(--foreground))] hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none",
         ghost:
-          "hover:bg-accent hover:text-accent-foreground hover:border-foreground border-transparent",
+          "hover:bg-accent hover:text-accent-foreground hover:border-border border-transparent",
         link: "text-primary border-transparent underline-offset-4 hover:underline",
       },
       size: {

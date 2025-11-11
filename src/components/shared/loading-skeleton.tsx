@@ -21,7 +21,7 @@ export function LoadingSkeleton({
             key={i}
             className={cn(
               "bg-card/50",
-              "border-foreground border-2 shadow-[4px_4px_0_0_hsl(var(--foreground))]",
+              "border-border border-2 shadow-[4px_4px_0_0_hsl(var(--foreground))]",
               "rounded-xl",
               "animate-pulse p-4",
               className,

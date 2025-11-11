@@ -133,7 +133,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="glass sticky top-0 z-10 border-b px-4 py-3">
+      <header className="glass border-border sticky top-0 z-10 border-b-2 px-4 py-3">
         <div className="mx-auto flex max-w-6xl items-center gap-4">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/">
@@ -164,7 +164,7 @@ export default async function ArticlePage({ params }: PageProps) {
         </div>
       </header>
 
-      <div className="border-b px-4 py-2">
+      <div className="border-border border-b-2 px-4 py-2">
         <div className="mx-auto max-w-4xl">
           <ArticleActions
             articleId={article.id}
@@ -226,7 +226,7 @@ export default async function ArticlePage({ params }: PageProps) {
           )}
 
           {article.content ? (
-            <div className="border-border bg-card rounded-xl border p-6 lg:p-8">
+            <div className="border-border bg-card rounded-xl border-2 p-6 lg:p-8">
               <div
                 className="prose prose-neutral dark:prose-invert prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-semibold prose-img:rounded-lg prose-img:shadow-md max-w-none"
                 dangerouslySetInnerHTML={{
@@ -235,7 +235,7 @@ export default async function ArticlePage({ params }: PageProps) {
               />
             </div>
           ) : (
-            <div className="border-border bg-muted/30 rounded-xl border p-8 text-center">
+            <div className="border-border bg-muted/30 rounded-xl border-2 p-8 text-center">
               <p className="text-muted-foreground text-base">
                 No content available. Click{" "}
                 <a
