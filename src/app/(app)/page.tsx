@@ -5,6 +5,7 @@ import { parseAsString, useQueryState } from "nuqs"
 
 import { ArticleList } from "@/components/article/article-list"
 import { ArticleReader } from "@/components/article/article-reader"
+import LogoutButton from "@/components/auth/logout-button"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import ThemeSwitcher from "@/components/theme/theme-switcher"
@@ -74,6 +75,7 @@ function DashboardContent() {
           </Breadcrumb>
           <div className="ml-auto flex items-center gap-2">
             <ThemeSwitcher />
+            <LogoutButton />
           </div>
         </header>
 

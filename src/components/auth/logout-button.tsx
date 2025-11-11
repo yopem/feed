@@ -1,17 +1,21 @@
 import { LogOutIcon as LogoutIcon } from "lucide-react"
 
+import { Button } from "@/components/ui/button"
 import { logout } from "@/lib/auth/logout"
 
 const LogoutButton = () => {
   return (
     <form action={logout}>
-      <button
-        aria-label="Keluar"
-        className="inline-flex cursor-pointer flex-row"
+      <Button
+        type="submit"
+        variant="ghost"
+        size="sm"
+        aria-label="Logout"
+        className="gap-2"
       >
-        <LogoutIcon name="LogOut" className="mr-2" />
-        Keluar
-      </button>
+        <LogoutIcon className="size-4" />
+        <span className="hidden sm:inline">Logout</span>
+      </Button>
     </form>
   )
 }
