@@ -292,6 +292,7 @@ export function AppSidebar() {
                             <DropdownMenu modal={false}>
                               <DropdownMenuTrigger asChild>
                                 <button
+                                  type="button"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                   }}
@@ -432,6 +433,7 @@ export function AppSidebar() {
                             <DropdownMenu modal={false}>
                               <DropdownMenuTrigger asChild>
                                 <button
+                                  type="button"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                   }}
