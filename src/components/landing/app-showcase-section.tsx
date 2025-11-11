@@ -1,4 +1,4 @@
-import { Check } from "lucide-react"
+import { CheckIcon } from "lucide-react"
 
 /**
  * App Showcase section for the landing page
@@ -38,7 +38,7 @@ export default function AppShowcaseSection() {
                     className="flex items-start gap-2 sm:gap-3"
                   >
                     <div className="bg-primary/10 mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full sm:h-5 sm:w-5">
-                      <Check
+                      <CheckIcon
                         className="text-primary h-2.5 w-2.5 sm:h-3 sm:w-3"
                         aria-hidden="true"
                       />

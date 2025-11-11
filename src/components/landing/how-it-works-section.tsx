@@ -1,4 +1,4 @@
-import { BookmarkPlus, Rss, Sparkles } from "lucide-react"
+import { BookmarkPlusIcon, RssIcon, SparklesIcon } from "lucide-react"
 
 /**
  * How It Works section for the landing page
@@ -11,21 +11,21 @@ export default function HowItWorksSection() {
   const steps = [
     {
       number: "01",
-      icon: Rss,
+      icon: RssIcon,
       title: "Add Your Feeds",
       description:
         "Paste any blog or website URL and we'll automatically detect their RSS feed. No technical knowledge required—if they publish content, we'll find it.",
     },
     {
       number: "02",
-      icon: BookmarkPlus,
+      icon: BookmarkPlusIcon,
       title: "Organize with Tags",
       description:
         "Create tags like 'Tech News', 'Must Read', or 'Weekend Reading'. Build a system that matches how you think and makes finding content effortless.",
     },
     {
       number: "03",
-      icon: Sparkles,
+      icon: SparklesIcon,
       title: "Read and Enjoy",
       description:
         "Dive into your personalized reading experience. No ads, no distractions—just the content you care about, presented beautifully and ready whenever you are.",

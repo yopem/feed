@@ -1,4 +1,4 @@
-import { LogOutIcon as LogoutIcon } from "lucide-react"
+import { LogOutIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { logout } from "@/lib/auth/logout"
@@ -13,7 +13,7 @@ const LogoutButton = () => {
         aria-label="Logout"
         className="gap-2"
       >
-        <LogoutIcon className="size-4" />
+        <LogOutIcon className="size-4" />
         <span className="hidden sm:inline">Logout</span>
       </Button>
     </form>
