@@ -57,7 +57,7 @@ export function ScrollToTopButton() {
       onClick={scrollToTop}
       onKeyDown={handleKeyDown}
       size="icon"
-      className="neo-shadow-lg fixed right-6 bottom-6 z-50 h-12 w-12 rounded-full transition-opacity duration-200"
+      className="fixed right-6 bottom-6 z-50 h-12 w-12 rounded-full shadow-[6px_6px_0_0_hsl(var(--foreground))] transition-opacity duration-200"
       aria-label="Scroll to top"
       title="Scroll to top"
     >

@@ -65,9 +65,12 @@ export default function FeaturesSection() {
             {features.map((feature) => {
               const Icon = feature.icon
               return (
-                <Card key={feature.title} className="neo-interactive">
+                <Card
+                  key={feature.title}
+                  className="transition-all duration-200 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none motion-reduce:transition-none motion-reduce:hover:transform-none"
+                >
                   <CardHeader className="space-y-3 p-5 sm:space-y-4 sm:p-6">
-                    <div className="bg-muted neo-border inline-flex h-10 w-10 items-center justify-center rounded-lg sm:h-12 sm:w-12">
+                    <div className="bg-muted border-foreground inline-flex h-10 w-10 items-center justify-center rounded-lg border-2 sm:h-12 sm:w-12">
                       <Icon
                         className="text-foreground h-5 w-5 sm:h-6 sm:w-6"
                         aria-hidden="true"

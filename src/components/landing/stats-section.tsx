@@ -42,7 +42,7 @@ export default function StatsSection() {
                   key={benefit.label}
                   className="flex flex-col items-center text-center"
                 >
-                  <div className="bg-muted neo-border mb-3 flex h-10 w-10 items-center justify-center rounded-lg sm:mb-4 sm:h-12 sm:w-12">
+                  <div className="bg-muted border-foreground mb-3 flex h-10 w-10 items-center justify-center rounded-lg border-2 sm:mb-4 sm:h-12 sm:w-12">
                     <Icon
                       className="text-foreground h-5 w-5 sm:h-6 sm:w-6"
                       aria-hidden="true"

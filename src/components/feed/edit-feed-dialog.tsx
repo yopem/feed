@@ -289,7 +289,7 @@ export function EditFeedDialog({
                     <Badge
                       key={tag.id}
                       variant="default"
-                      className="neo-interactive cursor-pointer"
+                      className="cursor-pointer transition-all duration-200 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none motion-reduce:transition-none motion-reduce:hover:transform-none"
                       onClick={() => removeTag(tag.id)}
                     >
                       {tag.name}
@@ -315,7 +315,7 @@ export function EditFeedDialog({
                 />
 
                 {showDropdown && tagSearchQuery && (
-                  <div className="bg-popover text-popover-foreground neo-border neo-shadow-sm absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md">
+                  <div className="bg-popover text-popover-foreground border-foreground absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border-2 shadow-[2px_2px_0_0_hsl(var(--foreground))]">
                     {filteredTags.length > 0 ? (
                       <>
                         {filteredTags

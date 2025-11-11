@@ -59,13 +59,13 @@ export default function HowItWorksSection() {
                 <div key={step.number} className="relative">
                   <div className="flex flex-col items-center text-center">
                     <div className="relative mb-4 sm:mb-6">
-                      <div className="bg-background neo-border neo-shadow-sm flex h-14 w-14 items-center justify-center rounded-2xl sm:h-16 sm:w-16">
+                      <div className="bg-background border-foreground flex h-14 w-14 items-center justify-center rounded-2xl border-2 shadow-[2px_2px_0_0_hsl(var(--foreground))] sm:h-16 sm:w-16">
                         <Icon
                           className="text-foreground h-6 w-6 sm:h-7 sm:w-7"
                           aria-hidden="true"
                         />
                       </div>
-                      <div className="bg-muted text-muted-foreground neo-border absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold sm:h-6 sm:w-6">
+                      <div className="bg-muted text-muted-foreground border-foreground absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 text-xs font-bold sm:h-6 sm:w-6">
                         {step.number}
                       </div>
                     </div>
