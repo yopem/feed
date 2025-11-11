@@ -139,7 +139,6 @@ function DashboardContent() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <h2 className="text-foreground text-sm font-semibold">Articles</h2>
           <div className="ml-auto flex items-center gap-2">
             <ThemeSwitcher />
             <LogoutButton />
