@@ -60,7 +60,7 @@ function DashboardContent() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="glass border-border sticky top-0 z-10 flex h-14 items-center gap-4 border-b-2 px-4">
+        <header className="bg-background border-border sticky top-0 z-10 flex h-14 items-center gap-4 border-b-2 px-4">
           <SidebarTrigger />
           <Breadcrumb>
             <BreadcrumbList>
@@ -95,8 +95,8 @@ function DashboardContent() {
               side={isMobile ? "bottom" : "right"}
               className={
                 isMobile
-                  ? "glass max-h-[85vh] overflow-hidden rounded-t-xl border-t"
-                  : "glass !w-[70vw] overflow-hidden sm:!max-w-none"
+                  ? "bg-background max-h-[85vh] overflow-hidden rounded-t-xl border-t-2"
+                  : "bg-background !w-[70vw] overflow-hidden sm:!max-w-none"
               }
             >
               <SheetHeader>

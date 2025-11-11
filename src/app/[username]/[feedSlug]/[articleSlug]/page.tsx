@@ -133,7 +133,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="glass border-border sticky top-0 z-10 border-b-2 px-4 py-3">
+      <header className="bg-background border-border sticky top-0 z-10 border-b-2 px-4 py-3">
         <div className="mx-auto flex max-w-6xl items-center gap-4">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/">

@@ -52,35 +52,35 @@ export default function AppShowcaseSection() {
             </div>
 
             <div className="relative">
-              <div className="bg-muted border-border relative overflow-hidden rounded-lg border-2 shadow-[6px_6px_0_0_hsl(var(--foreground))] sm:rounded-xl">
-                <div className="border-border border-2 border-b p-2 sm:p-3">
-                  <div className="flex items-center gap-1 sm:gap-1.5">
-                    <div className="h-2 w-2 rounded-full bg-red-500/60 sm:h-2.5 sm:w-2.5" />
-                    <div className="h-2 w-2 rounded-full bg-yellow-500/60 sm:h-2.5 sm:w-2.5" />
-                    <div className="h-2 w-2 rounded-full bg-green-500/60 sm:h-2.5 sm:w-2.5" />
+              <div className="bg-card border-border relative overflow-hidden rounded-lg border-4 shadow-[8px_8px_0_0_hsl(var(--foreground))] sm:rounded-xl">
+                <div className="bg-foreground/5 border-border flex items-center justify-between border-b-4 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full border-2 border-red-500 bg-red-500" />
+                    <div className="h-3 w-3 rounded-full border-2 border-yellow-500 bg-yellow-500" />
+                    <div className="h-3 w-3 rounded-full border-2 border-green-500 bg-green-500" />
                   </div>
                 </div>
 
-                <div className="space-y-3 p-4 sm:space-y-4 sm:p-6">
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <div className="bg-muted-foreground/20 h-2.5 w-16 rounded sm:h-3 sm:w-20" />
-                    <div className="bg-foreground/90 h-4 w-3/4 rounded sm:h-5" />
-                    <div className="bg-muted-foreground/40 h-2 w-full rounded sm:h-2.5" />
-                    <div className="bg-muted-foreground/40 h-2 w-5/6 rounded sm:h-2.5" />
-                  </div>
-
-                  <div className="border-border border-2 border-t pt-3 sm:pt-4">
-                    <div className="space-y-2 sm:space-y-3">
-                      {[1, 2, 3].map((i) => (
+                <div className="space-y-4 p-6 sm:p-8">
+                  <div className="pt-4">
+                    <div className="space-y-3">
+                      {[
+                        { color: "bg-blue-500" },
+                        { color: "bg-green-500" },
+                        { color: "bg-purple-500" },
+                        { color: "bg-yellow-500" },
+                        { color: "bg-red-500" },
+                      ].map((item, i) => (
                         <div
                           key={i}
-                          className="hover:bg-background/50 border-border flex gap-2 rounded-lg border-2 p-2 transition-colors sm:gap-3 sm:p-3"
+                          className="bg-background border-border group flex items-center gap-3 rounded-lg border-2 p-3 transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none"
                         >
-                          <div className="bg-muted h-12 w-12 shrink-0 rounded sm:h-14 sm:w-14" />
-                          <div className="flex-1 space-y-1.5 sm:space-y-2">
-                            <div className="bg-foreground/70 h-2.5 w-full rounded sm:h-3" />
-                            <div className="bg-muted-foreground/30 h-1.5 w-3/4 rounded sm:h-2" />
-                            <div className="bg-muted-foreground/30 h-1.5 w-1/2 rounded sm:h-2" />
+                          <div
+                            className={`${item.color} border-foreground h-12 w-12 shrink-0 rounded-md border-2`}
+                          />
+                          <div className="flex-1 space-y-2">
+                            <div className="bg-foreground border-foreground h-3 w-full rounded border-2" />
+                            <div className="bg-muted-foreground/40 border-border h-2 w-3/4 rounded border-2" />
                           </div>
                         </div>
                       ))}
