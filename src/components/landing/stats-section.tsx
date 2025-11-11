@@ -31,7 +31,7 @@ export default function StatsSection() {
   ]
 
   return (
-    <section className="border-b py-12 sm:py-16 md:py-20">
+    <section className="border-b-2 py-12 sm:py-16 md:py-20">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-5xl">
           <div className="grid grid-cols-2 gap-6 sm:gap-8 lg:grid-cols-4">
@@ -42,16 +42,16 @@ export default function StatsSection() {
                   key={benefit.label}
                   className="flex flex-col items-center text-center"
                 >
-                  <div className="bg-muted mb-3 flex h-10 w-10 items-center justify-center rounded-lg sm:mb-4 sm:h-12 sm:w-12">
+                  <div className="bg-muted neo-border mb-3 flex h-10 w-10 items-center justify-center rounded-lg sm:mb-4 sm:h-12 sm:w-12">
                     <Icon
                       className="text-foreground h-5 w-5 sm:h-6 sm:w-6"
                       aria-hidden="true"
                     />
                   </div>
-                  <div className="text-xl font-bold sm:text-2xl lg:text-3xl">
+                  <div className="text-xl font-extrabold sm:text-2xl lg:text-3xl">
                     {benefit.value}
                   </div>
-                  <div className="text-muted-foreground mt-1 text-xs sm:text-sm">
+                  <div className="text-muted-foreground mt-1 text-xs font-medium sm:text-sm">
                     {benefit.label}
                   </div>
                 </div>

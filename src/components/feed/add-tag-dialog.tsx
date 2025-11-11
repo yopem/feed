@@ -66,7 +66,7 @@ export function AddTagDialog({ isOpen, onClose }: AddTagDialogProps) {
   if (!isOpen) return null
 
   return (
-    <div className="bg-background/80 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div className="bg-background/95 fixed inset-0 z-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-foreground text-xl font-bold">Add New Tag</h2>

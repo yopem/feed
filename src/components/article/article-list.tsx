@@ -77,7 +77,7 @@ export function ArticleList() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-border bg-background/95 supports-[backdrop-filter]:bg-background/60 border-b px-4 py-3 backdrop-blur">
+      <div className="bg-background/95 border-b-2 px-4 py-3">
         <h2 className="text-foreground text-sm font-semibold">Articles</h2>
       </div>
 

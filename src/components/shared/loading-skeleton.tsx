@@ -20,9 +20,9 @@ export function LoadingSkeleton({
           <div
             key={i}
             className={cn(
-              "bg-card/50 backdrop-blur-md",
-              "border-border border",
-              "rounded-xl shadow-lg",
+              "bg-card/50",
+              "neo-border neo-shadow",
+              "rounded-xl",
               "animate-pulse p-4",
               className,
             )}

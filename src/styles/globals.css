@@ -44,7 +44,7 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.25rem;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -121,35 +121,68 @@
   }
 }
 
-/* Glass utility classes to standardize glassmorphism surfaces */
+/* Neobrutalism utility classes */
 @layer utilities {
-  .glass {
-    /* slightly stronger translucency for visibility */
-    background: color-mix(in oklab, var(--card) 70%, transparent);
-    border: 1px solid var(--border);
-    -webkit-backdrop-filter: blur(16px) saturate(110%);
-    backdrop-filter: blur(16px) saturate(110%);
+  /* Border utilities */
+  .neo-border {
+    border-width: 3px;
+    border-style: solid;
+    border-color: var(--foreground);
   }
 
-  .glass-hover:hover {
-    background: color-mix(in oklab, var(--card) 78%, transparent);
-    transform: translateZ(0) scale(1.02);
-    box-shadow: 0 12px 24px -12px color-mix(in oklab, var(--foreground) 14%, transparent);
+  .neo-border-thin {
+    border-width: 2px;
+    border-style: solid;
+    border-color: var(--foreground);
   }
 
-  /* Reduce motion/transparency preferences */
-  @media (prefers-reduced-transparency: reduce) {
-    .glass {
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-      background: color-mix(in oklab, var(--card) 92%, transparent);
-    }
+  /* Shadow utilities - offset shadows for depth */
+  .neo-shadow {
+    box-shadow: 4px 4px 0 0 var(--foreground);
   }
 
-  /* Fallback when backdrop-filter unsupported */
-  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    .glass {
-      background: color-mix(in oklab, var(--card) 92%, transparent);
+  .neo-shadow-sm {
+    box-shadow: 2px 2px 0 0 var(--foreground);
+  }
+
+  .neo-shadow-lg {
+    box-shadow: 6px 6px 0 0 var(--foreground);
+  }
+
+  /* Card utility - combines border and shadow */
+  .neo-card {
+    border-width: 2px;
+    border-style: solid;
+    border-color: var(--foreground);
+    box-shadow: 4px 4px 0 0 var(--foreground);
+    background-color: var(--card);
+    border-radius: var(--radius-md);
+  }
+
+  /* Interactive elements with hover animation */
+  .neo-interactive {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+  }
+
+  .neo-interactive:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 0 var(--foreground);
+  }
+
+  .neo-interactive:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 0 var(--foreground);
+  }
+
+  /* Respect reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .neo-interactive,
+    .neo-interactive:hover,
+    .neo-interactive:active {
+      transform: none;
+      transition: none;
     }
   }
 }

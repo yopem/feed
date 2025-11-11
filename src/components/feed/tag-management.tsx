@@ -110,7 +110,7 @@ export function TagManagement() {
   return (
     <>
       <Card className="flex flex-col overflow-hidden">
-        <div className="border-b px-4 py-3">
+        <div className="border-b-2 px-4 py-3">
           <div className="flex items-center justify-between">
             <h2 className="text-foreground text-sm leading-5 font-medium">
               Tags
@@ -284,7 +284,7 @@ function TagItem({
   }
 
   return (
-    <Card className="group hover:bg-accent cursor-pointer p-3 transition-all hover:scale-[1.02] hover:shadow-xl">
+    <Card className="neo-interactive group cursor-pointer p-3">
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <h4 className="text-foreground truncate text-sm font-semibold">

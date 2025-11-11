@@ -70,7 +70,7 @@ export function ArticleActions({
   }
 
   return (
-    <div className="flex items-center justify-between border-b px-4 py-3 md:px-6">
+    <div className="flex items-center justify-between border-b-2 px-4 py-3 md:px-6">
       <div className="flex items-center gap-1.5">
         <Button
           variant="ghost"

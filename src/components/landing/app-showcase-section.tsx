@@ -15,7 +15,7 @@ export default function AppShowcaseSection() {
   ]
 
   return (
-    <section className="border-b py-16 sm:py-20 md:py-28">
+    <section className="border-b-2 py-16 sm:py-20 md:py-28">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-6xl">
           <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16">
@@ -37,7 +37,7 @@ export default function AppShowcaseSection() {
                     key={highlight}
                     className="flex items-start gap-2 sm:gap-3"
                   >
-                    <div className="bg-primary/10 mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full sm:h-5 sm:w-5">
+                    <div className="bg-primary/10 neo-border-thin mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full sm:h-5 sm:w-5">
                       <CheckIcon
                         className="text-primary h-2.5 w-2.5 sm:h-3 sm:w-3"
                         aria-hidden="true"
@@ -52,8 +52,8 @@ export default function AppShowcaseSection() {
             </div>
 
             <div className="relative">
-              <div className="bg-muted relative overflow-hidden rounded-lg border shadow-lg sm:rounded-xl">
-                <div className="border-b p-2 sm:p-3">
+              <div className="bg-muted neo-border neo-shadow-lg relative overflow-hidden rounded-lg sm:rounded-xl">
+                <div className="neo-border-thin border-b p-2 sm:p-3">
                   <div className="flex items-center gap-1 sm:gap-1.5">
                     <div className="h-2 w-2 rounded-full bg-red-500/60 sm:h-2.5 sm:w-2.5" />
                     <div className="h-2 w-2 rounded-full bg-yellow-500/60 sm:h-2.5 sm:w-2.5" />
@@ -69,12 +69,12 @@ export default function AppShowcaseSection() {
                     <div className="bg-muted-foreground/40 h-2 w-5/6 rounded sm:h-2.5" />
                   </div>
 
-                  <div className="border-t pt-3 sm:pt-4">
+                  <div className="neo-border-thin border-t pt-3 sm:pt-4">
                     <div className="space-y-2 sm:space-y-3">
                       {[1, 2, 3].map((i) => (
                         <div
                           key={i}
-                          className="hover:bg-background/50 flex gap-2 rounded-lg border p-2 transition-colors sm:gap-3 sm:p-3"
+                          className="hover:bg-background/50 neo-border-thin flex gap-2 rounded-lg border p-2 transition-colors sm:gap-3 sm:p-3"
                         >
                           <div className="bg-muted h-12 w-12 shrink-0 rounded sm:h-14 sm:w-14" />
                           <div className="flex-1 space-y-1.5 sm:space-y-2">

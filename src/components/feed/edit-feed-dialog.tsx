@@ -178,7 +178,7 @@ export function EditFeedDialog({
   if (!isOpen) return null
 
   return (
-    <div className="bg-background/80 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div className="bg-background/95 fixed inset-0 z-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-foreground text-xl font-bold">Edit Feed</h2>
@@ -289,7 +289,7 @@ export function EditFeedDialog({
                     <Badge
                       key={tag.id}
                       variant="default"
-                      className="cursor-pointer transition-colors hover:opacity-80"
+                      className="neo-interactive cursor-pointer"
                       onClick={() => removeTag(tag.id)}
                     >
                       {tag.name}
@@ -315,7 +315,7 @@ export function EditFeedDialog({
                 />
 
                 {showDropdown && tagSearchQuery && (
-                  <div className="bg-popover text-popover-foreground border-border absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border shadow-md">
+                  <div className="bg-popover text-popover-foreground neo-border neo-shadow-sm absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md">
                     {filteredTags.length > 0 ? (
                       <>
                         {filteredTags

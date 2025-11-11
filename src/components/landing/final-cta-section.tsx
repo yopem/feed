@@ -11,15 +11,10 @@ import { Button } from "@/components/ui/button"
  */
 export default function FinalCTASection() {
   return (
-    <section className="bg-muted/30 relative py-16 sm:py-20 md:py-28">
-      {/* Gradient background */}
-      <div className="absolute inset-0 -z-10">
-        <div className="from-primary/10 via-background/50 absolute inset-0 bg-linear-to-t to-purple-500/10" />
-      </div>
-
+    <section className="bg-muted/30 py-16 sm:py-20 md:py-28">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-3xl">
-          <div className="from-background to-muted/30 relative overflow-hidden rounded-xl border bg-linear-to-br p-6 text-center shadow-sm sm:rounded-2xl sm:p-8 md:p-12">
+          <div className="bg-background neo-border neo-shadow-lg relative overflow-hidden rounded-xl p-6 text-center sm:rounded-2xl sm:p-8 md:p-12">
             <div className="relative">
               <h2 className="text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
                 Ready to Transform Your Reading?

@@ -44,14 +44,9 @@ export default function FeaturesSection() {
   return (
     <section
       id="features"
-      className="relative border-b py-16 sm:py-20 md:py-28"
+      className="border-b-2 py-16 sm:py-20 md:py-28"
       aria-labelledby="features-heading"
     >
-      {/* Gradient background */}
-      <div className="absolute inset-0 -z-10">
-        <div className="from-background via-primary/5 to-background absolute inset-0 bg-linear-to-b" />
-      </div>
-
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-2xl text-center">
           <h2
@@ -70,12 +65,9 @@ export default function FeaturesSection() {
             {features.map((feature) => {
               const Icon = feature.icon
               return (
-                <Card
-                  key={feature.title}
-                  className="group transition-all hover:shadow-md"
-                >
+                <Card key={feature.title} className="neo-interactive">
                   <CardHeader className="space-y-3 p-5 sm:space-y-4 sm:p-6">
-                    <div className="bg-muted inline-flex h-10 w-10 items-center justify-center rounded-lg sm:h-12 sm:w-12">
+                    <div className="bg-muted neo-border inline-flex h-10 w-10 items-center justify-center rounded-lg sm:h-12 sm:w-12">
                       <Icon
                         className="text-foreground h-5 w-5 sm:h-6 sm:w-6"
                         aria-hidden="true"

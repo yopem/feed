@@ -39,7 +39,7 @@ export function FeedItem({
     <Card
       onClick={() => onSelect(id)}
       className={cn(
-        "group hover:bg-accent cursor-pointer p-3 transition-all hover:scale-[1.02] hover:shadow-xl",
+        "group neo-interactive cursor-pointer p-3",
         isSelected && "bg-accent ring-ring ring-2",
       )}
     >

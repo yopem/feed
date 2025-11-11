@@ -103,7 +103,7 @@ export function ArticleCard({
   return (
     <Card
       className={cn(
-        "group hover:border-primary/20 cursor-pointer gap-0 transition-all hover:shadow-md",
+        "group neo-interactive cursor-pointer gap-0",
         isSelected && "ring-ring bg-accent ring-2",
       )}
       onMouseEnter={() => setIsHovered(true)}
