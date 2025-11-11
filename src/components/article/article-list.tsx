@@ -77,10 +77,6 @@ export function ArticleList() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="bg-background/95 border-b-2 px-4 py-3">
-        <h2 className="text-foreground text-sm font-semibold">Articles</h2>
-      </div>
-
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {isLoading ? (
           <LoadingSkeleton variant="list" count={5} />

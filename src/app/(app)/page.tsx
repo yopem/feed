@@ -60,7 +60,7 @@ function DashboardContent() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="glass sticky top-0 z-10 flex h-14 items-center gap-4 px-4">
+        <header className="glass sticky top-0 z-10 flex h-14 items-center gap-4 border-b-2 px-4">
           <SidebarTrigger />
           <Breadcrumb>
             <BreadcrumbList>
@@ -73,6 +73,7 @@ function DashboardContent() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
+          <h2 className="text-foreground text-sm font-semibold">Articles</h2>
           <div className="ml-auto flex items-center gap-2">
             <ThemeSwitcher />
             <LogoutButton />
