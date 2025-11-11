@@ -3,10 +3,10 @@
 import { Suspense, useMemo } from "react"
 import { parseAsString, useQueryState } from "nuqs"
 
-import { ArticleList } from "@/components/dashboard/article/article-list"
-import { ArticleReader } from "@/components/dashboard/article/article-reader"
-import { AppSidebar } from "@/components/dashboard/layout/app-sidebar"
-import { LoadingSkeleton } from "@/components/dashboard/shared/loading-skeleton"
+import { ArticleList } from "@/components/article/article-list"
+import { ArticleReader } from "@/components/article/article-reader"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import ThemeSwitcher from "@/components/theme/theme-switcher"
 import {
   Breadcrumb,
@@ -64,7 +64,7 @@ function DashboardContent() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+                <BreadcrumbLink href="/">Home</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>

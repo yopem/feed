@@ -6,7 +6,7 @@ import { redirect } from "next/navigation"
 import dayjs from "dayjs"
 import { ChevronLeftIcon } from "lucide-react"
 
-import { ArticleActions } from "@/components/dashboard/article/article-actions"
+import { ArticleActions } from "@/components/article/article-actions"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -112,7 +112,7 @@ export default async function ArticlePage({ params }: PageProps) {
   const { username, feedSlug, articleSlug } = await params
 
   if (session.username !== username) {
-    redirect("/dashboard")
+    redirect("/")
   }
 
   const ctx = await createTRPCContext({
@@ -126,7 +126,7 @@ export default async function ArticlePage({ params }: PageProps) {
   })
 
   if (!article) {
-    redirect("/dashboard")
+    redirect("/")
   }
 
   const feed = article.feed
@@ -136,7 +136,7 @@ export default async function ArticlePage({ params }: PageProps) {
       <header className="glass sticky top-0 z-10 border-b px-4 py-3">
         <div className="mx-auto flex max-w-6xl items-center gap-4">
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/dashboard">
+            <Link href="/">
               <ChevronLeftIcon className="h-4 w-4" />
               <span>Back</span>
             </Link>
@@ -145,11 +145,11 @@ export default async function ArticlePage({ params }: PageProps) {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+                <BreadcrumbLink href="/">Home</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href={`/dashboard?feed=${feedSlug}`}>
+                <BreadcrumbLink href={`/?feed=${feedSlug}`}>
                   {feed.title}
                 </BreadcrumbLink>
               </BreadcrumbItem>

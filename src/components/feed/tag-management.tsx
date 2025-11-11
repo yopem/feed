@@ -5,8 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { EditIcon, PlusIcon, TagIcon, TrashIcon } from "lucide-react"
 import { toast } from "sonner"
 
-import { EmptyState } from "@/components/dashboard/shared/empty-state"
-import { LoadingSkeleton } from "@/components/dashboard/shared/loading-skeleton"
+import { EmptyState } from "@/components/shared/empty-state"
+import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import {
   AlertDialog,
   AlertDialogAction,
