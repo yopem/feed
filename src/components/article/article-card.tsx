@@ -103,8 +103,9 @@ export function ArticleCard({
   return (
     <Card
       className={cn(
-        "group cursor-pointer gap-0 transition-all duration-200 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none motion-reduce:transition-none motion-reduce:hover:transform-none",
+        "group cursor-pointer gap-0 transition-all duration-200 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none motion-reduce:transition-none motion-reduce:hover:transform-none",
         isSelected && "ring-ring bg-accent ring-2",
+        isRead && "border-muted-foreground/30",
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -144,7 +145,7 @@ export function ArticleCard({
           <div className="min-w-0 flex-1 space-y-1">
             <h3
               className={cn(
-                "line-clamp-2 text-sm leading-snug font-semibold tracking-tight",
+                "line-clamp-2 text-sm leading-snug font-semibold tracking-tight md:text-base",
                 isRead ? "text-foreground/60" : "text-foreground",
               )}
             >
@@ -165,10 +166,10 @@ export function ArticleCard({
 
       <CardFooter
         className={cn(
-          "justify-between pt-2 pb-3 transition-all",
+          "justify-between pt-2 pb-3 transition-all duration-200",
           isHovered || isStarred || isReadLater
-            ? "flex"
-            : "hidden md:group-hover:flex",
+            ? "flex opacity-100"
+            : "hidden opacity-0 md:group-hover:flex md:group-hover:opacity-100",
         )}
       >
         <div className="flex items-center gap-2">

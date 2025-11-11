@@ -76,8 +76,8 @@ export function ArticleList() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+    <div className="flex h-full flex-col overflow-y-auto">
+      <div className="flex-1 space-y-3 p-4 md:mx-auto md:max-w-4xl md:px-6">
         {isLoading ? (
           <LoadingSkeleton variant="list" count={5} />
         ) : articles.length === 0 ? (
