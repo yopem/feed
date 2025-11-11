@@ -6,10 +6,8 @@ import { parseAsString, useQueryState } from "nuqs"
 
 import { ArticleList } from "@/components/article/article-list"
 import { ArticleReader } from "@/components/article/article-reader"
-import LogoutButton from "@/components/auth/logout-button"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
-import ThemeSwitcher from "@/components/theme/theme-switcher"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -139,10 +137,6 @@ function DashboardContent() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <div className="ml-auto flex items-center gap-2">
-            <ThemeSwitcher />
-            <LogoutButton />
-          </div>
         </header>
 
         <div className="flex h-[calc(100vh-3.5rem)] w-full overflow-hidden">
@@ -161,7 +155,7 @@ function DashboardContent() {
               className={
                 isMobile
                   ? "bg-background max-h-[85vh] overflow-hidden rounded-t-xl border-t-2"
-                  : "bg-background !w-[70vw] overflow-hidden sm:!max-w-none"
+                  : "bg-background w-[70vw]! overflow-hidden sm:max-w-none!"
               }
             >
               <SheetHeader>
