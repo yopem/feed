@@ -731,7 +731,6 @@ export const articleRouter = createTRPCRouter({
           .where(eq(articleTable.id, input.id))
           .returning()
 
-        // Delete byId cache to ensure fresh data on next fetch
         await ctx.redis.deleteCache(
           `feed:article:${input.id}:user:${ctx.session.id}`,
         )

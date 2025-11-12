@@ -67,7 +67,6 @@ export function EditFeedDialog({
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
-  // Reset form when dialog opens with new initial values
   useEffect(() => {
     if (isOpen) {
       form.reset()

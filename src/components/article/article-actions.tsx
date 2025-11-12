@@ -46,8 +46,6 @@ export function ArticleActions({
   const updateStarred = useMutation(
     trpc.article.updateStarred.mutationOptions({
       onSuccess: async (data) => {
-        // Only invalidate queries for this specific article
-        // This prevents cascading invalidations to other components
         if (data?.id && articleId) {
           await queryClient.invalidateQueries({
             predicate: (query) => {
@@ -71,8 +69,6 @@ export function ArticleActions({
   const updateReadLater = useMutation(
     trpc.article.updateReadLater.mutationOptions({
       onSuccess: async (data) => {
-        // Only invalidate queries for this specific article
-        // This prevents cascading invalidations to other components
         if (data?.id && articleId) {
           await queryClient.invalidateQueries({
             predicate: (query) => {

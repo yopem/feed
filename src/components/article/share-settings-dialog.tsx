@@ -111,7 +111,6 @@ function ShareSettingsForm({
       if (!article?.isPubliclyShared) return
 
       try {
-        // Only send values that are not empty strings
         const updateData: {
           id: string
           shareSlug?: string
@@ -121,19 +120,16 @@ function ShareSettingsForm({
           id: articleId,
         }
 
-        // Handle custom slug - undefined means keep current, empty string means clear
         if (value.shareSlug !== undefined && value.shareSlug !== "") {
           updateData.shareSlug = value.shareSlug
         }
 
-        // Handle expiration - undefined means keep current, empty string means clear
         if (value.expiresAt !== undefined) {
           updateData.shareExpiresAt = value.expiresAt
             ? new Date(value.expiresAt)
             : null
         }
 
-        // Handle password - undefined means keep current, empty string means clear
         if (value.password !== undefined) {
           updateData.sharePassword = value.password || ""
         }
@@ -294,7 +290,6 @@ export function ShareSettingsDialog({
     enabled: isOpen && !!articleId,
   })
 
-  // Reset justEnabled when dialog closes
   useEffect(() => {
     if (!isOpen) {
       setJustEnabled(false)
@@ -306,7 +301,6 @@ export function ShareSettingsDialog({
       onSuccess: async (data) => {
         if (data) {
           if (data.isPubliclyShared) {
-            // Wait for refetch to complete before showing share settings
             await queryClient.refetchQueries(
               trpc.article.byId.queryOptions(articleId),
             )

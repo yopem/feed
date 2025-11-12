@@ -69,6 +69,16 @@ function extractImageUrl(item: AtomEntry | RSSItem): string | undefined {
   return undefined
 }
 
+/**
+ * Fetches RSS/Atom feed XML content with automatic proxy fallback
+ *
+ * Attempts direct fetch first, then falls back to a proxy service
+ * if the direct request fails due to CORS or network issues.
+ *
+ * @param feedUrl - The URL of the RSS/Atom feed to fetch
+ * @returns The raw XML content of the feed
+ * @throws Error if both direct and proxy fetch attempts fail
+ */
 export async function fetchFeedXML(feedUrl: string): Promise<string> {
   const headers = {
     "User-Agent":
@@ -99,6 +109,17 @@ export async function fetchFeedXML(feedUrl: string): Promise<string> {
   }
 }
 
+/**
+ * Parses an RSS or Atom feed and extracts feed metadata and articles
+ *
+ * Supports both RSS 2.0 and Atom feed formats. Extracts feed title,
+ * description, image, and article data including title, link, description,
+ * publication date, and embedded images.
+ *
+ * @param url - The URL of the RSS/Atom feed to parse
+ * @returns Object containing feed metadata and array of parsed articles
+ * @throws Error if feed cannot be fetched, parsed, or contains invalid data
+ */
 export async function parseFeed(url: string) {
   try {
     const xmlString = await fetchFeedXML(url)
