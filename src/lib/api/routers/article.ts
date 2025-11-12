@@ -522,7 +522,7 @@ export const articleRouter = createTRPCRouter({
           isPasswordProtected: !!article.sharePassword,
         }
 
-        await ctx.redis.setCache(cacheKey, result, 300)
+        await ctx.redis.setCache(cacheKey, result, 60)
         return result
       } catch (error) {
         handleTRPCError(error)
@@ -591,7 +591,7 @@ export const articleRouter = createTRPCRouter({
           isPasswordProtected: !!article.sharePassword,
         }
 
-        await ctx.redis.setCache(cacheKey, result, 300)
+        await ctx.redis.setCache(cacheKey, result, 60)
         return result
       } catch (error) {
         handleTRPCError(error)
@@ -831,18 +831,25 @@ export const articleRouter = createTRPCRouter({
           .where(eq(articleTable.id, input.id))
           .returning()
 
-        // Delete byId cache to ensure fresh data on next fetch
         await ctx.redis.deleteCache(
           `feed:article:${input.id}:user:${ctx.session.id}`,
         )
 
+        const currentSlug = updates.shareSlug ?? article.shareSlug
         await ctx.redis.deleteCache(
-          `feed:article:public:${ctx.session.username}:${article.shareSlug}`,
+          `feed:article:public:${ctx.session.username}:${currentSlug}`,
         )
 
-        if (input.shareSlug && input.shareSlug !== article.shareSlug) {
+        await ctx.redis.deleteCache(
+          `feed:article:public:shareSlug:${currentSlug}`,
+        )
+
+        if (article.shareSlug && article.shareSlug !== currentSlug) {
           await ctx.redis.deleteCache(
-            `feed:article:public:${ctx.session.username}:${input.shareSlug}`,
+            `feed:article:public:${ctx.session.username}:${article.shareSlug}`,
+          )
+          await ctx.redis.deleteCache(
+            `feed:article:public:shareSlug:${article.shareSlug}`,
           )
         }
 
