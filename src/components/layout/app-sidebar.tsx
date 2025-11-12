@@ -13,6 +13,7 @@ import {
   PencilIcon,
   PlusIcon,
   RssIcon,
+  ShareIcon,
   StarIcon,
   SunIcon,
   Trash2Icon,
@@ -22,6 +23,7 @@ import { parseAsString, useQueryState } from "nuqs"
 
 import { AddFeedDialog } from "@/components/feed/add-feed-dialog"
 import { AddTagDialog } from "@/components/feed/add-tag-dialog"
+import { BulkShareDialog } from "@/components/feed/bulk-share-dialog"
 import { DeleteFeedDialog } from "@/components/feed/delete-feed-dialog"
 import { DeleteTagDialog } from "@/components/feed/delete-tag-dialog"
 import { EditFeedDialog } from "@/components/feed/edit-feed-dialog"
@@ -65,6 +67,7 @@ interface FeedWithTags {
   updatedAt: Date | null
   url: string
   lastUpdated: Date | null
+  isBulkShared: boolean
   tags?: {
     tag: {
       id: string
@@ -114,6 +117,12 @@ export function AppSidebar() {
   const [deletingTag, setDeletingTag] = useState<{
     id: string
     name: string
+  } | null>(null)
+  const [bulkSharingFeed, setBulkSharingFeed] = useState<{
+    id: string
+    title: string
+    articleCount: number
+    isBulkShared: boolean
   } | null>(null)
   const trpc = useTRPC()
 
@@ -495,6 +504,25 @@ export function AppSidebar() {
                                   <PencilIcon className="h-4 w-4" />
                                   <span>Edit feed</span>
                                 </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    const stats = statistics?.find(
+                                      (s: { feedId: string }) =>
+                                        s.feedId === feed.id,
+                                    )
+                                    setBulkSharingFeed({
+                                      id: feed.id,
+                                      title: feed.title,
+                                      articleCount: stats?.totalCount ?? 0,
+                                      isBulkShared: feed.isBulkShared,
+                                    })
+                                  }}
+                                  className="cursor-pointer py-2.5"
+                                >
+                                  <ShareIcon className="h-4 w-4" />
+                                  <span>Bulk Share</span>
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   variant="destructive"
@@ -669,6 +697,17 @@ export function AppSidebar() {
               void setTagSlug(null)
             }
           }}
+        />
+      )}
+
+      {bulkSharingFeed && (
+        <BulkShareDialog
+          isOpen={true}
+          onClose={() => setBulkSharingFeed(null)}
+          feedId={bulkSharingFeed.id}
+          feedTitle={bulkSharingFeed.title}
+          articleCount={bulkSharingFeed.articleCount}
+          isBulkShared={bulkSharingFeed.isBulkShared}
         />
       )}
     </>

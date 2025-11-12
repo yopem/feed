@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import Image from "next/image"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 
+import { ArticleShareBadges } from "@/components/article/article-share-badges"
 import { EmptyState } from "@/components/shared/empty-state"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import { Separator } from "@/components/ui/separator"
@@ -24,6 +25,10 @@ interface ArticleWithFeed {
   isRead: boolean
   isStarred: boolean
   isReadLater: boolean
+  isPubliclyShared: boolean
+  sharePassword: string | null
+  shareExpiresAt: Date | null
+  shareViewCount: number
   feed: {
     title: string
     slug: string
@@ -38,6 +43,8 @@ interface ArticleReaderProps {
 export function ArticleReader({ articleId }: ArticleReaderProps) {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const hasMarkedAsRead = useRef<Set<string>>(new Set())
+
   const { data: article, isLoading } = useQuery({
     ...trpc.article.byId.queryOptions(articleId!),
     enabled: !!articleId,
@@ -45,15 +52,34 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
 
   const markAsRead = useMutation(
     trpc.article.updateReadStatus.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.article.pathFilter())
+      onSuccess: async (data) => {
+        if (data?.id && articleId) {
+          await queryClient.invalidateQueries({
+            predicate: (query) => {
+              const queryKey = query.queryKey as unknown[]
+              return Boolean(
+                queryKey[0] === "article" &&
+                  queryKey[1] === "byId" &&
+                  queryKey[2] &&
+                  typeof queryKey[2] === "object" &&
+                  "input" in queryKey[2] &&
+                  queryKey[2].input === articleId,
+              )
+            },
+          })
+        }
         await queryClient.invalidateQueries(trpc.feed.pathFilter())
       },
     }),
   )
 
   useEffect(() => {
-    if (article && !article.isRead) {
+    if (
+      article &&
+      !article.isRead &&
+      !hasMarkedAsRead.current.has(article.id)
+    ) {
+      hasMarkedAsRead.current.add(article.id)
       markAsRead.mutate({ id: article.id, isRead: true })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -97,6 +123,7 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
     <div className="flex h-full flex-col">
       <ArticleActions
         articleId={article.id}
+        articleTitle={article.title}
         isStarred={article.isStarred}
         isReadLater={article.isReadLater}
         link={article.link}
@@ -127,6 +154,14 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
                 {dayjs(article.pubDate).format("MMMM D, YYYY")}
               </time>
             </div>
+
+            <ArticleShareBadges
+              isPubliclyShared={article.isPubliclyShared}
+              hasPassword={!!article.sharePassword}
+              expiresAt={article.shareExpiresAt}
+              viewCount={article.shareViewCount}
+              className="mt-2"
+            />
 
             <Separator />
           </header>

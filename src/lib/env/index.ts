@@ -30,6 +30,8 @@ export const env = createEnv({
     R2_BUCKET: z.string().min(1),
     R2_DOMAIN: z.string().min(1),
     R2_REGION: z.string().min(1),
+
+    CRON_SECRET: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_API_URL: z.string().min(1),

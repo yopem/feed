@@ -155,7 +155,7 @@ function DashboardContent() {
               className={
                 isMobile
                   ? "bg-background max-h-[85vh] overflow-hidden rounded-t-xl border-t-2"
-                  : "bg-background w-[70vw]! overflow-hidden sm:max-w-none!"
+                  : "bg-background w-[70vw] overflow-hidden sm:max-w-none"
               }
             >
               <SheetHeader>
@@ -163,7 +163,7 @@ function DashboardContent() {
                   Reader
                 </SheetTitle>
               </SheetHeader>
-              <div className="flex-1 overflow-y-auto">
+              <div className="min-h-0 flex-1 overflow-y-auto">
                 <ArticleReader articleId={selectedArticleId} />
               </div>
             </SheetContent>

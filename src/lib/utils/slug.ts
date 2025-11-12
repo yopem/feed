@@ -2,6 +2,25 @@
 
 import { transliterate as tr } from "transliteration"
 
+/**
+ * Generates a random short slug for sharing URLs
+ *
+ * Creates a URL-safe random string of 8 characters using
+ * alphanumeric characters. Used for public share links.
+ *
+ * @returns Random 8-character alphanumeric slug
+ * @example
+ * generateSlug() // "a7f3k9m2"
+ */
+export function generateSlug(): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+  let result = ""
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return result
+}
+
 export function slugify(text: string) {
   return tr(text)
     .toString() // Cast to string (optional)

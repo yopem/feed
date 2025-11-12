@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm"
 import {
+  boolean,
   index,
   pgTable,
   primaryKey,
@@ -29,6 +30,10 @@ export const feedTable = pgTable(
     userId: text("user_id").notNull(),
     /** Entity status for soft-delete: published (visible), draft (hidden), deleted (soft-deleted) */
     status: entityStatusEnum("status").notNull().default("published"),
+    /** Whether bulk sharing is enabled for all articles in this feed */
+    isBulkShared: boolean("is_bulk_shared").notNull().default(false),
+    /** Expiration timestamp for bulk sharing (applies to all articles in feed) */
+    bulkShareExpiresAt: timestamp("bulk_share_expires_at"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -37,6 +42,7 @@ export const feedTable = pgTable(
     unique("feed_user_slug_unique").on(t.userId, t.slug),
     index("feed_status_idx").on(t.status),
     index("feed_user_status_idx").on(t.userId, t.status),
+    index("feed_is_bulk_shared_idx").on(t.isBulkShared),
   ],
 )
 

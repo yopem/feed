@@ -1,20 +1,24 @@
 "use client"
 
+import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
+  BarChart3Icon,
   BookmarkIcon,
   ExternalLinkIcon,
   Share2Icon,
   StarIcon,
 } from "lucide-react"
-import { toast } from "sonner"
 
+import { ShareAnalyticsDialog } from "@/components/article/share-analytics-dialog"
+import { ShareSettingsDialog } from "@/components/article/share-settings-dialog"
 import { Button } from "@/components/ui/button"
 import { useTRPC } from "@/lib/trpc/client"
 import { cn } from "@/lib/utils"
 
 interface ArticleActionsProps {
   articleId: string
+  articleTitle: string
   isStarred: boolean
   isReadLater: boolean
   link: string
@@ -24,21 +28,41 @@ interface ArticleActionsProps {
 
 export function ArticleActions({
   articleId,
+  articleTitle,
   isStarred,
   isReadLater,
   link,
-  feedSlug,
-  articleSlug,
 }: ArticleActionsProps) {
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
+  const [isAnalyticsDialogOpen, setIsAnalyticsDialogOpen] = useState(false)
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
-  const { data: user } = useQuery(trpc.user.getCurrentUser.queryOptions())
+  const { data: article } = useQuery({
+    ...trpc.article.byId.queryOptions(articleId),
+    enabled: !!articleId,
+  })
 
   const updateStarred = useMutation(
     trpc.article.updateStarred.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.article.pathFilter())
+      onSuccess: async (data) => {
+        // Only invalidate queries for this specific article
+        // This prevents cascading invalidations to other components
+        if (data?.id && articleId) {
+          await queryClient.invalidateQueries({
+            predicate: (query) => {
+              const queryKey = query.queryKey as unknown[]
+              return Boolean(
+                queryKey[0] === "article" &&
+                  queryKey[1] === "byId" &&
+                  queryKey[2] &&
+                  typeof queryKey[2] === "object" &&
+                  "input" in queryKey[2] &&
+                  queryKey[2].input === articleId,
+              )
+            },
+          })
+        }
         await queryClient.invalidateQueries(trpc.feed.pathFilter())
       },
     }),
@@ -46,27 +70,31 @@ export function ArticleActions({
 
   const updateReadLater = useMutation(
     trpc.article.updateReadLater.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.article.pathFilter())
+      onSuccess: async (data) => {
+        // Only invalidate queries for this specific article
+        // This prevents cascading invalidations to other components
+        if (data?.id && articleId) {
+          await queryClient.invalidateQueries({
+            predicate: (query) => {
+              const queryKey = query.queryKey as unknown[]
+              return Boolean(
+                queryKey[0] === "article" &&
+                  queryKey[1] === "byId" &&
+                  queryKey[2] &&
+                  typeof queryKey[2] === "object" &&
+                  "input" in queryKey[2] &&
+                  queryKey[2].input === articleId,
+              )
+            },
+          })
+        }
         await queryClient.invalidateQueries(trpc.feed.pathFilter())
       },
     }),
   )
 
-  const handleShare = async () => {
-    if (!feedSlug || !articleSlug || !user?.username) {
-      toast.error("Unable to share this article")
-      return
-    }
-
-    const shareUrl = `${window.location.origin}/${user.username}/${feedSlug}/${articleSlug}`
-
-    try {
-      await navigator.clipboard.writeText(shareUrl)
-      toast.success("Link copied to clipboard!")
-    } catch {
-      toast.error("Failed to copy link")
-    }
+  const handleShare = () => {
+    setIsShareDialogOpen(true)
   }
 
   return (
@@ -115,16 +143,27 @@ export function ArticleActions({
           />
         </Button>
 
-        {feedSlug && articleSlug && user?.username && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9"
+          onClick={handleShare}
+          title="Share article publicly"
+          aria-label="Share article publicly"
+        >
+          <Share2Icon className="text-muted-foreground hover:text-foreground h-5 w-5 transition-colors" />
+        </Button>
+
+        {article?.isPubliclyShared && (
           <Button
             variant="ghost"
             size="icon"
             className="h-9 w-9"
-            onClick={handleShare}
-            title="Share article"
-            aria-label="Share article"
+            onClick={() => setIsAnalyticsDialogOpen(true)}
+            title="View share analytics"
+            aria-label="View share analytics"
           >
-            <Share2Icon className="text-muted-foreground hover:text-foreground h-5 w-5 transition-colors" />
+            <BarChart3Icon className="text-muted-foreground hover:text-foreground h-5 w-5 transition-colors" />
           </Button>
         )}
       </div>
@@ -135,6 +174,20 @@ export function ArticleActions({
           <ExternalLinkIcon className="ml-2 h-4 w-4" />
         </a>
       </Button>
+
+      <ShareSettingsDialog
+        isOpen={isShareDialogOpen}
+        onClose={() => setIsShareDialogOpen(false)}
+        articleId={articleId}
+        articleTitle={articleTitle}
+      />
+
+      <ShareAnalyticsDialog
+        isOpen={isAnalyticsDialogOpen}
+        onClose={() => setIsAnalyticsDialogOpen(false)}
+        articleId={articleId}
+        articleTitle={articleTitle}
+      />
     </div>
   )
 }

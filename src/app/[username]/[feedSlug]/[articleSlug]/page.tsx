@@ -168,6 +168,7 @@ export default async function ArticlePage({ params }: PageProps) {
         <div className="mx-auto max-w-4xl">
           <ArticleActions
             articleId={article.id}
+            articleTitle={article.title}
             isStarred={article.isStarred}
             isReadLater={article.isReadLater}
             link={article.link}

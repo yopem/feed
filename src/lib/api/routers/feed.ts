@@ -1,4 +1,5 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server"
+import { and, eq } from "drizzle-orm"
 import z from "zod"
 
 import { handleTRPCError } from "@/lib/api/error"
@@ -609,6 +610,157 @@ export const feedRouter = {
         await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
 
         return { newArticles: newArticles.length }
+      } catch (error) {
+        handleTRPCError(error)
+      }
+    }),
+
+  /**
+   * Enable bulk sharing for all articles in a feed
+   *
+   * Sets isBulkShared flag on the feed, which makes all articles
+   * in that feed publicly accessible via their share slugs. Generates
+   * share slugs for articles that don't have them yet.
+   *
+   * @param feedId - Feed ID
+   * @param expiresAt - Optional expiration date for bulk sharing
+   * @returns Success status and count of articles enabled for sharing
+   */
+  bulkShare: protectedProcedure
+    .input(
+      z.object({
+        feedId: z.string(),
+        expiresAt: z.date().nullable().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const existingFeed = await ctx.db.query.feedTable.findFirst({
+          where: and(
+            eq(feedTable.id, input.feedId),
+            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.status, "published"),
+          ),
+        })
+
+        if (!existingFeed) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Feed not found.",
+          })
+        }
+
+        await ctx.db
+          .update(feedTable)
+          .set({
+            isBulkShared: true,
+            bulkShareExpiresAt: input.expiresAt,
+            updatedAt: new Date(),
+          })
+          .where(eq(feedTable.id, input.feedId))
+
+        const articles = await ctx.db.query.articleTable.findMany({
+          where: and(
+            eq(articleTable.feedId, input.feedId),
+            eq(articleTable.status, "published"),
+          ),
+        })
+
+        let enabledCount = 0
+        for (const article of articles) {
+          let shareSlug = article.shareSlug
+          if (!shareSlug) {
+            const { createCustomId } = await import("@/lib/utils/custom-id")
+            shareSlug = createCustomId().slice(0, 12)
+
+            let attempts = 0
+            while (attempts < 5) {
+              const existing = await ctx.db.query.articleTable.findFirst({
+                where: eq(articleTable.shareSlug, shareSlug),
+              })
+              if (!existing) break
+              shareSlug = createCustomId().slice(0, 12)
+              attempts++
+            }
+          }
+
+          await ctx.db
+            .update(articleTable)
+            .set({
+              isPubliclyShared: true,
+              shareSlug,
+              updatedAt: new Date(),
+            })
+            .where(eq(articleTable.id, article.id))
+
+          enabledCount++
+        }
+
+        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
+
+        return { success: true, enabledCount }
+      } catch (error) {
+        handleTRPCError(error)
+      }
+    }),
+
+  /**
+   * Disable bulk sharing for a feed
+   *
+   * Unsets isBulkShared flag on the feed and disables public sharing
+   * for all articles in that feed. Share slugs are preserved but
+   * articles become inaccessible publicly.
+   *
+   * @param feedId - Feed ID
+   * @returns Success status and count of articles disabled
+   */
+  bulkUnshare: protectedProcedure
+    .input(z.string())
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const existingFeed = await ctx.db.query.feedTable.findFirst({
+          where: and(
+            eq(feedTable.id, input),
+            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.status, "published"),
+          ),
+        })
+
+        if (!existingFeed) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Feed not found.",
+          })
+        }
+
+        await ctx.db
+          .update(feedTable)
+          .set({
+            isBulkShared: false,
+            bulkShareExpiresAt: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(feedTable.id, input))
+
+        const result = await ctx.db
+          .update(articleTable)
+          .set({
+            isPubliclyShared: false,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(articleTable.feedId, input),
+              eq(articleTable.status, "published"),
+            ),
+          )
+          .returning()
+
+        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
+
+        return { success: true, disabledCount: result.length }
       } catch (error) {
         handleTRPCError(error)
       }

@@ -5,15 +5,27 @@ import z, { ZodError } from "zod"
 import { auth } from "@/lib/auth/session"
 import { db } from "@/lib/db"
 import { createRedisCache } from "@/lib/db/redis"
+import { createTokenBucket } from "@/lib/utils/rate-limit"
+
+/**
+ * Rate limiter for public endpoints
+ * 50 requests per minute per IP
+ */
+const publicRateLimiter = createTokenBucket<string>(50, 60)
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await auth()
   const redis = createRedisCache()
+  const clientIP =
+    opts.headers.get("x-forwarded-for") ??
+    opts.headers.get("x-real-ip") ??
+    "unknown"
 
   return {
     db,
     redis,
     session,
+    clientIP,
     ...opts,
   }
 }
@@ -53,7 +65,33 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
   return result
 })
 
+/**
+ * Rate limiting middleware for public endpoints
+ * Limits requests based on client IP address
+ */
+const rateLimitMiddleware = t.middleware(async ({ ctx, next }) => {
+  const clientIP = ctx.clientIP
+
+  if (!publicRateLimiter.consume(clientIP, 1)) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: "Too many requests. Please try again later.",
+    })
+  }
+
+  return next()
+})
+
 export const publicProcedure = t.procedure.use(timingMiddleware)
+
+/**
+ * Rate-limited public procedure for sensitive public endpoints
+ * Use this for endpoints that are accessible without authentication
+ * and need protection from abuse
+ */
+export const rateLimitedPublicProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(rateLimitMiddleware)
 
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
