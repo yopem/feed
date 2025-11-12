@@ -23,19 +23,14 @@ export function useAutoRefresh() {
     data: SelectUserSettings | undefined
   }
 
-  const refreshAll = useMutation(
-    trpc.feed.refreshAll.mutationOptions({
-      onError: () => {},
-    }),
-  )
+  const refreshAll = useMutation(trpc.feed.refreshAll.mutationOptions())
 
   useEffect(() => {
-    if (!settings || !settings.autoRefreshEnabled) return
+    if (!settings?.autoRefreshEnabled) return
 
-    refreshAll.mutate(undefined, {
-      onError: () => {},
-    })
-  }, [settings])
+    refreshAll.mutate(undefined)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings?.autoRefreshEnabled])
 
   return {
     isRefreshing: refreshAll.isPending,

@@ -27,10 +27,13 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { useAutoRefresh } from "@/hooks/use-auto-refresh"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useTRPC } from "@/lib/trpc/client"
 
 function DashboardContent() {
+  useAutoRefresh()
+
   const [filter] = useQueryState("filter", parseAsString.withDefault("all"))
   const [feedSlug] = useQueryState("feed", parseAsString.withDefault(""))
   const [tagSlug] = useQueryState("tag", parseAsString)

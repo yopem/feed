@@ -36,7 +36,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
             if (
               op.direction === "down" &&
               op.result instanceof Error &&
-              op.result.message?.includes("Rate limit exceeded")
+              op.result.message.includes("Rate limit exceeded")
             ) {
               return false
             }

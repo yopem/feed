@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   BookmarkIcon,
   ChevronUpIcon,
@@ -12,7 +12,9 @@ import {
   MoreHorizontalIcon,
   PencilIcon,
   PlusIcon,
+  RefreshCwIcon,
   RssIcon,
+  SettingsIcon,
   ShareIcon,
   StarIcon,
   SunIcon,
@@ -20,6 +22,7 @@ import {
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { parseAsString, useQueryState } from "nuqs"
+import { toast } from "sonner"
 
 import { AddFeedDialog } from "@/components/feed/add-feed-dialog"
 import { AddTagDialog } from "@/components/feed/add-tag-dialog"
@@ -28,6 +31,7 @@ import { DeleteFeedDialog } from "@/components/feed/delete-feed-dialog"
 import { DeleteTagDialog } from "@/components/feed/delete-tag-dialog"
 import { EditFeedDialog } from "@/components/feed/edit-feed-dialog"
 import { EditTagDialog } from "@/components/feed/edit-tag-dialog"
+import Link from "@/components/link"
 import { EmptyState } from "@/components/shared/empty-state"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -125,6 +129,7 @@ export function AppSidebar() {
     isBulkShared: boolean
   } | null>(null)
   const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
   const { data: feeds, isLoading: feedsLoading } = useQuery(
     trpc.feed.all.queryOptions({
@@ -142,6 +147,25 @@ export function AppSidebar() {
   )
 
   const { theme, setTheme } = useTheme()
+
+  const refreshAll = useMutation(
+    trpc.feed.refreshAll.mutationOptions({
+      onSuccess: async (data) => {
+        if (data) {
+          await queryClient.invalidateQueries(trpc.feed.pathFilter())
+          await queryClient.invalidateQueries(trpc.article.pathFilter())
+          toast.success(
+            `Refreshed ${data.refreshedFeeds} of ${data.totalFeeds} feed${data.totalFeeds !== 1 ? "s" : ""} successfully${
+              data.failedFeeds > 0 ? `. ${data.failedFeeds} failed.` : ""
+            }`,
+          )
+        }
+      },
+      onError: (err: { message: string }) => {
+        toast.error(err.message || "Failed to refresh feeds")
+      },
+    }),
+  )
 
   const selectedTag = tagSlug
     ? tags?.find((t) => t.id === tagSlug || t.name === tagSlug)
@@ -202,6 +226,23 @@ export function AppSidebar() {
               >
                 <PlusIcon className="h-4 w-4" />
                 <span>Add Feed</span>
+              </Button>
+              <Button
+                onClick={() => refreshAll.mutate()}
+                className="mt-2 w-full"
+                size="sm"
+                variant="secondary"
+                disabled={refreshAll.isPending}
+              >
+                <RefreshCwIcon
+                  className={cn(
+                    "h-4 w-4",
+                    refreshAll.isPending && "animate-spin",
+                  )}
+                />
+                <span>
+                  {refreshAll.isPending ? "Refreshing..." : "Refresh All Feeds"}
+                </span>
               </Button>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -625,6 +666,12 @@ export function AppSidebar() {
                           ? "Switch to light mode"
                           : "Switch to dark mode"}
                       </span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer py-2.5">
+                      <Link href="/settings">
+                        <SettingsIcon className="h-4 w-4" />
+                        <span>Settings</span>
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
