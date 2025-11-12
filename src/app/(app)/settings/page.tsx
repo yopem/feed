@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { updateUserSettingsSchema } from "@/lib/db/schema"
-import type { SelectUserSettings } from "@/lib/db/schema/userSettings"
+import type { SelectUserSettings } from "@/lib/db/schema/user-settings"
 import { useTRPC } from "@/lib/trpc/client"
 
 /**
@@ -81,7 +81,7 @@ function SettingsContent() {
 
   return (
     <>
-      <header className="bg-background border-border sticky top-0 z-10 flex h-14 items-center gap-4 border-b-2 px-4">
+      <header className="bg-background border-border sticky top-0 z-10 flex items-center gap-4 border-b-2 px-4 py-3">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/">
             <ArrowLeftIcon className="h-4 w-4" />
@@ -172,11 +172,12 @@ function SettingsContent() {
                       type="number"
                       min={1}
                       max={168}
-                      value={field.state.value}
+                      value={field.state.value ?? ""}
                       onBlur={field.handleBlur}
-                      onChange={(e) =>
-                        field.handleChange(parseInt(e.target.value, 10))
-                      }
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10)
+                        field.handleChange(isNaN(val) ? 0 : val)
+                      }}
                       disabled={updateSettings.isPending}
                       aria-invalid={field.state.meta.errors.length > 0}
                     />

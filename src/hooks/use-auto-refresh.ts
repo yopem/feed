@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 
-import type { SelectUserSettings } from "@/lib/db/schema/userSettings"
+import type { SelectUserSettings } from "@/lib/db/schema/user-settings"
 import { useTRPC } from "@/lib/trpc/client"
 
 /**
