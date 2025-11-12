@@ -916,6 +916,165 @@ export const feedRouter = {
   }),
 
   /**
+   * Auto-refresh stale feeds on user login
+   *
+   * Automatically refreshes feeds that are older than the user's configured refresh interval.
+   * This procedure is designed for silent background refresh on login and bypasses rate limiting.
+   * Only refreshes feeds that actually need updating based on lastRefreshedAt timestamp.
+   *
+   * @returns Summary with totalFeeds, refreshedFeeds, failedFeeds, and newArticles counts
+   */
+  autoRefresh: protectedProcedure.mutation(async ({ ctx }) => {
+    try {
+      const userSettings = await ctx.db.query.userSettingsTable.findFirst({
+        where: eq(userSettingsTable.userId, ctx.session.id),
+      })
+
+      if (!userSettings?.autoRefreshEnabled) {
+        return {
+          totalFeeds: 0,
+          refreshedFeeds: 0,
+          failedFeeds: 0,
+          newArticles: 0,
+        }
+      }
+
+      const now = new Date()
+      const intervalMs = userSettings.refreshIntervalHours * 60 * 60 * 1000
+
+      const feeds = await ctx.db.query.feedTable.findMany({
+        where: (feedTable, { eq, and }) =>
+          and(
+            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.status, "published"),
+          ),
+      })
+
+      if (feeds.length === 0) {
+        return {
+          totalFeeds: 0,
+          refreshedFeeds: 0,
+          failedFeeds: 0,
+          newArticles: 0,
+        }
+      }
+
+      const feedsToRefresh = feeds.filter((feed) => {
+        if (!feed.lastRefreshedAt) return true
+        const timeSinceRefresh =
+          now.getTime() - new Date(feed.lastRefreshedAt).getTime()
+        return timeSinceRefresh >= intervalMs
+      })
+
+      if (feedsToRefresh.length === 0) {
+        return {
+          totalFeeds: feeds.length,
+          refreshedFeeds: 0,
+          failedFeeds: 0,
+          newArticles: 0,
+        }
+      }
+
+      let refreshedCount = 0
+      let failedCount = 0
+      let totalNewArticles = 0
+
+      for (const feed of feedsToRefresh) {
+        try {
+          const feedData = await parseFeed(feed.url)
+
+          await ctx.db
+            .update(feedTable)
+            .set({
+              lastRefreshedAt: new Date(),
+              updatedAt: new Date(),
+            })
+            .where(eq(feedTable.id, feed.id))
+
+          if (feedData.articles.length > 0) {
+            const existingArticles = await ctx.db.query.articleTable.findMany({
+              where: (articleTable, { eq, and }) =>
+                and(
+                  eq(articleTable.feedId, feed.id),
+                  eq(articleTable.status, "published"),
+                ),
+              columns: {
+                link: true,
+              },
+            })
+
+            const existingLinks = new Set(existingArticles.map((a) => a.link))
+            const newArticles = feedData.articles.filter(
+              (article) => !existingLinks.has(article.link),
+            )
+
+            if (newArticles.length > 0) {
+              const articlesToInsert = newArticles.map((article) => {
+                const articleSlug = slugify(article.title)
+                return {
+                  title: article.title,
+                  slug: articleSlug,
+                  description: article.description,
+                  content: article.content,
+                  link: article.link,
+                  imageUrl: article.imageUrl,
+                  source: article.source,
+                  pubDate: new Date(article.pubDate),
+                  userId: ctx.session.id,
+                  feedId: feed.id,
+                  isRead: false,
+                  isReadLater: false,
+                  isStarred: false,
+                }
+              })
+
+              const slugCounts = new Map<string, number>()
+              const finalArticles = articlesToInsert.map((article) => {
+                let finalSlug = article.slug
+                const count = slugCounts.get(article.slug) ?? 0
+
+                if (count > 0) {
+                  finalSlug = `${article.slug}-${count}`
+                }
+
+                slugCounts.set(article.slug, count + 1)
+
+                return {
+                  ...article,
+                  slug: finalSlug,
+                }
+              })
+
+              await ctx.db.insert(articleTable).values(finalArticles)
+              totalNewArticles += newArticles.length
+            }
+          }
+
+          refreshedCount++
+        } catch (error) {
+          failedCount++
+          console.error(`Failed to auto-refresh feed ${feed.id}:`, error)
+        }
+      }
+
+      if (refreshedCount > 0 || failedCount > 0) {
+        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
+        await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
+      }
+
+      return {
+        totalFeeds: feeds.length,
+        refreshedFeeds: refreshedCount,
+        failedFeeds: failedCount,
+        newArticles: totalNewArticles,
+      }
+    } catch (error) {
+      handleTRPCError(error)
+    }
+  }),
+
+  /**
    * Cron-triggered feed refresh for all users with auto-refresh enabled
    *
    * This procedure is intended to be called by external cron services (e.g., GitHub Actions).

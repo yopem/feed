@@ -7,14 +7,14 @@ import type { SelectUserSettings } from "@/lib/db/schema/user-settings"
 import { useTRPC } from "@/lib/trpc/client"
 
 /**
- * Automatically refreshes all feeds on component mount if they haven't been
- * refreshed within the user's configured refresh interval
+ * Automatically refreshes stale feeds on component mount
  *
  * This hook:
  * - Fetches user settings to determine refresh preferences
- * - Triggers feed refresh if auto-refresh is enabled
+ * - Triggers auto-refresh for stale feeds if auto-refresh is enabled
  * - Respects the user's configured refresh interval
  * - Runs silently without user interaction
+ * - Bypasses rate limiting (uses autoRefresh instead of refreshAll)
  */
 export function useAutoRefresh() {
   const trpc = useTRPC()
@@ -23,16 +23,16 @@ export function useAutoRefresh() {
     data: SelectUserSettings | undefined
   }
 
-  const refreshAll = useMutation(trpc.feed.refreshAll.mutationOptions())
+  const autoRefresh = useMutation(trpc.feed.autoRefresh.mutationOptions())
 
   useEffect(() => {
     if (!settings?.autoRefreshEnabled) return
 
-    refreshAll.mutate(undefined)
+    autoRefresh.mutate(undefined)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings?.autoRefreshEnabled])
 
   return {
-    isRefreshing: refreshAll.isPending,
+    isRefreshing: autoRefresh.isPending,
   }
 }
