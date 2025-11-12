@@ -7,6 +7,7 @@ export const databaseUrl = env.DATABASE_URL
 export const redisUrl = env.REDIS_URL
 
 export const authIssuer = env.AUTH_ISSUER
+export const cronSecret = env.CRON_SECRET
 
 export const cfAccountId = env.CF_ACCOUNT_ID
 export const r2AccessKey = env.R2_ACCESS_KEY

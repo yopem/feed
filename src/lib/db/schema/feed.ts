@@ -27,6 +27,7 @@ export const feedTable = pgTable(
     description: text("description"),
     imageUrl: text("image_url"),
     lastUpdated: timestamp("last_updated").defaultNow(),
+    lastRefreshedAt: timestamp("last_refreshed_at"),
     userId: text("user_id").notNull(),
     /** Entity status for soft-delete: published (visible), draft (hidden), deleted (soft-deleted) */
     status: entityStatusEnum("status").notNull().default("published"),

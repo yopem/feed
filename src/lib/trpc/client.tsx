@@ -31,9 +31,20 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
     createTRPCClient<AppRouter>({
       links: [
         loggerLink({
-          enabled: (op) =>
-            appEnv === "development" ||
-            (op.direction === "down" && op.result instanceof Error),
+          enabled: (op) => {
+            // Don't log rate limit errors from background operations
+            if (
+              op.direction === "down" &&
+              op.result instanceof Error &&
+              op.result.message?.includes("Rate limit exceeded")
+            ) {
+              return false
+            }
+            return (
+              appEnv === "development" ||
+              (op.direction === "down" && op.result instanceof Error)
+            )
+          },
         }),
         httpBatchStreamLink({
           transformer: SuperJSON,

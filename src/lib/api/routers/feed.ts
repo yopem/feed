@@ -3,16 +3,25 @@ import { and, eq } from "drizzle-orm"
 import z from "zod"
 
 import { handleTRPCError } from "@/lib/api/error"
-import { protectedProcedure } from "@/lib/api/trpc"
+import { protectedProcedure, publicProcedure } from "@/lib/api/trpc"
 import {
   articleTable,
   feedTable,
   feedTagsTable,
   tagTable,
+  userSettingsTable,
   type SelectFeed,
 } from "@/lib/db/schema"
+import { cronSecret } from "@/lib/env/server"
+import { createTokenBucket } from "@/lib/utils/rate-limit"
 import { parseFeed } from "@/lib/utils/scraping"
 import { slugify } from "@/lib/utils/slug"
+
+/**
+ * Rate limiter for manual feed refresh operations
+ * Allows 1 refresh per 5 minutes (300 seconds) per user
+ */
+const refreshAllRateLimiter = createTokenBucket<string>(1, 300)
 
 /**
  * Feed management router providing operations for RSS/Atom feed subscriptions
@@ -542,6 +551,14 @@ export const feedRouter = {
 
         const feedData = await parseFeed(existingFeed.url)
 
+        await ctx.db
+          .update(feedTable)
+          .set({
+            lastRefreshedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(feedTable.id, input))
+
         if (feedData.articles.length === 0) {
           return { newArticles: 0 }
         }
@@ -564,6 +581,7 @@ export const feedRouter = {
         )
 
         if (newArticles.length === 0) {
+          await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
           return { newArticles: 0 }
         }
 
@@ -761,6 +779,325 @@ export const feedRouter = {
         await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
 
         return { success: true, disabledCount: result.length }
+      } catch (error) {
+        handleTRPCError(error)
+      }
+    }),
+
+  /**
+   * Refresh all feeds for the current user
+   *
+   * Fetches latest articles from all user feeds and updates their lastRefreshedAt timestamps.
+   * Rate limited to 1 request per 5 minutes per user to prevent abuse.
+   *
+   * @returns Summary with totalFeeds count, refreshedFeeds count, failedFeeds count, and newArticles count
+   * @throws TRPCError if rate limit exceeded
+   */
+  refreshAll: protectedProcedure.mutation(async ({ ctx }) => {
+    try {
+      if (!refreshAllRateLimiter.consume(ctx.session.id, 1)) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message:
+            "Rate limit exceeded. Please wait 5 minutes before refreshing all feeds again.",
+        })
+      }
+
+      const feeds = await ctx.db.query.feedTable.findMany({
+        where: (feedTable, { eq, and }) =>
+          and(
+            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.status, "published"),
+          ),
+      })
+
+      if (feeds.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No feeds found to refresh.",
+        })
+      }
+
+      let refreshedCount = 0
+      let failedCount = 0
+      let totalNewArticles = 0
+
+      for (const feed of feeds) {
+        try {
+          const feedData = await parseFeed(feed.url)
+
+          await ctx.db
+            .update(feedTable)
+            .set({
+              lastRefreshedAt: new Date(),
+              updatedAt: new Date(),
+            })
+            .where(eq(feedTable.id, feed.id))
+
+          if (feedData.articles.length > 0) {
+            const existingArticles = await ctx.db.query.articleTable.findMany({
+              where: (articleTable, { eq, and }) =>
+                and(
+                  eq(articleTable.feedId, feed.id),
+                  eq(articleTable.status, "published"),
+                ),
+              columns: {
+                link: true,
+              },
+            })
+
+            const existingLinks = new Set(existingArticles.map((a) => a.link))
+            const newArticles = feedData.articles.filter(
+              (article) => !existingLinks.has(article.link),
+            )
+
+            if (newArticles.length > 0) {
+              const articlesToInsert = newArticles.map((article) => {
+                const articleSlug = slugify(article.title)
+                return {
+                  title: article.title,
+                  slug: articleSlug,
+                  description: article.description,
+                  content: article.content,
+                  link: article.link,
+                  imageUrl: article.imageUrl,
+                  source: article.source,
+                  pubDate: new Date(article.pubDate),
+                  userId: ctx.session.id,
+                  feedId: feed.id,
+                  isRead: false,
+                  isReadLater: false,
+                  isStarred: false,
+                }
+              })
+
+              const slugCounts = new Map<string, number>()
+              const finalArticles = articlesToInsert.map((article) => {
+                let finalSlug = article.slug
+                const count = slugCounts.get(article.slug) ?? 0
+
+                if (count > 0) {
+                  finalSlug = `${article.slug}-${count}`
+                }
+
+                slugCounts.set(article.slug, count + 1)
+
+                return {
+                  ...article,
+                  slug: finalSlug,
+                }
+              })
+
+              await ctx.db.insert(articleTable).values(finalArticles)
+              totalNewArticles += newArticles.length
+            }
+          }
+
+          refreshedCount++
+        } catch (error) {
+          failedCount++
+          console.error(`Failed to refresh feed ${feed.id}:`, error)
+        }
+      }
+
+      await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+      await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
+      await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
+
+      return {
+        totalFeeds: feeds.length,
+        refreshedFeeds: refreshedCount,
+        failedFeeds: failedCount,
+        newArticles: totalNewArticles,
+      }
+    } catch (error) {
+      handleTRPCError(error)
+    }
+  }),
+
+  /**
+   * Cron-triggered feed refresh for all users with auto-refresh enabled
+   *
+   * This procedure is intended to be called by external cron services (e.g., GitHub Actions).
+   * It requires a CRON_SECRET to be provided for authentication. Respects user settings
+   * for auto-refresh enablement and refresh interval.
+   *
+   * @param secret - Authentication secret for cron job
+   * @returns Summary with totalUsers, refreshedUsers, totalFeeds, and newArticles counts
+   * @throws TRPCError if secret is invalid or not configured
+   */
+  refreshAllCron: publicProcedure
+    .input(
+      z.object({
+        secret: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        if (!cronSecret) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "CRON_SECRET not configured on server.",
+          })
+        }
+
+        if (input.secret !== cronSecret) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid CRON_SECRET.",
+          })
+        }
+
+        const usersWithSettings = await ctx.db.query.userSettingsTable.findMany(
+          {
+            where: eq(userSettingsTable.autoRefreshEnabled, true),
+          },
+        )
+
+        if (usersWithSettings.length === 0) {
+          return {
+            totalUsers: 0,
+            refreshedUsers: 0,
+            totalFeeds: 0,
+            newArticles: 0,
+          }
+        }
+
+        let refreshedUsersCount = 0
+        let totalFeedsCount = 0
+        let totalNewArticles = 0
+
+        for (const userSettings of usersWithSettings) {
+          const now = new Date()
+          const intervalMs = userSettings.refreshIntervalHours * 60 * 60 * 1000
+
+          const feeds = await ctx.db.query.feedTable.findMany({
+            where: (feedTable, { eq, and }) =>
+              and(
+                eq(feedTable.userId, userSettings.userId),
+                eq(feedTable.status, "published"),
+              ),
+          })
+
+          if (feeds.length === 0) {
+            continue
+          }
+
+          const feedsToRefresh = feeds.filter((feed) => {
+            if (!feed.lastRefreshedAt) return true
+            const timeSinceRefresh =
+              now.getTime() - new Date(feed.lastRefreshedAt).getTime()
+            return timeSinceRefresh >= intervalMs
+          })
+
+          if (feedsToRefresh.length === 0) {
+            continue
+          }
+
+          let userNewArticles = 0
+
+          for (const feed of feedsToRefresh) {
+            try {
+              const feedData = await parseFeed(feed.url)
+
+              await ctx.db
+                .update(feedTable)
+                .set({
+                  lastRefreshedAt: new Date(),
+                  updatedAt: new Date(),
+                })
+                .where(eq(feedTable.id, feed.id))
+
+              if (feedData.articles.length > 0) {
+                const existingArticles =
+                  await ctx.db.query.articleTable.findMany({
+                    where: (articleTable, { eq, and }) =>
+                      and(
+                        eq(articleTable.feedId, feed.id),
+                        eq(articleTable.status, "published"),
+                      ),
+                    columns: {
+                      link: true,
+                    },
+                  })
+
+                const existingLinks = new Set(
+                  existingArticles.map((a) => a.link),
+                )
+                const newArticles = feedData.articles.filter(
+                  (article) => !existingLinks.has(article.link),
+                )
+
+                if (newArticles.length > 0) {
+                  const articlesToInsert = newArticles.map((article) => {
+                    const articleSlug = slugify(article.title)
+                    return {
+                      title: article.title,
+                      slug: articleSlug,
+                      description: article.description,
+                      content: article.content,
+                      link: article.link,
+                      imageUrl: article.imageUrl,
+                      source: article.source,
+                      pubDate: new Date(article.pubDate),
+                      userId: userSettings.userId,
+                      feedId: feed.id,
+                      isRead: false,
+                      isReadLater: false,
+                      isStarred: false,
+                    }
+                  })
+
+                  const slugCounts = new Map<string, number>()
+                  const finalArticles = articlesToInsert.map((article) => {
+                    let finalSlug = article.slug
+                    const count = slugCounts.get(article.slug) ?? 0
+
+                    if (count > 0) {
+                      finalSlug = `${article.slug}-${count}`
+                    }
+
+                    slugCounts.set(article.slug, count + 1)
+
+                    return {
+                      ...article,
+                      slug: finalSlug,
+                    }
+                  })
+
+                  await ctx.db.insert(articleTable).values(finalArticles)
+                  userNewArticles += newArticles.length
+                }
+              }
+
+              totalFeedsCount++
+            } catch (error) {
+              console.error(`Failed to refresh feed ${feed.id}:`, error)
+            }
+          }
+
+          if (userNewArticles > 0) {
+            await ctx.redis.invalidatePattern(
+              `feed:*:user:${userSettings.userId}`,
+            )
+            await ctx.redis.invalidatePattern(
+              `article:*:user:${userSettings.userId}`,
+            )
+            await ctx.redis.deleteCache(
+              `feed:statistics:user:${userSettings.userId}`,
+            )
+          }
+
+          totalNewArticles += userNewArticles
+          refreshedUsersCount++
+        }
+
+        return {
+          totalUsers: usersWithSettings.length,
+          refreshedUsers: refreshedUsersCount,
+          totalFeeds: totalFeedsCount,
+          newArticles: totalNewArticles,
+        }
       } catch (error) {
         handleTRPCError(error)
       }
