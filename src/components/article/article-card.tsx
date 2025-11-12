@@ -239,7 +239,7 @@ export function ArticleCard({
           >
             <CheckIcon className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">
-              {isRead ? "Read" : "Unread"}
+              {isRead ? "Mark as Unread" : "Mark as Read"}
             </span>
           </Button>
         </div>
