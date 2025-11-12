@@ -68,6 +68,7 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
             },
           })
         }
+        await queryClient.invalidateQueries(trpc.article.pathFilter())
         await queryClient.invalidateQueries(trpc.feed.pathFilter())
       },
     }),
