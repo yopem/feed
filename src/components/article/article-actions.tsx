@@ -45,22 +45,8 @@ export function ArticleActions({
 
   const updateStarred = useMutation(
     trpc.article.updateStarred.mutationOptions({
-      onSuccess: async (data) => {
-        if (data?.id && articleId) {
-          await queryClient.invalidateQueries({
-            predicate: (query) => {
-              const queryKey = query.queryKey as unknown[]
-              return Boolean(
-                queryKey[0] === "article" &&
-                  queryKey[1] === "byId" &&
-                  queryKey[2] &&
-                  typeof queryKey[2] === "object" &&
-                  "input" in queryKey[2] &&
-                  queryKey[2].input === articleId,
-              )
-            },
-          })
-        }
+      onSuccess: async () => {
+        await queryClient.invalidateQueries(trpc.article.pathFilter())
         await queryClient.invalidateQueries(trpc.feed.pathFilter())
       },
     }),
@@ -68,22 +54,8 @@ export function ArticleActions({
 
   const updateReadLater = useMutation(
     trpc.article.updateReadLater.mutationOptions({
-      onSuccess: async (data) => {
-        if (data?.id && articleId) {
-          await queryClient.invalidateQueries({
-            predicate: (query) => {
-              const queryKey = query.queryKey as unknown[]
-              return Boolean(
-                queryKey[0] === "article" &&
-                  queryKey[1] === "byId" &&
-                  queryKey[2] &&
-                  typeof queryKey[2] === "object" &&
-                  "input" in queryKey[2] &&
-                  queryKey[2].input === articleId,
-              )
-            },
-          })
-        }
+      onSuccess: async () => {
+        await queryClient.invalidateQueries(trpc.article.pathFilter())
         await queryClient.invalidateQueries(trpc.feed.pathFilter())
       },
     }),
@@ -93,6 +65,9 @@ export function ArticleActions({
     setIsShareDialogOpen(true)
   }
 
+  const currentIsStarred = article?.isStarred ?? isStarred
+  const currentIsReadLater = article?.isReadLater ?? isReadLater
+
   return (
     <div className="border-border flex items-center justify-between border-b-2 px-4 py-3 md:px-6">
       <div className="flex items-center gap-1.5">
@@ -101,15 +76,18 @@ export function ArticleActions({
           size="icon"
           className="h-9 w-9"
           onClick={() =>
-            updateStarred.mutate({ id: articleId, isStarred: !isStarred })
+            updateStarred.mutate({
+              id: articleId,
+              isStarred: !currentIsStarred,
+            })
           }
-          title={isStarred ? "Remove star" : "Add star"}
-          aria-label={isStarred ? "Remove star" : "Add star"}
+          title={currentIsStarred ? "Remove star" : "Add star"}
+          aria-label={currentIsStarred ? "Remove star" : "Add star"}
         >
           <StarIcon
             className={cn(
               "h-5 w-5 transition-colors",
-              isStarred
+              currentIsStarred
                 ? "fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400"
                 : "text-muted-foreground hover:text-foreground",
             )}
@@ -123,16 +101,18 @@ export function ArticleActions({
           onClick={() =>
             updateReadLater.mutate({
               id: articleId,
-              isReadLater: !isReadLater,
+              isReadLater: !currentIsReadLater,
             })
           }
-          title={isReadLater ? "Remove from read later" : "Read later"}
-          aria-label={isReadLater ? "Remove from read later" : "Read later"}
+          title={currentIsReadLater ? "Remove from read later" : "Read later"}
+          aria-label={
+            currentIsReadLater ? "Remove from read later" : "Read later"
+          }
         >
           <BookmarkIcon
             className={cn(
               "h-5 w-5 transition-colors",
-              isReadLater
+              currentIsReadLater
                 ? "fill-blue-500 text-blue-500 dark:fill-blue-400 dark:text-blue-400"
                 : "text-muted-foreground hover:text-foreground",
             )}
