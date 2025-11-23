@@ -54,6 +54,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { logout } from "@/lib/auth/logout"
@@ -130,6 +131,7 @@ export function AppSidebar() {
   } | null>(null)
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const { setOpenMobile, isMobile } = useSidebar()
 
   const { data: feeds, isLoading: feedsLoading } = useQuery(
     trpc.feed.all.queryOptions({
@@ -261,7 +263,10 @@ export function AppSidebar() {
                       <SidebarMenuButton
                         asChild
                         isActive={isActive}
-                        onClick={() => setFilter(filterItem.value)}
+                        onClick={() => {
+                          void setFilter(filterItem.value)
+                          if (isMobile) setOpenMobile(false)
+                        }}
                         className={cn(
                           "group cursor-pointer",
                           isActive && "bg-accent",
@@ -317,7 +322,10 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       isActive={!selectedTag}
-                      onClick={() => setTagSlug(null)}
+                      onClick={() => {
+                        void setTagSlug(null)
+                        if (isMobile) setOpenMobile(false)
+                      }}
                       className={cn(
                         "group cursor-pointer",
                         !selectedTag && "bg-accent",
@@ -344,7 +352,10 @@ export function AppSidebar() {
                         <SidebarMenuButton
                           asChild
                           isActive={isSelected}
-                          onClick={() => setTagSlug(tag.id)}
+                          onClick={() => {
+                            void setTagSlug(tag.id)
+                            if (isMobile) setOpenMobile(false)
+                          }}
                           className={cn(
                             "group cursor-pointer",
                             isSelected && "bg-accent",
@@ -439,7 +450,10 @@ export function AppSidebar() {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    onClick={() => setFeedSlug("")}
+                    onClick={() => {
+                      void setFeedSlug("")
+                      if (isMobile) setOpenMobile(false)
+                    }}
                     className="w-full cursor-pointer"
                     isActive={feedSlug === ""}
                   >
@@ -473,7 +487,10 @@ export function AppSidebar() {
                         <SidebarMenuButton
                           asChild
                           isActive={isSelected}
-                          onClick={() => setFeedSlug(feed.slug)}
+                          onClick={() => {
+                            void setFeedSlug(feed.slug)
+                            if (isMobile) setOpenMobile(false)
+                          }}
                           className={cn(
                             "group h-auto cursor-pointer py-2",
                             isSelected && "bg-accent",

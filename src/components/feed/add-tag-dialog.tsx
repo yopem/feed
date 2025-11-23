@@ -2,12 +2,17 @@
 
 import { useForm } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { XIcon } from "lucide-react"
 import { toast } from "sonner"
 import type { z } from "zod"
 
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Field,
   FieldContent,
@@ -63,22 +68,17 @@ export function AddTagDialog({ isOpen, onClose }: AddTagDialogProps) {
     }),
   )
 
-  if (!isOpen) return null
+  const handleClose = () => {
+    form.reset()
+    onClose()
+  }
 
   return (
-    <div className="bg-background/95 fixed inset-0 z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-foreground text-xl font-bold">Add New Tag</h2>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            aria-label="Close"
-          >
-            <XIcon className="text-muted-foreground h-5 w-5" />
-          </Button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add New Tag</DialogTitle>
+        </DialogHeader>
 
         <form
           onSubmit={(e) => {
@@ -172,10 +172,10 @@ export function AddTagDialog({ isOpen, onClose }: AddTagDialogProps) {
             selector={(state) => [state.isSubmitting, state.canSubmit]}
           >
             {([isSubmitting, canSubmit]) => (
-              <div className="flex justify-end gap-3">
+              <DialogFooter>
                 <Button
                   type="button"
-                  onClick={onClose}
+                  onClick={handleClose}
                   variant="secondary"
                   disabled={createTag.isPending}
                 >
@@ -187,11 +187,11 @@ export function AddTagDialog({ isOpen, onClose }: AddTagDialogProps) {
                 >
                   {createTag.isPending ? "Creating..." : "Create Tag"}
                 </Button>
-              </div>
+              </DialogFooter>
             )}
           </form.Subscribe>
         </form>
-      </Card>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

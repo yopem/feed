@@ -9,7 +9,13 @@ import { z } from "zod"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Field,
   FieldContent,
@@ -209,27 +215,19 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
     createTag.mutate({ name: tagSearchQuery.trim() })
   }
 
-  if (!isOpen) return null
+  const handleClose = () => {
+    form.reset()
+    setSelectedTagIds([])
+    setTagSearchQuery("")
+    onClose()
+  }
 
   return (
-    <div className="bg-background/95 fixed inset-0 z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-foreground text-xl font-bold">Add New Feed</h2>
-          <Button
-            onClick={() => {
-              form.reset()
-              setSelectedTagIds([])
-              setTagSearchQuery("")
-              onClose()
-            }}
-            variant="ghost"
-            size="icon"
-            aria-label="Close"
-          >
-            <XIcon className="text-muted-foreground h-5 w-5" />
-          </Button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add New Feed</DialogTitle>
+        </DialogHeader>
 
         <form
           onSubmit={(e) => {
@@ -385,15 +383,10 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
             selector={(state) => [state.isSubmitting, state.canSubmit]}
           >
             {([isSubmitting, canSubmit]) => (
-              <div className="flex justify-end gap-3">
+              <DialogFooter>
                 <Button
                   type="button"
-                  onClick={() => {
-                    form.reset()
-                    setSelectedTagIds([])
-                    setTagSearchQuery("")
-                    onClose()
-                  }}
+                  onClick={handleClose}
                   variant="secondary"
                   disabled={
                     createFeed.isPending ||
@@ -419,11 +412,11 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
                       ? "Creating tag..."
                       : "Add Feed"}
                 </Button>
-              </div>
+              </DialogFooter>
             )}
           </form.Subscribe>
         </form>
-      </Card>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
