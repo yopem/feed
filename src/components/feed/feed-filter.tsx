@@ -4,7 +4,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export type FilterType = "all" | "unread" | "starred" | "readLater" | "today"
+export type FilterType =
+  | "all"
+  | "unread"
+  | "starred"
+  | "readLater"
+  | "today"
+  | "recentlyRead"
 
 interface FeedFilterProps {
   activeFilter: FilterType
@@ -15,6 +21,7 @@ interface FeedFilterProps {
     starred: number
     readLater: number
     today: number
+    recentlyRead: number
   }
 }
 
@@ -24,6 +31,7 @@ const filters: { value: FilterType; label: string }[] = [
   { value: "unread", label: "Unread" },
   { value: "starred", label: "Favorited" },
   { value: "readLater", label: "Read Later" },
+  { value: "recentlyRead", label: "Recently Read" },
 ]
 
 export function FeedFilter({

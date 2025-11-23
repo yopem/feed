@@ -75,6 +75,8 @@ function DashboardContent() {
         return "Favorited"
       case "readLater":
         return "Read Later"
+      case "recentlyRead":
+        return "Recently Read"
       default:
         return "All Articles"
     }

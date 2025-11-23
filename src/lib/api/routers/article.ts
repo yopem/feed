@@ -193,7 +193,14 @@ export const articleRouter = createTRPCRouter({
   byFilter: protectedProcedure
     .input(
       z.object({
-        filter: z.enum(["all", "unread", "starred", "readLater", "today"]),
+        filter: z.enum([
+          "all",
+          "unread",
+          "starred",
+          "readLater",
+          "today",
+          "recentlyRead",
+        ]),
         feedId: z.string().optional(),
         page: z.number().default(1),
         perPage: z.number().default(50),
@@ -225,6 +232,10 @@ export const articleRouter = createTRPCRouter({
         } else if (input.filter === "today") {
           const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
           conditions.push(gte(articleTable.pubDate, yesterday))
+        } else if (input.filter === "recentlyRead") {
+          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          conditions.push(eq(articleTable.isRead, true))
+          conditions.push(gte(articleTable.updatedAt, sevenDaysAgo))
         }
 
         const data = await ctx.db.query.articleTable.findMany({
@@ -390,7 +401,14 @@ export const articleRouter = createTRPCRouter({
     .input(
       z.object({
         filter: z
-          .enum(["all", "unread", "starred", "readLater", "today"])
+          .enum([
+            "all",
+            "unread",
+            "starred",
+            "readLater",
+            "today",
+            "recentlyRead",
+          ])
           .default("all"),
         feedId: z.string().optional(),
         limit: z.number().default(50),
@@ -429,6 +447,10 @@ export const articleRouter = createTRPCRouter({
         } else if (input.filter === "today") {
           const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
           conditions.push(gte(articleTable.pubDate, yesterday))
+        } else if (input.filter === "recentlyRead") {
+          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          conditions.push(eq(articleTable.isRead, true))
+          conditions.push(gte(articleTable.updatedAt, sevenDaysAgo))
         }
 
         if (cursorDate) {

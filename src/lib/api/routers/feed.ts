@@ -434,6 +434,7 @@ export const feedRouter = {
           starredCount: number
           readLaterCount: number
           todayCount: number
+          recentlyReadCount: number
         }[]
       >(cacheKey)
       if (cached) {
@@ -451,6 +452,7 @@ export const feedRouter = {
           favoritedCount: sql<number>`COUNT(*) FILTER (WHERE ${articleTable.isFavorited} = true)::int`,
           readLaterCount: sql<number>`COUNT(*) FILTER (WHERE ${articleTable.isReadLater} = true)::int`,
           todayCount: sql<number>`COUNT(*) FILTER (WHERE ${articleTable.pubDate} >= NOW() - INTERVAL '24 hours')::int`,
+          recentlyReadCount: sql<number>`COUNT(*) FILTER (WHERE ${articleTable.isRead} = true AND ${articleTable.updatedAt} >= NOW() - INTERVAL '7 days')::int`,
         })
         .from(articleTable)
         .where(

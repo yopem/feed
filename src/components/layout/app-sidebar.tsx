@@ -6,6 +6,7 @@ import {
   BookmarkIcon,
   CalendarIcon,
   ChevronUpIcon,
+  ClockIcon,
   InboxIcon,
   ListIcon,
   LogOutIcon,
@@ -89,6 +90,7 @@ const filterItems = [
   { value: "unread" as const, label: "Unread", icon: InboxIcon },
   { value: "starred" as const, label: "Favorited", icon: StarIcon },
   { value: "readLater" as const, label: "Read Later", icon: BookmarkIcon },
+  { value: "recentlyRead" as const, label: "Recently Read", icon: ClockIcon },
 ]
 
 export function AppSidebar() {
@@ -255,6 +257,12 @@ export function AppSidebar() {
     readLater:
       statistics?.reduce(
         (acc: number, s: { readLaterCount: number }) => acc + s.readLaterCount,
+        0,
+      ) ?? 0,
+    recentlyRead:
+      statistics?.reduce(
+        (acc: number, s: { recentlyReadCount?: number }) =>
+          acc + (s.recentlyReadCount ?? 0),
         0,
       ) ?? 0,
   }
