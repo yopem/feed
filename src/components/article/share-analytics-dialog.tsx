@@ -3,6 +3,7 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import dayjs from "dayjs"
+import relativeTime from "dayjs/plugin/relativeTime"
 import {
   BarChart3Icon,
   EyeIcon,
@@ -13,18 +14,18 @@ import {
 } from "lucide-react"
 
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { useTRPC } from "@/lib/trpc/client"
+
+dayjs.extend(relativeTime)
 
 interface ShareAnalyticsData {
   totalViews: number
@@ -70,41 +71,46 @@ export function ShareAnalyticsDialog({
   const { data, isLoading } = useQuery({
     ...trpc.article.getShareAnalytics.queryOptions({ id: articleId }),
     enabled: isOpen && !!articleId && !!article?.isPubliclyShared,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000,
   })
 
   const analytics = data as ShareAnalyticsData | undefined
+
+  const getCountryName = (code: string) => {
+    if (code === "Unknown") return "Unknown"
+    try {
+      const regionNames = new Intl.DisplayNames(["en"], { type: "region" })
+      return regionNames.of(code) ?? code
+    } catch {
+      return code
+    }
+  }
 
   if (!isOpen) return null
 
   if (!article?.isPubliclyShared) {
     return (
-      <AlertDialog open={isOpen} onOpenChange={onClose}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Analytics Unavailable</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Analytics Unavailable</DialogTitle>
+            <DialogDescription>
               This article is not publicly shared. Enable sharing to view
               analytics.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Close</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     )
   }
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto">
-        <AlertDialogHeader>
-          <AlertDialogTitle>Share Analytics</AlertDialogTitle>
-          <AlertDialogDescription>
-            Analytics for "{articleTitle}"
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-h-[90vh] !max-w-6xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Share Analytics</DialogTitle>
+          <DialogDescription>Analytics for "{articleTitle}"</DialogDescription>
+        </DialogHeader>
 
         {isLoading ? (
           <div className="space-y-4 py-4">
@@ -112,7 +118,7 @@ export function ShareAnalyticsDialog({
           </div>
         ) : analytics ? (
           <div className="space-y-6 py-4">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-3">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -121,10 +127,10 @@ export function ShareAnalyticsDialog({
                   <EyeIcon className="text-muted-foreground h-4 w-4" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
+                  <div className="text-3xl font-bold">
                     {analytics.totalViews.toLocaleString()}
                   </div>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     All time views
                   </p>
                 </CardContent>
@@ -138,10 +144,10 @@ export function ShareAnalyticsDialog({
                   <UsersIcon className="text-muted-foreground h-4 w-4" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
+                  <div className="text-3xl font-bold">
                     {analytics.uniqueViews.toLocaleString()}
                   </div>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Distinct visitors
                   </p>
                 </CardContent>
@@ -155,12 +161,12 @@ export function ShareAnalyticsDialog({
                   <TrendingUpIcon className="text-muted-foreground h-4 w-4" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {article.shareLastViewedAt
-                      ? dayjs(article.shareLastViewedAt).fromNow()
+                  <div className="text-xl font-bold">
+                    {analytics.shareLastViewedAt
+                      ? dayjs(analytics.shareLastViewedAt).fromNow()
                       : "Never"}
                   </div>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Most recent view
                   </p>
                 </CardContent>
@@ -170,34 +176,34 @@ export function ShareAnalyticsDialog({
             {analytics.viewsOverTime.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <BarChart3Icon className="h-4 w-4" />
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3Icon className="h-5 w-5" />
                     Views Over Time (Last 30 Days)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {analytics.viewsOverTime
                       .slice(0, 10)
                       .map((day: { date: string; views: number }) => (
                         <div
                           key={day.date}
-                          className="flex items-center justify-between"
+                          className="grid grid-cols-[120px_1fr_60px] items-center gap-4"
                         >
                           <span className="text-muted-foreground text-sm">
                             {dayjs(day.date).format("MMM D, YYYY")}
                           </span>
-                          <div className="flex items-center gap-2">
+                          <div className="bg-muted relative h-6 overflow-hidden">
                             <div
-                              className="bg-primary h-2 rounded-full"
+                              className="bg-foreground h-full"
                               style={{
-                                width: `${Math.max((day.views / Math.max(...analytics.viewsOverTime.map((d: { views: number }) => d.views))) * 200, 20)}px`,
+                                width: `${(day.views / Math.max(...analytics.viewsOverTime.map((d: { views: number }) => d.views))) * 100}%`,
                               }}
                             />
-                            <span className="text-foreground w-12 text-right text-sm font-medium">
-                              {day.views}
-                            </span>
                           </div>
+                          <span className="text-foreground text-right text-base font-bold">
+                            {day.views}
+                          </span>
                         </div>
                       ))}
                   </div>
@@ -205,28 +211,28 @@ export function ShareAnalyticsDialog({
               </Card>
             )}
 
-            {analytics.topReferrers.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <LinkIcon className="h-4 w-4" />
-                    Top Referrers
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {analytics.topReferrers.map(
-                      (
-                        referrer: { referer: string; count: number },
-                        index: number,
-                      ) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between"
-                        >
-                          <div className="flex items-center gap-2">
+            <div className="grid gap-6 md:grid-cols-2">
+              {analytics.topReferrers.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <LinkIcon className="h-5 w-5" />
+                      Top Referrers
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {analytics.topReferrers.map(
+                        (
+                          referrer: { referer: string; count: number },
+                          index: number,
+                        ) => (
+                          <div
+                            key={index}
+                            className="grid grid-cols-[auto_1fr_auto] items-center gap-3"
+                          >
                             <Badge variant="outline" className="text-xs">
-                              {index + 1}
+                              #{index + 1}
                             </Badge>
                             <span className="text-foreground truncate text-sm">
                               {referrer.referer === "direct" ||
@@ -234,71 +240,71 @@ export function ShareAnalyticsDialog({
                                 ? "Direct / None"
                                 : referrer.referer}
                             </span>
+                            <span className="text-muted-foreground text-sm whitespace-nowrap">
+                              {referrer.count} views
+                            </span>
                           </div>
-                          <span className="text-muted-foreground text-sm">
-                            {referrer.count} views
-                          </span>
-                        </div>
-                      ),
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                        ),
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
-            {analytics.geographicData.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <GlobeIcon className="h-4 w-4" />
-                    Geographic Distribution
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {analytics.geographicData.map(
-                      (
-                        geo: { country: string; count: number },
-                        index: number,
-                      ) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between"
-                        >
-                          <span className="text-foreground text-sm">
-                            {geo.country || "Unknown"}
-                          </span>
-                          <span className="text-muted-foreground text-sm">
-                            {geo.count} views
-                          </span>
-                        </div>
-                      ),
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+              {analytics.geographicData.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <GlobeIcon className="h-5 w-5" />
+                      Geographic Distribution
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {analytics.geographicData.map(
+                        (
+                          geo: { country: string; count: number },
+                          index: number,
+                        ) => (
+                          <div
+                            key={index}
+                            className="grid grid-cols-[1fr_auto] items-center gap-3"
+                          >
+                            <span className="text-foreground truncate text-sm">
+                              {getCountryName(geo.country)}
+                            </span>
+                            <span className="text-muted-foreground text-sm whitespace-nowrap">
+                              {geo.count} views
+                            </span>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
 
             {analytics.totalViews === 0 && (
-              <div className="border-border rounded-lg border-2 p-8 text-center">
-                <p className="text-muted-foreground text-sm">
-                  No views yet. Share your link to start tracking analytics!
-                </p>
-              </div>
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <p className="text-muted-foreground text-sm">
+                    No views yet. Share your link to start tracking analytics!
+                  </p>
+                </CardContent>
+              </Card>
             )}
           </div>
         ) : (
-          <div className="border-border rounded-lg border-2 p-8 text-center">
-            <p className="text-muted-foreground text-sm">
-              Unable to load analytics. Please try again later.
-            </p>
-          </div>
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-muted-foreground text-sm">
+                Unable to load analytics. Please try again later.
+              </p>
+            </CardContent>
+          </Card>
         )}
-
-        <AlertDialogFooter>
-          <AlertDialogCancel>Close</AlertDialogCancel>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      </DialogContent>
+    </Dialog>
   )
 }

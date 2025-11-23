@@ -83,6 +83,7 @@ export default function SharedArticlePage({
       trackView.mutate({
         username,
         slug,
+        userAgent: navigator.userAgent,
         referer: document.referrer || undefined,
       })
     }

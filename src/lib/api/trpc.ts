@@ -5,6 +5,7 @@ import z, { ZodError } from "zod"
 import { auth } from "@/lib/auth/session"
 import { db } from "@/lib/db"
 import { createRedisCache } from "@/lib/db/redis"
+import { appEnv } from "@/lib/env/server"
 import { createTokenBucket } from "@/lib/utils/rate-limit"
 
 /**
@@ -16,10 +17,30 @@ const publicRateLimiter = createTokenBucket<string>(50, 60)
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await auth()
   const redis = createRedisCache()
-  const clientIP =
+
+  let clientIP =
     opts.headers.get("x-forwarded-for") ??
     opts.headers.get("x-real-ip") ??
     "unknown"
+
+  // For development: If localhost/private IP, use a test public IP for geolocation testing
+  if (
+    appEnv === "development" &&
+    (clientIP === "unknown" ||
+      clientIP === "127.0.0.1" ||
+      clientIP === "::1" ||
+      clientIP.includes("::ffff:192.168.") ||
+      clientIP.includes("::ffff:10.") ||
+      clientIP.includes("::ffff:172.") ||
+      clientIP.includes("::ffff:127.") ||
+      clientIP.startsWith("192.168.") ||
+      clientIP.startsWith("10.") ||
+      clientIP.startsWith("172.") ||
+      clientIP.startsWith("127."))
+  ) {
+    // Use a real public IP for testing (Google DNS)
+    clientIP = "8.8.8.8"
+  }
 
   return {
     db,

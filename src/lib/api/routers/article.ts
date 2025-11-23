@@ -17,6 +17,7 @@ import {
   type SelectArticle,
   type SelectFeed,
 } from "@/lib/db/schema"
+import { lookupGeoLocation } from "@/lib/utils/geolocation"
 import { generateSlug } from "@/lib/utils/slug"
 
 type ArticleWithFeed = SelectArticle & {
@@ -867,12 +868,13 @@ export const articleRouter = createTRPCRouter({
   /**
    * Public endpoint to track a view on a shared article
    *
-   * Records a view event for analytics. IP addresses are anonymized
-   * using SHA-256 hashing for privacy. Updates view count and last viewed timestamp.
+   * Records a view event for analytics including geographic location data.
+   * IP addresses are anonymized using SHA-256 hashing for privacy after
+   * geolocation lookup. Updates view count and last viewed timestamp.
    *
    * @param username - The article owner's username
    * @param slug - Share slug
-   * @param ipAddress - Client IP address (will be hashed)
+   * @param ipAddress - Client IP address (will be geolocated then hashed)
    * @param userAgent - Client user agent string
    * @param referer - HTTP Referer header
    * @returns Success status
@@ -882,7 +884,6 @@ export const articleRouter = createTRPCRouter({
       z.object({
         username: z.string(),
         slug: z.string(),
-        ipAddress: z.string().optional(),
         userAgent: z.string().optional(),
         referer: z.string().optional(),
       }),
@@ -906,11 +907,17 @@ export const articleRouter = createTRPCRouter({
         }
 
         let ipHash: string | null = null
-        if (input.ipAddress) {
-          ipHash = crypto
-            .createHash("sha256")
-            .update(input.ipAddress)
-            .digest("hex")
+        let country: string | null = null
+        let city: string | null = null
+
+        const ipAddress = ctx.clientIP
+
+        if (ipAddress && ipAddress !== "unknown") {
+          const geo = await lookupGeoLocation(ipAddress)
+          country = geo.country
+          city = geo.city
+
+          ipHash = crypto.createHash("sha256").update(ipAddress).digest("hex")
         }
 
         await ctx.db.insert(articleShareViewTable).values({
@@ -918,6 +925,8 @@ export const articleRouter = createTRPCRouter({
           ipHash,
           userAgent: input.userAgent,
           referer: input.referer,
+          country,
+          city,
           viewedAt: new Date(),
         })
 
@@ -933,6 +942,8 @@ export const articleRouter = createTRPCRouter({
         await ctx.redis.deleteCache(
           `feed:article:public:${input.username}:${input.slug}`,
         )
+        const analyticsPattern = `feed:article:analytics:${article.id}:*`
+        await ctx.redis.invalidatePattern(analyticsPattern)
 
         return { success: true }
       } catch (error) {
