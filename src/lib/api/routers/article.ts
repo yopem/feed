@@ -192,7 +192,7 @@ export const articleRouter = createTRPCRouter({
   byFilter: protectedProcedure
     .input(
       z.object({
-        filter: z.enum(["all", "unread", "starred", "readLater"]),
+        filter: z.enum(["all", "unread", "starred", "readLater", "today"]),
         feedId: z.string().optional(),
         page: z.number().default(1),
         perPage: z.number().default(50),
@@ -221,6 +221,9 @@ export const articleRouter = createTRPCRouter({
           conditions.push(eq(articleTable.isStarred, true))
         } else if (input.filter === "readLater") {
           conditions.push(eq(articleTable.isReadLater, true))
+        } else if (input.filter === "today") {
+          const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+          conditions.push(gte(articleTable.pubDate, yesterday))
         }
 
         const data = await ctx.db.query.articleTable.findMany({
@@ -375,7 +378,7 @@ export const articleRouter = createTRPCRouter({
     .input(
       z.object({
         filter: z
-          .enum(["all", "unread", "starred", "readLater"])
+          .enum(["all", "unread", "starred", "readLater", "today"])
           .default("all"),
         feedId: z.string().optional(),
         limit: z.number().default(50),
@@ -411,6 +414,9 @@ export const articleRouter = createTRPCRouter({
           conditions.push(eq(articleTable.isStarred, true))
         } else if (input.filter === "readLater") {
           conditions.push(eq(articleTable.isReadLater, true))
+        } else if (input.filter === "today") {
+          const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+          conditions.push(gte(articleTable.pubDate, yesterday))
         }
 
         if (cursorDate) {

@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   BookmarkIcon,
+  CalendarIcon,
   ChevronUpIcon,
   InboxIcon,
   ListIcon,
@@ -82,6 +83,7 @@ interface FeedWithTags {
 }
 
 const filterItems = [
+  { value: "today" as const, label: "Today", icon: CalendarIcon },
   { value: "all" as const, label: "All Articles", icon: ListIcon },
   { value: "unread" as const, label: "Unread", icon: InboxIcon },
   { value: "starred" as const, label: "Starred", icon: StarIcon },
@@ -196,6 +198,11 @@ export function AppSidebar() {
     all:
       statistics?.reduce(
         (acc: number, s: { totalCount: number }) => acc + s.totalCount,
+        0,
+      ) ?? 0,
+    today:
+      statistics?.reduce(
+        (acc: number, s: { todayCount?: number }) => acc + (s.todayCount ?? 0),
         0,
       ) ?? 0,
     unread:

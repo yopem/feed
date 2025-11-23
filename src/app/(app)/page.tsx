@@ -67,6 +67,8 @@ function DashboardContent() {
 
   const getFilterLabel = () => {
     switch (filter) {
+      case "today":
+        return "Today"
       case "unread":
         return "Unread"
       case "starred":
