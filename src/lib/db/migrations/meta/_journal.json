@@ -50,6 +50,13 @@
       "when": 1762977940454,
       "tag": "0006_calm_lady_vermin",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1763884408283,
+      "tag": "0007_demonic_skullbuster",
+      "breakpoints": true
     }
   ]
 }

@@ -36,6 +36,7 @@ import { useTRPC } from "@/lib/trpc/client"
 const formSchema = updateUserSettingsSchema.pick({
   autoRefreshEnabled: true,
   refreshIntervalHours: true,
+  articleRetentionDays: true,
 })
 type FormData = z.infer<typeof formSchema>
 
@@ -51,12 +52,14 @@ function SettingsContent() {
     defaultValues: {
       autoRefreshEnabled: settings?.autoRefreshEnabled ?? true,
       refreshIntervalHours: settings?.refreshIntervalHours ?? 24,
+      articleRetentionDays: settings?.articleRetentionDays ?? 30,
     } as FormData,
     onSubmit: async ({ value }) => {
       try {
         await updateSettings.mutateAsync({
           autoRefreshEnabled: value.autoRefreshEnabled,
           refreshIntervalHours: value.refreshIntervalHours,
+          articleRetentionDays: value.articleRetentionDays,
         })
         // eslint-disable-next-line no-empty
       } catch {}
@@ -71,6 +74,24 @@ function SettingsContent() {
       },
       onError: (err: { message: string }) => {
         toast.error(err.message || "Failed to save settings")
+      },
+    }),
+  )
+
+  const expireArticles = useMutation(
+    trpc.user.expireMyArticles.mutationOptions({
+      onSuccess: async (data) => {
+        await queryClient.invalidateQueries(trpc.article.pathFilter())
+        if (data?.articlesExpired === 0) {
+          toast.info("No old articles to delete")
+        } else {
+          toast.success(
+            `Deleted ${data?.articlesExpired} old article${data?.articlesExpired === 1 ? "" : "s"}`,
+          )
+        }
+      },
+      onError: (err: { message: string }) => {
+        toast.error(err.message || "Failed to delete articles")
       },
     }),
   )
@@ -185,6 +206,71 @@ function SettingsContent() {
                       How many hours to wait between automatic refreshes (1-168
                       hours)
                     </FieldDescription>
+                    {field.state.meta.errors.length > 0 && (
+                      <FieldError>{field.state.meta.errors[0]!}</FieldError>
+                    )}
+                  </FieldContent>
+                </Field>
+              )}
+            </form.Field>
+
+            <form.Field
+              name="articleRetentionDays"
+              validators={{
+                onSubmit: ({ value }) => {
+                  const result =
+                    formSchema.shape.articleRetentionDays.safeParse(value)
+                  if (!result.success) {
+                    return (
+                      result.error.issues[0]?.message || "Invalid retention"
+                    )
+                  }
+                  return undefined
+                },
+              }}
+            >
+              {(field) => (
+                <Field data-invalid={field.state.meta.errors.length > 0}>
+                  <FieldContent>
+                    <FieldLabel htmlFor={field.name}>
+                      Article Retention Period (days)
+                    </FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="number"
+                      min={1}
+                      max={365}
+                      value={field.state.value ?? ""}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10)
+                        field.handleChange(isNaN(val) ? 0 : val)
+                      }}
+                      disabled={updateSettings.isPending}
+                      aria-invalid={field.state.meta.errors.length > 0}
+                    />
+                    <FieldDescription>
+                      Automatically delete articles older than this many days
+                      (1-365 days)
+                    </FieldDescription>
+                    <div className="mt-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => expireArticles.mutate()}
+                        disabled={expireArticles.isPending}
+                      >
+                        {expireArticles.isPending
+                          ? "Deleting..."
+                          : "Delete Old Articles Now"}
+                      </Button>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        Immediately delete articles older than your retention
+                        setting
+                      </p>
+                    </div>
                     {field.state.meta.errors.length > 0 && (
                       <FieldError>{field.state.meta.errors[0]!}</FieldError>
                     )}

@@ -13,6 +13,7 @@ export const userSettingsTable = pgTable("user_settings", {
   userId: text("user_id").notNull().unique(),
   autoRefreshEnabled: boolean("auto_refresh_enabled").default(true).notNull(),
   refreshIntervalHours: integer("refresh_interval_hours").default(24).notNull(),
+  articleRetentionDays: integer("article_retention_days").default(30).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 })

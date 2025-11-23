@@ -1,9 +1,9 @@
-import { eq } from "drizzle-orm"
+import { and, eq, lt } from "drizzle-orm"
 import z from "zod"
 
 import { handleTRPCError } from "@/lib/api/error"
 import { createTRPCRouter, protectedProcedure } from "@/lib/api/trpc"
-import { userSettingsTable } from "@/lib/db/schema"
+import { articleTable, userSettingsTable } from "@/lib/db/schema"
 
 /**
  * User management router providing operations for user profile and settings
@@ -24,9 +24,9 @@ export const userRouter = createTRPCRouter({
    * Get user settings for auto-refresh configuration
    *
    * If settings don't exist yet, creates them with default values
-   * (autoRefreshEnabled: true, refreshIntervalHours: 24)
+   * (autoRefreshEnabled: true, refreshIntervalHours: 24, articleRetentionDays: 30)
    *
-   * @returns User settings with auto-refresh preferences
+   * @returns User settings with auto-refresh and retention preferences
    */
   getSettings: protectedProcedure.query(async ({ ctx }) => {
     try {
@@ -47,6 +47,7 @@ export const userRouter = createTRPCRouter({
             userId: ctx.session.id,
             autoRefreshEnabled: true,
             refreshIntervalHours: 24,
+            articleRetentionDays: 30,
           })
           .returning()
         settings = newSettings
@@ -60,10 +61,11 @@ export const userRouter = createTRPCRouter({
   }),
 
   /**
-   * Update user settings for auto-refresh configuration
+   * Update user settings for auto-refresh configuration and article retention
    *
    * @param autoRefreshEnabled - Enable/disable automatic feed refresh
    * @param refreshIntervalHours - Hours between automatic refreshes (1-168)
+   * @param articleRetentionDays - Days to keep articles before expiring (1-365)
    * @returns Updated user settings
    * @throws TRPCError if settings not found
    */
@@ -72,6 +74,7 @@ export const userRouter = createTRPCRouter({
       z.object({
         autoRefreshEnabled: z.boolean().optional(),
         refreshIntervalHours: z.number().min(1).max(168).optional(),
+        articleRetentionDays: z.number().min(1).max(365).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -89,6 +92,7 @@ export const userRouter = createTRPCRouter({
               userId: ctx.session.id,
               autoRefreshEnabled: input.autoRefreshEnabled ?? true,
               refreshIntervalHours: input.refreshIntervalHours ?? 24,
+              articleRetentionDays: input.articleRetentionDays ?? 30,
             })
             .returning()
 
@@ -104,6 +108,9 @@ export const userRouter = createTRPCRouter({
             refreshIntervalHours:
               input.refreshIntervalHours ??
               existingSettings.refreshIntervalHours,
+            articleRetentionDays:
+              input.articleRetentionDays ??
+              existingSettings.articleRetentionDays,
             updatedAt: new Date(),
           })
           .where(eq(userSettingsTable.userId, ctx.session.id))
@@ -115,4 +122,58 @@ export const userRouter = createTRPCRouter({
         handleTRPCError(error)
       }
     }),
+
+  /**
+   * Expire articles for current user based on their retention settings
+   *
+   * Marks articles as "expired" if they are older than the user's configured
+   * articleRetentionDays setting. Only affects articles with status "published".
+   * This provides immediate expiration when user changes retention settings,
+   * complementing the scheduled cron job that runs system-wide.
+   *
+   * @returns Statistics about expired articles
+   */
+  expireMyArticles: protectedProcedure.mutation(async ({ ctx }) => {
+    try {
+      const settings = await ctx.db.query.userSettingsTable.findFirst({
+        where: eq(userSettingsTable.userId, ctx.session.id),
+      })
+
+      if (!settings) {
+        return {
+          success: false,
+          articlesExpired: 0,
+          message: "User settings not found",
+        }
+      }
+
+      const now = new Date()
+      const retentionDays = settings.articleRetentionDays
+      const expirationDate = new Date(now)
+      expirationDate.setDate(expirationDate.getDate() - retentionDays)
+
+      const expiredArticles = await ctx.db
+        .update(articleTable)
+        .set({
+          status: "expired",
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(articleTable.userId, ctx.session.id),
+            eq(articleTable.status, "published"),
+            lt(articleTable.createdAt, expirationDate),
+          ),
+        )
+        .returning({ id: articleTable.id })
+
+      return {
+        success: true,
+        articlesExpired: expiredArticles.length,
+        retentionDays,
+      }
+    } catch (error) {
+      handleTRPCError(error)
+    }
+  }),
 })
