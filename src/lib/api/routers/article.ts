@@ -1,7 +1,18 @@
 import crypto from "crypto"
 import { TRPCError } from "@trpc/server"
 import bcryptjs from "bcryptjs"
-import { and, count, countDistinct, desc, eq, gte, lt, sql } from "drizzle-orm"
+import {
+  and,
+  count,
+  countDistinct,
+  desc,
+  eq,
+  gte,
+  ilike,
+  lt,
+  or,
+  sql,
+} from "drizzle-orm"
 import z from "zod"
 
 import { handleTRPCError } from "@/lib/api/error"
@@ -1105,6 +1116,80 @@ export const articleRouter = createTRPCRouter({
             country: g.country ?? "Unknown",
             count: g.count,
           })),
+        }
+
+        await ctx.redis.setCache(cacheKey, result, 300)
+        return result
+      } catch (error) {
+        handleTRPCError(error)
+      }
+    }),
+
+  /**
+   * Global search across articles and feeds
+   *
+   * Searches article titles, descriptions, and feed names for matching content.
+   * Returns combined results sorted by relevance (exact matches first).
+   *
+   * @param query - Search query string (minimum 2 characters)
+   * @param limit - Maximum number of results (default 20, max 50)
+   * @returns Combined search results with articles and feeds
+   */
+  search: protectedProcedure
+    .input(
+      z.object({
+        query: z.string().min(2),
+        limit: z.number().min(1).max(50).default(20),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const cacheKey = `search:query:${input.query}:limit:${input.limit}:user:${ctx.session.id}`
+        const cached = await ctx.redis.getCache<{
+          articles: ArticleWithFeed[]
+          feeds: SelectFeed[]
+        }>(cacheKey)
+        if (cached) {
+          return cached
+        }
+
+        const searchPattern = `%${input.query}%`
+
+        const articles = await ctx.db.query.articleTable.findMany({
+          where: and(
+            eq(articleTable.userId, ctx.session.id),
+            eq(articleTable.status, "published"),
+            or(
+              ilike(articleTable.title, searchPattern),
+              ilike(articleTable.description, searchPattern),
+            ),
+          ),
+          limit: input.limit,
+          orderBy: [desc(articleTable.pubDate)],
+          with: {
+            feed: {
+              columns: {
+                title: true,
+                slug: true,
+                imageUrl: true,
+              },
+            },
+          },
+        })
+
+        const feeds = await ctx.db.query.feedTable.findMany({
+          where: and(
+            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.status, "published"),
+            ilike(feedTable.title, searchPattern),
+          ),
+          limit: Math.min(10, input.limit),
+          orderBy: [desc(feedTable.createdAt)],
+        })
+
+        const result = {
+          articles: articles as ArticleWithFeed[],
+          feeds,
         }
 
         await ctx.redis.setCache(cacheKey, result, 300)

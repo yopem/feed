@@ -128,8 +128,6 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
         isFavorited={article.isFavorited}
         isReadLater={article.isReadLater}
         link={article.link}
-        feedSlug={article.feed.slug}
-        articleSlug={article.slug}
       />
 
       <div className="flex-1 overflow-y-auto">

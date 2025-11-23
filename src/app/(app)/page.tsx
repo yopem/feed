@@ -7,6 +7,7 @@ import { parseAsString, useQueryState } from "nuqs"
 import { ArticleList } from "@/components/article/article-list"
 import { ArticleReader } from "@/components/article/article-reader"
 import { AppSidebar } from "@/components/layout/app-sidebar"
+import { GlobalSearchProvider } from "@/components/shared/global-search"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import ThemeSwitcher from "@/components/theme/theme-switcher"
 import {
@@ -98,93 +99,95 @@ function DashboardContent() {
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="bg-background border-border sticky top-0 z-10 flex h-14 items-center gap-4 border-b-2 px-4">
-          <SidebarTrigger />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/">Home</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
+    <GlobalSearchProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <header className="bg-background border-border sticky top-0 z-10 flex h-14 items-center gap-4 border-b-2 px-4">
+            <SidebarTrigger />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
 
-              {selectedTag && (
-                <>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink
-                      href={buildBreadcrumbUrl({
-                        tag: selectedTag.id,
-                        filter,
-                      })}
-                    >
-                      {selectedTag.name}
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                </>
-              )}
+                {selectedTag && (
+                  <>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink
+                        href={buildBreadcrumbUrl({
+                          tag: selectedTag.id,
+                          filter,
+                        })}
+                      >
+                        {selectedTag.name}
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                  </>
+                )}
 
-              {selectedFeed && (
-                <>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink
-                      href={buildBreadcrumbUrl({
-                        tag: selectedTag?.id,
-                        feed: selectedFeed.slug,
-                        filter,
-                      })}
-                    >
-                      {selectedFeed.title}
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                </>
-              )}
+                {selectedFeed && (
+                  <>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink
+                        href={buildBreadcrumbUrl({
+                          tag: selectedTag?.id,
+                          feed: selectedFeed.slug,
+                          filter,
+                        })}
+                      >
+                        {selectedFeed.title}
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                  </>
+                )}
 
-              <BreadcrumbItem>
-                <BreadcrumbPage>{getFilterLabel()}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-          <div className="ml-auto">
-            <ThemeSwitcher />
-          </div>
-        </header>
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{getFilterLabel()}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+            <div className="ml-auto">
+              <ThemeSwitcher />
+            </div>
+          </header>
 
-        <div className="flex h-[calc(100vh-3.5rem)] w-full overflow-hidden">
-          {/* Article List - Full Width */}
-          <main className="min-w-0 flex-1 overflow-y-auto">
-            <ArticleList />
-          </main>
+          <div className="flex h-[calc(100vh-3.5rem)] w-full overflow-hidden">
+            {/* Article List - Full Width */}
+            <main className="min-w-0 flex-1 overflow-y-auto">
+              <ArticleList />
+            </main>
 
-          {/* Article Reader - Sheet Overlay for both Mobile and Desktop */}
-          <Sheet
-            open={isReaderOpen}
-            onOpenChange={(open) => !open && setSelectedArticleId(null)}
-          >
-            <SheetContent
-              side={isMobile ? "bottom" : "right"}
-              className={
-                isMobile
-                  ? "bg-background max-h-[85vh] overflow-hidden rounded-t-xl border-t-2"
-                  : "bg-background w-[70vw] overflow-hidden sm:max-w-none"
-              }
+            {/* Article Reader - Sheet Overlay for both Mobile and Desktop */}
+            <Sheet
+              open={isReaderOpen}
+              onOpenChange={(open) => !open && setSelectedArticleId(null)}
             >
-              <SheetHeader>
-                <SheetTitle className="text-sm leading-5 font-medium">
-                  Reader
-                </SheetTitle>
-              </SheetHeader>
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                <ArticleReader articleId={selectedArticleId} />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+              <SheetContent
+                side={isMobile ? "bottom" : "right"}
+                className={
+                  isMobile
+                    ? "bg-background max-h-[85vh] overflow-hidden rounded-t-xl border-t-2"
+                    : "bg-background w-[70vw] overflow-hidden sm:max-w-none"
+                }
+              >
+                <SheetHeader>
+                  <SheetTitle className="text-sm leading-5 font-medium">
+                    Reader
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                  <ArticleReader articleId={selectedArticleId} />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    </GlobalSearchProvider>
   )
 }
 

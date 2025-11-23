@@ -16,6 +16,7 @@ import {
   PlusIcon,
   RefreshCwIcon,
   RssIcon,
+  SearchIcon,
   SettingsIcon,
   ShareIcon,
   StarIcon,
@@ -35,6 +36,7 @@ import { EditFeedDialog } from "@/components/feed/edit-feed-dialog"
 import { EditTagDialog } from "@/components/feed/edit-tag-dialog"
 import Link from "@/components/link"
 import { EmptyState } from "@/components/shared/empty-state"
+import { useGlobalSearch } from "@/components/shared/global-search"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -137,6 +139,7 @@ export function AppSidebar() {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const { setOpenMobile, isMobile } = useSidebar()
+  const { setOpen: setSearchOpen } = useGlobalSearch()
 
   const { data: feeds, isLoading: feedsLoading } = useQuery(
     trpc.feed.all.queryOptions({
@@ -301,6 +304,18 @@ export function AppSidebar() {
                 <span>
                   {refreshAll.isPending ? "Refreshing..." : "Refresh All Feeds"}
                 </span>
+              </Button>
+              <Button
+                onClick={() => setSearchOpen(true)}
+                className="mt-2 w-full"
+                size="sm"
+                variant="outline"
+              >
+                <SearchIcon className="h-4 w-4" />
+                <span>Search</span>
+                <kbd className="bg-muted text-muted-foreground ml-auto hidden h-5 items-center gap-1 rounded border px-1.5 font-mono text-xs font-medium opacity-100 select-none sm:inline-flex">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
               </Button>
             </SidebarGroupContent>
           </SidebarGroup>

@@ -22,8 +22,6 @@ interface ArticleActionsProps {
   isFavorited: boolean
   isReadLater: boolean
   link: string
-  feedSlug?: string
-  articleSlug?: string
 }
 
 export function ArticleActions({

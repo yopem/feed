@@ -172,8 +172,6 @@ export default async function ArticlePage({ params }: PageProps) {
             isFavorited={article.isFavorited}
             isReadLater={article.isReadLater}
             link={article.link}
-            feedSlug={feedSlug}
-            articleSlug={articleSlug}
           />
         </div>
       </div>
