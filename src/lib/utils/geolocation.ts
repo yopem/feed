@@ -29,7 +29,7 @@ export async function lookupGeoLocation(ipAddress: string): Promise<{
 
     const response = await fetch(`${apiUrl}/${ipAddress}`, {
       headers: {
-        "User-Agent": "Yopem-Feed/1.0",
+        "User-Agent": "Yopem-Read/1.0",
       },
       next: { revalidate: 3600 },
     })
