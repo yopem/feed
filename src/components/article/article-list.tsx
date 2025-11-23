@@ -7,7 +7,6 @@ import { parseAsString, useQueryState } from "nuqs"
 
 import type { FilterType } from "@/components/feed/feed-filter"
 import { EmptyState } from "@/components/shared/empty-state"
-import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import { ScrollToTopButton } from "@/components/shared/scroll-to-top-button"
 import { useTRPC } from "@/lib/trpc/client"
 import { ArticleCard } from "./article-card"
@@ -79,7 +78,9 @@ export function ArticleList() {
     <div className="flex h-full flex-col overflow-y-auto">
       <div className="flex-1 space-y-3 p-4 md:mx-auto md:max-w-4xl md:px-6">
         {isLoading ? (
-          <LoadingSkeleton variant="list" count={5} />
+          <div className="flex h-full items-center justify-center">
+            <Loader2Icon className="text-muted-foreground h-8 w-8 animate-spin" />
+          </div>
         ) : articles.length === 0 ? (
           <div className="flex h-full items-center justify-center">
             <EmptyState

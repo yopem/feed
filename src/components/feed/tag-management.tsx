@@ -167,7 +167,7 @@ export function TagManagement() {
           )}
 
           {isLoading ? (
-            <LoadingSkeleton variant="list" count={3} />
+            <LoadingSkeleton variant="tag-item" count={3} />
           ) : !tags || tags.length === 0 ? (
             <EmptyState
               title="No tags yet"

@@ -632,7 +632,7 @@ export function AppSidebar() {
 
                 {feedsLoading ? (
                   <div className="px-2">
-                    <LoadingSkeleton variant="list" count={5} />
+                    <LoadingSkeleton variant="sidebar-feed" count={5} />
                   </div>
                 ) : !feedsWithStats || feedsWithStats.length === 0 ? (
                   <div className="px-2 py-4">
