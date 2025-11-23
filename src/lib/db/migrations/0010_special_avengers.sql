@@ -1,0 +1,1 @@
+ALTER TABLE "user_settings" ADD COLUMN "show_filter_count_badges" boolean DEFAULT true NOT NULL;

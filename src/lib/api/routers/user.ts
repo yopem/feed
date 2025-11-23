@@ -21,12 +21,12 @@ export const userRouter = createTRPCRouter({
   }),
 
   /**
-   * Get user settings for auto-refresh configuration
+   * Get user settings for auto-refresh configuration and display preferences
    *
    * If settings don't exist yet, creates them with default values
-   * (autoRefreshEnabled: true, refreshIntervalHours: 24, articleRetentionDays: 30)
+   * (autoRefreshEnabled: true, refreshIntervalHours: 24, articleRetentionDays: 30, showFilterCountBadges: true)
    *
-   * @returns User settings with auto-refresh and retention preferences
+   * @returns User settings with auto-refresh, retention, and display preferences
    */
   getSettings: protectedProcedure.query(async ({ ctx }) => {
     try {
@@ -48,6 +48,7 @@ export const userRouter = createTRPCRouter({
             autoRefreshEnabled: true,
             refreshIntervalHours: 24,
             articleRetentionDays: 30,
+            showFilterCountBadges: true,
           })
           .returning()
         settings = newSettings
@@ -61,11 +62,12 @@ export const userRouter = createTRPCRouter({
   }),
 
   /**
-   * Update user settings for auto-refresh configuration and article retention
+   * Update user settings for auto-refresh configuration, article retention, and display preferences
    *
    * @param autoRefreshEnabled - Enable/disable automatic feed refresh
    * @param refreshIntervalHours - Hours between automatic refreshes (1-168)
    * @param articleRetentionDays - Days to keep articles before expiring (1-365)
+   * @param showFilterCountBadges - Show/hide article count badges on filter options
    * @returns Updated user settings
    * @throws TRPCError if settings not found
    */
@@ -75,6 +77,7 @@ export const userRouter = createTRPCRouter({
         autoRefreshEnabled: z.boolean().optional(),
         refreshIntervalHours: z.number().min(1).max(168).optional(),
         articleRetentionDays: z.number().min(1).max(365).optional(),
+        showFilterCountBadges: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -93,6 +96,7 @@ export const userRouter = createTRPCRouter({
               autoRefreshEnabled: input.autoRefreshEnabled ?? true,
               refreshIntervalHours: input.refreshIntervalHours ?? 24,
               articleRetentionDays: input.articleRetentionDays ?? 30,
+              showFilterCountBadges: input.showFilterCountBadges ?? true,
             })
             .returning()
 
@@ -111,6 +115,9 @@ export const userRouter = createTRPCRouter({
             articleRetentionDays:
               input.articleRetentionDays ??
               existingSettings.articleRetentionDays,
+            showFilterCountBadges:
+              input.showFilterCountBadges ??
+              existingSettings.showFilterCountBadges,
             updatedAt: new Date(),
           })
           .where(eq(userSettingsTable.userId, ctx.session.id))

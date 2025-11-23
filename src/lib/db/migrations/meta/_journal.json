@@ -71,6 +71,27 @@
       "when": 1763931772990,
       "tag": "0009_massive_genesis",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1763933922621,
+      "tag": "0010_special_avengers",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1763935097119,
+      "tag": "0011_eager_micromax",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1763936469886,
+      "tag": "0012_familiar_eternals",
+      "breakpoints": true
     }
   ]
 }

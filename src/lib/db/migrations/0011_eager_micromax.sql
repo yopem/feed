@@ -1,0 +1,2 @@
+CREATE TYPE "public"."font_size_enum" AS ENUM('small', 'medium', 'large', 'extra-large');--> statement-breakpoint
+ALTER TABLE "user_settings" ADD COLUMN "font_size" "font_size_enum" DEFAULT 'medium' NOT NULL;

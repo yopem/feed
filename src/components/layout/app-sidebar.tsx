@@ -153,6 +153,10 @@ export function AppSidebar() {
     trpc.user.getCurrentUser.queryOptions(),
   )
 
+  const { data: userSettings } = useQuery(
+    trpc.user.getSettings.queryOptions(),
+  ) as { data: { showFilterCountBadges: boolean } | undefined }
+
   const { theme, setTheme } = useTheme()
 
   const refreshAll = useMutation(
@@ -309,6 +313,7 @@ export function AppSidebar() {
                   const isActive = filter === filterItem.value
                   const count = filterCounts[filterItem.value]
                   const Icon = filterItem.icon
+                  const showBadges = userSettings?.showFilterCountBadges ?? true
 
                   return (
                     <SidebarMenuItem key={filterItem.value}>
@@ -329,7 +334,7 @@ export function AppSidebar() {
                           <span className="truncate text-sm font-medium">
                             {filterItem.label}
                           </span>
-                          {count > 0 && (
+                          {showBadges && count > 0 && (
                             <Badge
                               variant={isActive ? "secondary" : "outline"}
                               className="ml-auto"
@@ -626,6 +631,8 @@ export function AppSidebar() {
                   feedsWithStats.map((feed) => {
                     const isSelected = feedSlug === feed.slug
                     const isHovered = hoveredFeedId === feed.id
+                    const showBadges =
+                      userSettings?.showFilterCountBadges ?? true
 
                     return (
                       <SidebarMenuItem
@@ -657,7 +664,7 @@ export function AppSidebar() {
                                 {feed.title}
                               </span>
                             </div>
-                            {feed.unreadCount > 0 && (
+                            {showBadges && feed.unreadCount > 0 && (
                               <Badge
                                 variant={isSelected ? "secondary" : "outline"}
                                 className="ml-auto shrink-0"
