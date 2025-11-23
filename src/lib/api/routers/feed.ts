@@ -119,7 +119,7 @@ export const feedRouter = {
               feedId: feed.id,
               isRead: false,
               isReadLater: false,
-              isStarred: false,
+              isFavorited: false,
             }
           })
 
@@ -255,6 +255,52 @@ export const feedRouter = {
         await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
 
         return { success: true }
+      } catch (error) {
+        handleTRPCError(error)
+      }
+    }),
+
+  /**
+   * Toggles the favorited status of a feed
+   *
+   * Allows users to mark or unmark feeds as favorited for quick access
+   * and better organization. Favorited status is stored in the database and
+   * persists across sessions.
+   *
+   * @param input - Feed ID and desired favorited state
+   * @returns Updated feed data
+   * @throws TRPCError if feed not found or user lacks permission
+   */
+  toggleFavorited: protectedProcedure
+    .input(z.object({ id: z.string(), isFavorited: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const { eq, and } = await import("drizzle-orm")
+
+        const existingFeed = await ctx.db.query.feedTable.findFirst({
+          where: and(
+            eq(feedTable.id, input.id),
+            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.status, "published"),
+          ),
+        })
+
+        if (!existingFeed) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Feed not found.",
+          })
+        }
+
+        const [updatedFeed] = await ctx.db
+          .update(feedTable)
+          .set({ isFavorited: input.isFavorited, updatedAt: new Date() })
+          .where(eq(feedTable.id, input.id))
+          .returning()
+
+        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+
+        return updatedFeed
       } catch (error) {
         handleTRPCError(error)
       }
@@ -402,7 +448,7 @@ export const feedRouter = {
           feedId: articleTable.feedId,
           totalCount: sql<number>`COUNT(*)::int`,
           unreadCount: sql<number>`COUNT(*) FILTER (WHERE ${articleTable.isRead} = false)::int`,
-          starredCount: sql<number>`COUNT(*) FILTER (WHERE ${articleTable.isStarred} = true)::int`,
+          favoritedCount: sql<number>`COUNT(*) FILTER (WHERE ${articleTable.isFavorited} = true)::int`,
           readLaterCount: sql<number>`COUNT(*) FILTER (WHERE ${articleTable.isReadLater} = true)::int`,
           todayCount: sql<number>`COUNT(*) FILTER (WHERE ${articleTable.pubDate} >= NOW() - INTERVAL '24 hours')::int`,
         })
@@ -602,7 +648,7 @@ export const feedRouter = {
             feedId: input,
             isRead: false,
             isReadLater: false,
-            isStarred: false,
+            isFavorited: false,
           }
         })
 
@@ -869,7 +915,7 @@ export const feedRouter = {
                   feedId: feed.id,
                   isRead: false,
                   isReadLater: false,
-                  isStarred: false,
+                  isFavorited: false,
                 }
               })
 
@@ -1026,7 +1072,7 @@ export const feedRouter = {
                   feedId: feed.id,
                   isRead: false,
                   isReadLater: false,
-                  isStarred: false,
+                  isFavorited: false,
                 }
               })
 
@@ -1205,7 +1251,7 @@ export const feedRouter = {
                       feedId: feed.id,
                       isRead: false,
                       isReadLater: false,
-                      isStarred: false,
+                      isFavorited: false,
                     }
                   })
 

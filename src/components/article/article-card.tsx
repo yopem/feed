@@ -28,7 +28,7 @@ interface ArticleCardProps {
   imageUrl?: string | null
   pubDate: Date
   isRead: boolean
-  isStarred: boolean
+  isFavorited: boolean
   isReadLater: boolean
   isSelected: boolean
   onSelect: (id: string) => void
@@ -45,7 +45,7 @@ export function ArticleCard({
   imageUrl,
   pubDate,
   isRead,
-  isStarred,
+  isFavorited,
   isReadLater,
   isSelected,
   onSelect,
@@ -67,12 +67,14 @@ export function ArticleCard({
     }),
   )
 
-  const updateStarred = useMutation(
-    trpc.article.updateStarred.mutationOptions({
+  const updateFavorited = useMutation(
+    trpc.article.updateFavorited.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries(trpc.article.pathFilter())
         await queryClient.invalidateQueries(trpc.feed.pathFilter())
-        toast.success(isStarred ? "Removed from starred" : "Added to starred")
+        toast.success(
+          isFavorited ? "Removed from favorites" : "Added to favorites",
+        )
       },
       onError: () => {
         toast.error("Failed to update article")
@@ -167,16 +169,16 @@ export function ArticleCard({
       <CardFooter
         className={cn(
           "justify-between pt-2 pb-3 transition-all duration-200",
-          isHovered || isStarred || isReadLater
+          isHovered || isFavorited || isReadLater
             ? "flex opacity-100"
             : "hidden opacity-0 md:group-hover:flex md:group-hover:opacity-100",
         )}
       >
         <div className="flex items-center gap-2">
-          {isStarred && (
+          {isFavorited && (
             <span
               className="text-yellow-500 dark:text-yellow-400"
-              title="Starred"
+              title="Favorited"
             >
               <StarIcon className="h-4 w-4 fill-current" />
             </span>
@@ -211,18 +213,18 @@ export function ArticleCard({
 
           <Button
             size="sm"
-            variant={isStarred ? "default" : "outline"}
+            variant={isFavorited ? "default" : "outline"}
             className="h-8 gap-1.5 px-2.5 text-xs"
             onClick={(e) =>
               handleActionClick(e, () =>
-                updateStarred.mutate({ id, isStarred: !isStarred }),
+                updateFavorited.mutate({ id, isFavorited: !isFavorited }),
               )
             }
-            title={isStarred ? "Remove from starred" : "Star"}
+            title={isFavorited ? "Remove from favorites" : "Add to favorites"}
           >
             <StarIcon className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">
-              {isStarred ? "Starred" : "Star"}
+              {isFavorited ? "Favorited" : "Favorite"}
             </span>
           </Button>
 

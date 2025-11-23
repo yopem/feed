@@ -132,6 +132,53 @@ export const tagRouter = createTRPCRouter({
       }
     }),
 
+  /**
+   * Toggles the favorited status of a tag
+   *
+   * Allows users to mark or unmark tags as favorited for quick access
+   * and better organization. Favorited status is stored in the database and
+   * persists across sessions.
+   *
+   * @param input - Tag ID and desired favorited state
+   * @returns Updated tag data
+   * @throws TRPCError if tag not found or user lacks permission
+   */
+  toggleFavorited: protectedProcedure
+    .input(z.object({ id: z.string(), isFavorited: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const { eq, and } = await import("drizzle-orm")
+
+        const existingTag = await ctx.db.query.tagTable.findFirst({
+          where: and(
+            eq(tagTable.id, input.id),
+            eq(tagTable.userId, ctx.session.id),
+            eq(tagTable.status, "published"),
+          ),
+        })
+
+        if (!existingTag) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Tag not found.",
+          })
+        }
+
+        const [updatedTag] = await ctx.db
+          .update(tagTable)
+          .set({ isFavorited: input.isFavorited, updatedAt: new Date() })
+          .where(eq(tagTable.id, input.id))
+          .returning()
+
+        await ctx.redis.invalidatePattern(`feed:tags:user:${ctx.session.id}`)
+        await ctx.redis.invalidatePattern(`feed:tag:*:user:${ctx.session.id}`)
+
+        return updatedTag
+      } catch (error) {
+        handleTRPCError(error)
+      }
+    }),
+
   all: protectedProcedure.query(async ({ ctx }) => {
     try {
       const cacheKey = `feed:tags:user:${ctx.session.id}`

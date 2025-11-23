@@ -219,7 +219,7 @@ export const articleRouter = createTRPCRouter({
         if (input.filter === "unread") {
           conditions.push(eq(articleTable.isRead, false))
         } else if (input.filter === "starred") {
-          conditions.push(eq(articleTable.isStarred, true))
+          conditions.push(eq(articleTable.isFavorited, true))
         } else if (input.filter === "readLater") {
           conditions.push(eq(articleTable.isReadLater, true))
         } else if (input.filter === "today") {
@@ -283,13 +283,24 @@ export const articleRouter = createTRPCRouter({
       }
     }),
 
-  updateStarred: protectedProcedure
-    .input(z.object({ id: z.string(), isStarred: z.boolean() }))
+  /**
+   * Updates the favorited status of an article
+   *
+   * Allows users to mark or unmark articles as favorited for quick access
+   * and filtering. Favorited articles can be filtered in the article list view.
+   * This operation invalidates relevant caches to keep the UI in sync.
+   *
+   * @param input - Article ID and desired favorited state
+   * @returns Updated article data
+   * @throws TRPCError if article update fails
+   */
+  updateFavorited: protectedProcedure
+    .input(z.object({ id: z.string(), isFavorited: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       try {
         const updatedArray = await ctx.db
           .update(articleTable)
-          .set({ isStarred: input.isStarred, updatedAt: new Date() })
+          .set({ isFavorited: input.isFavorited, updatedAt: new Date() })
           .where(
             and(
               eq(articleTable.id, input.id),
@@ -412,7 +423,7 @@ export const articleRouter = createTRPCRouter({
         if (input.filter === "unread") {
           conditions.push(eq(articleTable.isRead, false))
         } else if (input.filter === "starred") {
-          conditions.push(eq(articleTable.isStarred, true))
+          conditions.push(eq(articleTable.isFavorited, true))
         } else if (input.filter === "readLater") {
           conditions.push(eq(articleTable.isReadLater, true))
         } else if (input.filter === "today") {

@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm"
-import { index, pgTable, text, timestamp } from "drizzle-orm/pg-core"
+import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 
 import { createCustomId } from "@/lib/utils/custom-id"
@@ -17,12 +17,15 @@ export const tagTable = pgTable(
     userId: text("user_id").notNull(),
     /** Entity status for soft-delete: published (visible), draft (hidden), deleted (soft-deleted) */
     status: entityStatusEnum("status").notNull().default("published"),
+    /** Whether the tag is marked as favorited by the user */
+    isFavorited: boolean("is_favorited").notNull().default(false),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (t) => [
     index("tag_status_idx").on(t.status),
     index("tag_user_status_idx").on(t.userId, t.status),
+    index("tag_is_favorited_idx").on(t.isFavorited),
   ],
 )
 

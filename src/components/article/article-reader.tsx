@@ -23,7 +23,7 @@ interface ArticleWithFeed {
   link: string
   pubDate: Date
   isRead: boolean
-  isStarred: boolean
+  isFavorited: boolean
   isReadLater: boolean
   isPubliclyShared: boolean
   sharePassword: string | null
@@ -125,7 +125,7 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
       <ArticleActions
         articleId={article.id}
         articleTitle={article.title}
-        isStarred={article.isStarred}
+        isFavorited={article.isFavorited}
         isReadLater={article.isReadLater}
         link={article.link}
         feedSlug={article.feed.slug}

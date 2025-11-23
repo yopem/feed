@@ -109,7 +109,7 @@ export function ArticleList() {
                   imageUrl={article.imageUrl}
                   pubDate={article.pubDate}
                   isRead={article.isRead}
-                  isStarred={article.isStarred}
+                  isFavorited={article.isFavorited}
                   isReadLater={article.isReadLater}
                   isSelected={selectedArticleId === article.id}
                   onSelect={setSelectedArticleId}

@@ -22,7 +22,7 @@ const filters: { value: FilterType; label: string }[] = [
   { value: "all", label: "All" },
   { value: "today", label: "Today" },
   { value: "unread", label: "Unread" },
-  { value: "starred", label: "Starred" },
+  { value: "starred", label: "Favorited" },
   { value: "readLater", label: "Read Later" },
 ]
 

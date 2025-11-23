@@ -35,6 +35,8 @@ export const feedTable = pgTable(
     isBulkShared: boolean("is_bulk_shared").notNull().default(false),
     /** Expiration timestamp for bulk sharing (applies to all articles in feed) */
     bulkShareExpiresAt: timestamp("bulk_share_expires_at"),
+    /** Whether the feed is marked as favorited by the user */
+    isFavorited: boolean("is_favorited").notNull().default(false),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -44,6 +46,7 @@ export const feedTable = pgTable(
     index("feed_status_idx").on(t.status),
     index("feed_user_status_idx").on(t.userId, t.status),
     index("feed_is_bulk_shared_idx").on(t.isBulkShared),
+    index("feed_is_favorited_idx").on(t.isFavorited),
   ],
 )
 

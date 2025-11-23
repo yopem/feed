@@ -72,7 +72,7 @@ function DashboardContent() {
       case "unread":
         return "Unread"
       case "starred":
-        return "Starred"
+        return "Favorited"
       case "readLater":
         return "Read Later"
       default:

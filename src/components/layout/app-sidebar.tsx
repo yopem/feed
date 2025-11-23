@@ -74,6 +74,7 @@ interface FeedWithTags {
   url: string
   lastUpdated: Date | null
   isBulkShared: boolean
+  isFavorited: boolean
   tags?: {
     tag: {
       id: string
@@ -86,7 +87,7 @@ const filterItems = [
   { value: "today" as const, label: "Today", icon: CalendarIcon },
   { value: "all" as const, label: "All Articles", icon: ListIcon },
   { value: "unread" as const, label: "Unread", icon: InboxIcon },
-  { value: "starred" as const, label: "Starred", icon: StarIcon },
+  { value: "starred" as const, label: "Favorited", icon: StarIcon },
   { value: "readLater" as const, label: "Read Later", icon: BookmarkIcon },
 ]
 
@@ -171,6 +172,42 @@ export function AppSidebar() {
     }),
   )
 
+  const toggleFeedFavorited = useMutation(
+    trpc.feed.toggleFavorited.mutationOptions({
+      onSuccess: async (data) => {
+        if (data) {
+          await queryClient.invalidateQueries(trpc.feed.pathFilter())
+          toast.success(
+            data.isFavorited
+              ? "Feed added to favorites"
+              : "Feed removed from favorites",
+          )
+        }
+      },
+      onError: (err: { message: string }) => {
+        toast.error(err.message || "Failed to update feed")
+      },
+    }),
+  )
+
+  const toggleTagFavorited = useMutation(
+    trpc.tag.toggleFavorited.mutationOptions({
+      onSuccess: async (data) => {
+        if (data) {
+          await queryClient.invalidateQueries(trpc.tag.pathFilter())
+          toast.success(
+            data.isFavorited
+              ? "Tag added to favorites"
+              : "Tag removed from favorites",
+          )
+        }
+      },
+      onError: (err: { message: string }) => {
+        toast.error(err.message || "Failed to update tag")
+      },
+    }),
+  )
+
   const selectedTag = tagSlug
     ? tags?.find((t) => t.id === tagSlug || t.name === tagSlug)
     : null
@@ -211,8 +248,8 @@ export function AppSidebar() {
         0,
       ) ?? 0,
     starred:
-      statistics?.reduce(
-        (acc: number, s: { starredCount: number }) => acc + s.starredCount,
+      (statistics as { favoritedCount: number }[] | undefined)?.reduce(
+        (acc: number, s) => acc + s.favoritedCount,
         0,
       ) ?? 0,
     readLater:
@@ -300,6 +337,81 @@ export function AppSidebar() {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+
+          {(feeds?.some((f) => f.isFavorited) ??
+            tags?.some((t) => t.isFavorited)) && (
+            <SidebarGroup>
+              <SidebarGroupLabel>Favorites</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {feeds
+                    ?.filter((feed) => feed.isFavorited)
+                    .map((feed) => {
+                      const isSelected = feedSlug === feed.slug
+                      return (
+                        <SidebarMenuItem key={`fav-feed-${feed.id}`}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isSelected}
+                            onClick={() => {
+                              void setFeedSlug(feed.slug)
+                              void setTagSlug(null)
+                              if (isMobile) setOpenMobile(false)
+                            }}
+                            className={cn(
+                              "group cursor-pointer",
+                              isSelected && "bg-accent",
+                            )}
+                          >
+                            <div>
+                              <Avatar className="h-6 w-6 shrink-0">
+                                <AvatarImage src={feed.imageUrl ?? undefined} />
+                                <AvatarFallback className="text-xs">
+                                  {feed.title.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="truncate text-sm font-medium">
+                                {feed.title}
+                              </span>
+                              <StarIcon className="ml-auto h-3.5 w-3.5 shrink-0 fill-current text-yellow-500" />
+                            </div>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      )
+                    })}
+                  {tags
+                    ?.filter((tag) => tag.isFavorited)
+                    .map((tag) => {
+                      const isSelected = tagSlug === tag.id
+                      return (
+                        <SidebarMenuItem key={`fav-tag-${tag.id}`}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isSelected}
+                            onClick={() => {
+                              void setTagSlug(tag.id)
+                              void setFeedSlug("")
+                              if (isMobile) setOpenMobile(false)
+                            }}
+                            className={cn(
+                              "group cursor-pointer",
+                              isSelected && "bg-accent",
+                            )}
+                          >
+                            <div>
+                              <span className="truncate text-sm font-medium">
+                                {tag.name}
+                              </span>
+                              <StarIcon className="ml-auto h-3.5 w-3.5 shrink-0 fill-current text-yellow-500" />
+                            </div>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      )
+                    })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
 
           {tags && tags.length > 0 && (
             <SidebarGroup>
@@ -407,6 +519,28 @@ export function AppSidebar() {
                                 >
                                   <PencilIcon className="h-4 w-4" />
                                   <span>Edit tag</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    toggleTagFavorited.mutate({
+                                      id: tag.id,
+                                      isFavorited: !tag.isFavorited,
+                                    })
+                                  }}
+                                  className="cursor-pointer py-2.5"
+                                >
+                                  <StarIcon
+                                    className={cn(
+                                      "h-4 w-4",
+                                      tag.isFavorited && "fill-current",
+                                    )}
+                                  />
+                                  <span>
+                                    {tag.isFavorited
+                                      ? "Remove from Favorites"
+                                      : "Add to Favorites"}
+                                  </span>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -568,6 +702,28 @@ export function AppSidebar() {
                                 >
                                   <PencilIcon className="h-4 w-4" />
                                   <span>Edit feed</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    toggleFeedFavorited.mutate({
+                                      id: feed.id,
+                                      isFavorited: !feed.isFavorited,
+                                    })
+                                  }}
+                                  className="cursor-pointer py-2.5"
+                                >
+                                  <StarIcon
+                                    className={cn(
+                                      "h-4 w-4",
+                                      feed.isFavorited && "fill-current",
+                                    )}
+                                  />
+                                  <span>
+                                    {feed.isFavorited
+                                      ? "Add to Favorites"
+                                      : "Remove from Favorites"}
+                                  </span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={(e) => {

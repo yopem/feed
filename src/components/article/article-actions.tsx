@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils"
 interface ArticleActionsProps {
   articleId: string
   articleTitle: string
-  isStarred: boolean
+  isFavorited: boolean
   isReadLater: boolean
   link: string
   feedSlug?: string
@@ -29,7 +29,7 @@ interface ArticleActionsProps {
 export function ArticleActions({
   articleId,
   articleTitle,
-  isStarred,
+  isFavorited,
   isReadLater,
   link,
 }: ArticleActionsProps) {
@@ -43,8 +43,8 @@ export function ArticleActions({
     enabled: !!articleId,
   })
 
-  const updateStarred = useMutation(
-    trpc.article.updateStarred.mutationOptions({
+  const updateFavorited = useMutation(
+    trpc.article.updateFavorited.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries(trpc.article.pathFilter())
         await queryClient.invalidateQueries(trpc.feed.pathFilter())
@@ -65,7 +65,7 @@ export function ArticleActions({
     setIsShareDialogOpen(true)
   }
 
-  const currentIsStarred = article?.isStarred ?? isStarred
+  const currentIsFavorited = article?.isFavorited ?? isFavorited
   const currentIsReadLater = article?.isReadLater ?? isReadLater
 
   return (
@@ -76,18 +76,22 @@ export function ArticleActions({
           size="icon"
           className="h-9 w-9"
           onClick={() =>
-            updateStarred.mutate({
+            updateFavorited.mutate({
               id: articleId,
-              isStarred: !currentIsStarred,
+              isFavorited: !currentIsFavorited,
             })
           }
-          title={currentIsStarred ? "Remove star" : "Add star"}
-          aria-label={currentIsStarred ? "Remove star" : "Add star"}
+          title={
+            currentIsFavorited ? "Remove from favorites" : "Add to favorites"
+          }
+          aria-label={
+            currentIsFavorited ? "Remove from favorites" : "Add to favorites"
+          }
         >
           <StarIcon
             className={cn(
               "h-5 w-5 transition-colors",
-              currentIsStarred
+              currentIsFavorited
                 ? "fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400"
                 : "text-muted-foreground hover:text-foreground",
             )}

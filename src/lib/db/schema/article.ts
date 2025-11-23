@@ -30,7 +30,7 @@ export const articleTable = pgTable(
     pubDate: timestamp("pub_date").notNull(),
     isRead: boolean("is_read").notNull().default(false),
     isReadLater: boolean("is_read_later").notNull().default(false),
-    isStarred: boolean("is_starred").notNull().default(false),
+    isFavorited: boolean("is_favorited").notNull().default(false),
     userId: text("user_id").notNull(),
     /** Username of article owner (denormalized for public share URLs) */
     username: text("username"),

@@ -169,7 +169,7 @@ export default async function ArticlePage({ params }: PageProps) {
           <ArticleActions
             articleId={article.id}
             articleTitle={article.title}
-            isStarred={article.isStarred}
+            isFavorited={article.isFavorited}
             isReadLater={article.isReadLater}
             link={article.link}
             feedSlug={feedSlug}

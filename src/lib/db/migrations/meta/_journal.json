@@ -57,6 +57,20 @@
       "when": 1763884408283,
       "tag": "0007_demonic_skullbuster",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1763897865295,
+      "tag": "0008_quiet_daimon_hellstrom",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1763931772990,
+      "tag": "0009_massive_genesis",
+      "breakpoints": true
     }
   ]
 }
