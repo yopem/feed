@@ -77,7 +77,7 @@ Note: When using Docker, PostgreSQL and Redis are provided automatically.
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/yourusername/yopem-read.git
+git clone https://github.com/yopem/read.git
 cd yopem-read
 ```
 
