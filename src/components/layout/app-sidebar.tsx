@@ -302,7 +302,7 @@ export function AppSidebar() {
                   )}
                 />
                 <span>
-                  {refreshAll.isPending ? "Refreshing..." : "Refresh All Feeds"}
+                  {refreshAll.isPending ? "Refreshing..." : "Refresh"}
                 </span>
               </Button>
               <Button
@@ -336,7 +336,7 @@ export function AppSidebar() {
                         asChild
                         isActive={isActive}
                         onClick={() => {
-                          void setFilter(filterItem.value)
+                          void setFilter(isActive ? "all" : filterItem.value)
                           if (isMobile) setOpenMobile(false)
                         }}
                         className={cn(
@@ -382,7 +382,7 @@ export function AppSidebar() {
                             asChild
                             isActive={isSelected}
                             onClick={() => {
-                              void setFeedSlug(feed.slug)
+                              void setFeedSlug(isSelected ? "" : feed.slug)
                               void setTagSlug(null)
                               if (isMobile) setOpenMobile(false)
                             }}
@@ -401,7 +401,16 @@ export function AppSidebar() {
                               <span className="truncate text-sm font-medium">
                                 {feed.title}
                               </span>
-                              <StarIcon className="ml-auto h-3.5 w-3.5 shrink-0 fill-current text-yellow-500" />
+                              <StarIcon
+                                className="ml-auto h-3.5 w-3.5 shrink-0 cursor-pointer fill-current text-yellow-500 transition-opacity hover:opacity-70"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toggleFeedFavorited.mutate({
+                                    id: feed.id,
+                                    isFavorited: false,
+                                  })
+                                }}
+                              />
                             </div>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -417,7 +426,7 @@ export function AppSidebar() {
                             asChild
                             isActive={isSelected}
                             onClick={() => {
-                              void setTagSlug(tag.id)
+                              void setTagSlug(isSelected ? null : tag.id)
                               void setFeedSlug("")
                               if (isMobile) setOpenMobile(false)
                             }}
@@ -430,7 +439,16 @@ export function AppSidebar() {
                               <span className="truncate text-sm font-medium">
                                 {tag.name}
                               </span>
-                              <StarIcon className="ml-auto h-3.5 w-3.5 shrink-0 fill-current text-yellow-500" />
+                              <StarIcon
+                                className="ml-auto h-3.5 w-3.5 shrink-0 cursor-pointer fill-current text-yellow-500 transition-opacity hover:opacity-70"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toggleTagFavorited.mutate({
+                                    id: tag.id,
+                                    isFavorited: false,
+                                  })
+                                }}
+                              />
                             </div>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -500,7 +518,7 @@ export function AppSidebar() {
                           asChild
                           isActive={isSelected}
                           onClick={() => {
-                            void setTagSlug(tag.id)
+                            void setTagSlug(isSelected ? null : tag.id)
                             if (isMobile) setOpenMobile(false)
                           }}
                           className={cn(
@@ -659,7 +677,7 @@ export function AppSidebar() {
                           asChild
                           isActive={isSelected}
                           onClick={() => {
-                            void setFeedSlug(feed.slug)
+                            void setFeedSlug(isSelected ? "" : feed.slug)
                             if (isMobile) setOpenMobile(false)
                           }}
                           className={cn(
