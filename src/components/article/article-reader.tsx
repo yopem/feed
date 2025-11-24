@@ -4,10 +4,12 @@ import { useEffect, useRef } from "react"
 import Image from "next/image"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
+import { MessageCircle } from "lucide-react"
 
 import { ArticleShareBadges } from "@/components/article/article-share-badges"
 import { EmptyState } from "@/components/shared/empty-state"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
+import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useTRPC } from "@/lib/trpc/client"
 import { sanitizeHtml, stripHtml } from "@/lib/utils/html"
@@ -29,6 +31,7 @@ interface ArticleWithFeed {
   sharePassword: string | null
   shareExpiresAt: Date | null
   shareViewCount: number
+  redditPermalink: string | null
   feed: {
     title: string
     slug: string
@@ -162,11 +165,26 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
               className="mt-2"
             />
 
+            {article.redditPermalink && (
+              <div className="mt-4">
+                <Button variant="outline" size="sm" asChild className="gap-2">
+                  <a
+                    href={`https://www.reddit.com${article.redditPermalink}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    View Discussion on Reddit
+                  </a>
+                </Button>
+              </div>
+            )}
+
             <Separator />
           </header>
 
           {article.imageUrl && (
-            <figure className="mb-6 overflow-hidden rounded-lg md:mb-8 md:rounded-xl">
+            <figure className="mb-6 overflow-hidden rounded-xl md:mb-8">
               <Image
                 src={article.imageUrl}
                 alt={article.title}
@@ -187,9 +205,9 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
           )}
 
           {article.content ? (
-            <div className="bg-card border-border rounded-lg border-2 p-4 shadow-[4px_4px_0_0_hsl(var(--foreground))] md:rounded-xl md:p-6 lg:p-8">
+            <div className="bg-card border-border rounded-lg border-2 p-6 shadow-[4px_4px_0_0_hsl(var(--foreground))] md:rounded-xl md:p-8 lg:p-10">
               <div
-                className="prose prose-neutral dark:prose-invert prose-sm md:prose-base lg:prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-2xl md:prose-h1:text-3xl prose-h2:text-xl md:prose-h2:text-2xl prose-h3:text-lg md:prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-semibold prose-img:rounded-lg prose-img:shadow-md prose-pre:bg-muted prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none max-w-none"
+                className="prose prose-neutral dark:prose-invert prose-sm md:prose-base lg:prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-2xl md:prose-h1:text-3xl prose-h2:text-xl md:prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-lg md:prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-p:leading-relaxed prose-p:my-4 prose-ul:my-6 prose-ol:my-6 prose-li:my-1.5 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-semibold prose-img:rounded-lg prose-img:shadow-md prose-img:my-6 prose-figure:my-6 prose-hr:my-8 prose-hr:border-border prose-pre:bg-muted prose-pre:my-4 prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none max-w-none space-y-4 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
                 dangerouslySetInnerHTML={{
                   __html: sanitizeHtml(article.content),
                 }}

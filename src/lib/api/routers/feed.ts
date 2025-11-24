@@ -14,7 +14,11 @@ import {
 } from "@/lib/db/schema"
 import { cronSecret } from "@/lib/env/server"
 import { createTokenBucket } from "@/lib/utils/rate-limit"
-import { parseFeed } from "@/lib/utils/scraping"
+import {
+  isRedditUrl,
+  normalizeRedditUrl,
+  parseFeed,
+} from "@/lib/utils/scraping"
 import { slugify } from "@/lib/utils/slug"
 
 /**
@@ -42,11 +46,17 @@ export const feedRouter = {
           })
         }
 
+        const isReddit = isRedditUrl(trimmedInput)
+        const feedType = isReddit ? "reddit" : "rss"
+        const normalizedUrl = isReddit
+          ? normalizeRedditUrl(trimmedInput)
+          : trimmedInput
+
         const existingFeed = await ctx.db.query.feedTable.findFirst({
           where: (feedTable, { eq, and }) =>
             and(
               eq(feedTable.userId, ctx.session.id),
-              eq(feedTable.url, trimmedInput),
+              eq(feedTable.url, normalizedUrl),
               eq(feedTable.status, "published"),
             ),
         })
@@ -54,7 +64,9 @@ export const feedRouter = {
         if (existingFeed) {
           throw new TRPCError({
             code: "CONFLICT",
-            message: "You have already subscribed to this feed.",
+            message: isReddit
+              ? "You have already subscribed to this subreddit."
+              : "You have already subscribed to this feed.",
           })
         }
 
@@ -62,14 +74,16 @@ export const feedRouter = {
           setTimeout(() => {
             reject(
               new Error(
-                "Feed parsing timed out. The feed may be too slow to respond.",
+                isReddit
+                  ? "Reddit request timed out. Please try again later."
+                  : "Feed parsing timed out. The feed may be too slow to respond.",
               ),
             )
           }, 15000)
         })
 
         const feedData = await Promise.race([
-          parseFeed(trimmedInput),
+          parseFeed(normalizedUrl, feedType),
           timeoutPromise,
         ])
 
@@ -97,10 +111,11 @@ export const feedRouter = {
           .values({
             title: feedData.title,
             description: feedData.description,
-            url: trimmedInput,
+            url: normalizedUrl,
             slug,
             imageUrl: feedData.imageUrl,
             userId: ctx.session.id,
+            feedType,
           })
           .returning()
         if (feedData.articles.length > 0) {
@@ -120,6 +135,9 @@ export const feedRouter = {
               isRead: false,
               isReadLater: false,
               isFavorited: false,
+              redditPostId: article.redditPostId,
+              redditPermalink: article.redditPermalink,
+              redditSubreddit: article.redditSubreddit,
             }
           })
 
@@ -599,7 +617,10 @@ export const feedRouter = {
           })
         }
 
-        const feedData = await parseFeed(existingFeed.url)
+        const feedData = await parseFeed(
+          existingFeed.url,
+          existingFeed.feedType,
+        )
 
         await ctx.db
           .update(feedTable)
@@ -621,14 +642,23 @@ export const feedRouter = {
             ),
           columns: {
             link: true,
+            redditPostId: true,
           },
         })
 
         const existingLinks = new Set(existingArticles.map((a) => a.link))
-
-        const newArticles = feedData.articles.filter(
-          (article) => !existingLinks.has(article.link),
+        const existingRedditPostIds = new Set(
+          existingArticles
+            .map((a) => a.redditPostId)
+            .filter((id): id is string => id !== null),
         )
+
+        const newArticles = feedData.articles.filter((article) => {
+          if (article.redditPostId) {
+            return !existingRedditPostIds.has(article.redditPostId)
+          }
+          return !existingLinks.has(article.link)
+        })
 
         if (newArticles.length === 0) {
           await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
@@ -651,6 +681,9 @@ export const feedRouter = {
             isRead: false,
             isReadLater: false,
             isFavorited: false,
+            redditPostId: article.redditPostId,
+            redditPermalink: article.redditPermalink,
+            redditSubreddit: article.redditSubreddit,
           }
         })
 
@@ -874,7 +907,7 @@ export const feedRouter = {
 
       for (const feed of feeds) {
         try {
-          const feedData = await parseFeed(feed.url)
+          const feedData = await parseFeed(feed.url, feed.feedType)
 
           await ctx.db
             .update(feedTable)
@@ -893,13 +926,23 @@ export const feedRouter = {
                 ),
               columns: {
                 link: true,
+                redditPostId: true,
               },
             })
 
             const existingLinks = new Set(existingArticles.map((a) => a.link))
-            const newArticles = feedData.articles.filter(
-              (article) => !existingLinks.has(article.link),
+            const existingRedditPostIds = new Set(
+              existingArticles
+                .map((a) => a.redditPostId)
+                .filter((id): id is string => id !== null),
             )
+
+            const newArticles = feedData.articles.filter((article) => {
+              if (article.redditPostId) {
+                return !existingRedditPostIds.has(article.redditPostId)
+              }
+              return !existingLinks.has(article.link)
+            })
 
             if (newArticles.length > 0) {
               const articlesToInsert = newArticles.map((article) => {
@@ -918,6 +961,9 @@ export const feedRouter = {
                   isRead: false,
                   isReadLater: false,
                   isFavorited: false,
+                  redditPostId: article.redditPostId,
+                  redditPermalink: article.redditPermalink,
+                  redditSubreddit: article.redditSubreddit,
                 }
               })
 
@@ -1031,7 +1077,7 @@ export const feedRouter = {
 
       for (const feed of feedsToRefresh) {
         try {
-          const feedData = await parseFeed(feed.url)
+          const feedData = await parseFeed(feed.url, feed.feedType)
 
           await ctx.db
             .update(feedTable)
@@ -1050,13 +1096,23 @@ export const feedRouter = {
                 ),
               columns: {
                 link: true,
+                redditPostId: true,
               },
             })
 
             const existingLinks = new Set(existingArticles.map((a) => a.link))
-            const newArticles = feedData.articles.filter(
-              (article) => !existingLinks.has(article.link),
+            const existingRedditPostIds = new Set(
+              existingArticles
+                .map((a) => a.redditPostId)
+                .filter((id): id is string => id !== null),
             )
+
+            const newArticles = feedData.articles.filter((article) => {
+              if (article.redditPostId) {
+                return !existingRedditPostIds.has(article.redditPostId)
+              }
+              return !existingLinks.has(article.link)
+            })
 
             if (newArticles.length > 0) {
               const articlesToInsert = newArticles.map((article) => {
@@ -1075,6 +1131,9 @@ export const feedRouter = {
                   isRead: false,
                   isReadLater: false,
                   isFavorited: false,
+                  redditPostId: article.redditPostId,
+                  redditPermalink: article.redditPermalink,
+                  redditSubreddit: article.redditSubreddit,
                 }
               })
 
@@ -1207,7 +1266,7 @@ export const feedRouter = {
 
           for (const feed of feedsToRefresh) {
             try {
-              const feedData = await parseFeed(feed.url)
+              const feedData = await parseFeed(feed.url, feed.feedType)
 
               await ctx.db
                 .update(feedTable)
@@ -1227,15 +1286,25 @@ export const feedRouter = {
                       ),
                     columns: {
                       link: true,
+                      redditPostId: true,
                     },
                   })
 
                 const existingLinks = new Set(
                   existingArticles.map((a) => a.link),
                 )
-                const newArticles = feedData.articles.filter(
-                  (article) => !existingLinks.has(article.link),
+                const existingRedditPostIds = new Set(
+                  existingArticles
+                    .map((a) => a.redditPostId)
+                    .filter((id): id is string => id !== null),
                 )
+
+                const newArticles = feedData.articles.filter((article) => {
+                  if (article.redditPostId) {
+                    return !existingRedditPostIds.has(article.redditPostId)
+                  }
+                  return !existingLinks.has(article.link)
+                })
 
                 if (newArticles.length > 0) {
                   const articlesToInsert = newArticles.map((article) => {
@@ -1254,6 +1323,9 @@ export const feedRouter = {
                       isRead: false,
                       isReadLater: false,
                       isFavorited: false,
+                      redditPostId: article.redditPostId,
+                      redditPermalink: article.redditPermalink,
+                      redditSubreddit: article.redditSubreddit,
                     }
                   })
 

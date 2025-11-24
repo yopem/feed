@@ -12,7 +12,7 @@ import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 
 import { createCustomId } from "@/lib/utils/custom-id"
 import { articleTable } from "./article"
-import { entityStatusEnum } from "./enums"
+import { entityStatusEnum, feedTypeEnum } from "./enums"
 import { tagTable } from "./tag"
 
 export const feedTable = pgTable(
@@ -29,6 +29,8 @@ export const feedTable = pgTable(
     lastUpdated: timestamp("last_updated").defaultNow(),
     lastRefreshedAt: timestamp("last_refreshed_at"),
     userId: text("user_id").notNull(),
+    /** Feed type: rss (RSS/Atom feed) or reddit (Reddit subreddit) */
+    feedType: feedTypeEnum("feed_type").notNull().default("rss"),
     /** Entity status for soft-delete: published (visible), draft (hidden), deleted (soft-deleted) */
     status: entityStatusEnum("status").notNull().default("published"),
     /** Whether bulk sharing is enabled for all articles in this feed */
@@ -45,6 +47,7 @@ export const feedTable = pgTable(
     unique("feed_user_slug_unique").on(t.userId, t.slug),
     index("feed_status_idx").on(t.status),
     index("feed_user_status_idx").on(t.userId, t.status),
+    index("feed_type_idx").on(t.feedType),
     index("feed_is_bulk_shared_idx").on(t.isBulkShared),
     index("feed_is_favorited_idx").on(t.isFavorited),
   ],

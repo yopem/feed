@@ -114,6 +114,7 @@ export function ArticleList() {
                   isReadLater={article.isReadLater}
                   isSelected={selectedArticleId === article.id}
                   onSelect={setSelectedArticleId}
+                  redditPermalink={article.redditPermalink}
                 />
               ))}
 

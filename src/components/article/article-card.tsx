@@ -6,7 +6,12 @@ import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
-import { BookmarkIcon, CheckIcon, StarIcon } from "lucide-react"
+import {
+  BookmarkIcon,
+  CheckIcon,
+  MessageCircleIcon,
+  StarIcon,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -32,15 +37,16 @@ interface ArticleCardProps {
   isReadLater: boolean
   isSelected: boolean
   onSelect: (id: string) => void
+  redditPermalink?: string | null
 }
 
 export function ArticleCard({
   id,
   title,
-  slug: _slug, // Reserved for future navigation implementation
+  slug: _slug,
   description,
   feedTitle,
-  feedSlug: _feedSlug, // Reserved for future navigation implementation
+  feedSlug: _feedSlug,
   feedImageUrl,
   imageUrl,
   pubDate,
@@ -49,6 +55,7 @@ export function ArticleCard({
   isReadLater,
   isSelected,
   onSelect,
+  redditPermalink,
 }: ArticleCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const trpc = useTRPC()
@@ -194,6 +201,25 @@ export function ArticleCard({
         </div>
 
         <div className="flex gap-1.5">
+          {redditPermalink && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs"
+              onClick={(e) => {
+                e.stopPropagation()
+                window.open(
+                  `https://www.reddit.com${redditPermalink}`,
+                  "_blank",
+                  "noopener,noreferrer",
+                )
+              }}
+              title="See Reddit conversation"
+            >
+              <MessageCircleIcon className="mr-1 h-3 w-3" />
+              Discussion
+            </Button>
+          )}
           <Button
             size="sm"
             variant={isReadLater ? "default" : "outline"}

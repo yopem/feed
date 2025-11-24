@@ -1,5 +1,56 @@
 import { XMLParser } from "fast-xml-parser"
 
+/**
+ * Detects if a URL is a Reddit subreddit URL
+ *
+ * Supports various formats:
+ * - https://www.reddit.com/r/programming
+ * - http://reddit.com/r/programming
+ * - reddit.com/r/programming
+ *
+ * @param url - The URL to check
+ * @returns True if the URL is a Reddit subreddit URL
+ */
+export function isRedditUrl(url: string): boolean {
+  const redditPattern = /^(https?:\/\/)?(www\.)?reddit\.com\/r\/([a-zA-Z0-9_]+)/
+  return redditPattern.test(url)
+}
+
+/**
+ * Normalizes a Reddit subreddit URL to standard format
+ *
+ * Converts various Reddit URL formats to:
+ * https://www.reddit.com/r/{subreddit}
+ *
+ * @param url - The Reddit URL to normalize
+ * @returns Normalized Reddit URL
+ * @throws Error if URL is not a valid Reddit subreddit URL
+ */
+export function normalizeRedditUrl(url: string): string {
+  const subreddit = extractSubredditName(url)
+  return `https://www.reddit.com/r/${subreddit}`
+}
+
+/**
+ * Extracts the subreddit name from a Reddit URL
+ *
+ * @param url - The Reddit URL to parse
+ * @returns The subreddit name (without /r/ prefix)
+ * @throws Error if URL is not a valid Reddit subreddit URL
+ */
+export function extractSubredditName(url: string): string {
+  const redditPattern = /^(https?:\/\/)?(www\.)?reddit\.com\/r\/([a-zA-Z0-9_]+)/
+  const match = redditPattern.exec(url)
+
+  if (!match?.[3]) {
+    throw new Error(
+      "Invalid Reddit URL format. Expected: https://reddit.com/r/subreddit",
+    )
+  }
+
+  return match[3]
+}
+
 interface ScrapedArticleFeed {
   id: string
   title: string
@@ -11,6 +62,33 @@ interface ScrapedArticleFeed {
   isReadLater: boolean
   content?: string
   imageUrl?: string
+  redditPostId?: string
+  redditPermalink?: string
+  redditSubreddit?: string
+}
+
+/**
+ * Reddit API response types
+ */
+interface RedditPost {
+  data: {
+    id: string
+    title: string
+    selftext: string
+    url: string
+    permalink: string
+    author: string
+    created_utc: number
+    thumbnail?: string
+    subreddit: string
+    is_self: boolean
+  }
+}
+
+interface RedditApiResponse {
+  data: {
+    children: RedditPost[]
+  }
 }
 
 interface AtomEntry {
@@ -70,6 +148,189 @@ function extractImageUrl(item: AtomEntry | RSSItem): string | undefined {
 }
 
 /**
+ * Fetches Reddit posts from a subreddit using the public JSON API
+ *
+ * Retrieves the latest posts from a subreddit without authentication.
+ * Reddit's public API returns up to 25 posts by default.
+ *
+ * @param subredditName - The name of the subreddit (without /r/ prefix)
+ * @returns Reddit API response containing post data
+ * @throws Error if fetch fails, rate limited, or subreddit is invalid
+ */
+async function fetchRedditPosts(
+  subredditName: string,
+): Promise<RedditApiResponse> {
+  const url = `https://www.reddit.com/r/${subredditName}.json`
+  const headers = {
+    "User-Agent":
+      "Mozilla/5.0 (compatible; FeedReader/1.0; +https://github.com/your-repo)",
+  }
+
+  try {
+    const response = await fetch(url, { headers })
+
+    if (response.status === 429) {
+      throw new Error(
+        "Reddit rate limit exceeded. Please try again in a few minutes.",
+      )
+    }
+
+    if (response.status === 404) {
+      throw new Error(
+        `Subreddit "${subredditName}" not found. Please check the subreddit name and try again.`,
+      )
+    }
+
+    if (response.status === 403) {
+      throw new Error(
+        `Subreddit "${subredditName}" is private, banned, or quarantined.`,
+      )
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch Reddit posts: ${response.status} ${response.statusText}`,
+      )
+    }
+
+    const data = (await response.json()) as RedditApiResponse
+
+    return data
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error
+    }
+    throw new Error("Failed to fetch Reddit posts. Please try again later.")
+  }
+}
+
+/**
+ * Parses a Reddit subreddit feed and extracts posts as articles
+ *
+ * Fetches posts from Reddit's public JSON API and converts them to
+ * the standard article format. Includes Reddit-specific metadata like
+ * post ID, permalink, and subreddit for comment linking.
+ *
+ * @param url - The Reddit subreddit URL
+ * @returns Object containing feed metadata and array of parsed articles
+ * @throws Error if subreddit cannot be fetched or parsed
+ */
+async function parseRedditFeed(url: string) {
+  try {
+    const subredditName = extractSubredditName(url)
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("Reddit request timed out. Please try again later."))
+      }, 15000)
+    })
+
+    const data = await Promise.race([
+      fetchRedditPosts(subredditName),
+      timeoutPromise,
+    ])
+
+    if (data.data.children.length === 0) {
+      throw new Error(
+        `No posts found in subreddit "${subredditName}". The subreddit might be empty or restricted.`,
+      )
+    }
+
+    const feedTitle = `r/${subredditName}`
+    const feedDescription = `Posts from the ${subredditName} subreddit`
+
+    const truncate = (str = "") =>
+      str.length > 300 ? `${str.substring(0, 300)}…` : str
+
+    const articles = data.data.children
+      .map((post, idx): ScrapedArticleFeed | null => {
+        const postData = post.data
+        const title = postData.title.trim()
+        const link = postData.is_self
+          ? `https://www.reddit.com${postData.permalink}`
+          : postData.url
+
+        if (!title || !link) {
+          console.warn(
+            `Skipping invalid Reddit post at index ${idx}: missing title or link`,
+          )
+          return null
+        }
+
+        const description = postData.selftext
+          ? truncate(postData.selftext)
+          : postData.is_self
+            ? "Discussion post on Reddit"
+            : `External link: ${link}`
+
+        // For self posts, convert markdown-like text to HTML with proper formatting
+        // For link posts, provide a formatted message
+        const content = postData.selftext
+          ? postData.selftext
+              .split("\n\n")
+              .map((para) => `<p>${para.replace(/\n/g, "<br>")}</p>`)
+              .join("")
+          : postData.is_self
+            ? ""
+            : `<p>This is a link post to an external resource.</p><p><a href="${link}" target="_blank" rel="noopener noreferrer">Open external link: ${link}</a></p>`
+
+        const thumbnail =
+          postData.thumbnail &&
+          postData.thumbnail !== "self" &&
+          postData.thumbnail !== "default" &&
+          postData.thumbnail.startsWith("http")
+            ? postData.thumbnail
+            : undefined
+
+        return {
+          id: `reddit-${postData.id}-${Date.now()}-${idx}`,
+          title,
+          description,
+          link,
+          pubDate: new Date(postData.created_utc * 1000).toISOString(),
+          source: `u/${postData.author}`,
+          isRead: false,
+          isReadLater: false,
+          content,
+          imageUrl: thumbnail,
+          redditPostId: postData.id,
+          redditPermalink: postData.permalink,
+          redditSubreddit: postData.subreddit,
+        }
+      })
+      .filter((article): article is ScrapedArticleFeed => article !== null)
+
+    if (articles.length === 0) {
+      throw new Error(`No valid posts found in subreddit "${subredditName}".`)
+    }
+
+    return {
+      title: feedTitle,
+      description: feedDescription,
+      articles,
+      imageUrl: undefined,
+    }
+  } catch (error) {
+    console.error("Error parsing Reddit feed:", error)
+
+    if (error instanceof Error) {
+      if (
+        error.message.includes("rate limit") ||
+        error.message.includes("not found") ||
+        error.message.includes("private") ||
+        error.message.includes("timed out")
+      ) {
+        throw error
+      }
+    }
+
+    throw new Error(
+      "Failed to fetch Reddit feed. Please ensure the subreddit URL is valid and try again.",
+    )
+  }
+}
+
+/**
  * Fetches RSS/Atom feed XML content with automatic proxy fallback
  *
  * Attempts direct fetch first, then falls back to a proxy service
@@ -110,17 +371,43 @@ export async function fetchFeedXML(feedUrl: string): Promise<string> {
 }
 
 /**
+ * Parses an RSS, Atom, or Reddit feed and extracts feed metadata and articles
+ *
+ * Supports RSS 2.0, Atom feed formats, and Reddit subreddits. Automatically
+ * detects feed type and routes to appropriate parser. Extracts feed title,
+ * description, image, and article data.
+ *
+ * @param url - The URL of the feed to parse (RSS/Atom or Reddit subreddit)
+ * @param feedType - Optional feed type override ('rss' or 'reddit')
+ * @returns Object containing feed metadata and array of parsed articles
+ * @throws Error if feed cannot be fetched, parsed, or contains invalid data
+ */
+export async function parseFeed(
+  url: string,
+  feedType?: "rss" | "reddit",
+): Promise<{
+  title: string
+  description: string
+  articles: ScrapedArticleFeed[]
+  imageUrl?: string
+}> {
+  if (feedType === "reddit" || isRedditUrl(url)) {
+    return parseRedditFeed(url)
+  }
+
+  return parseRSSFeed(url)
+}
+
+/**
  * Parses an RSS or Atom feed and extracts feed metadata and articles
  *
- * Supports both RSS 2.0 and Atom feed formats. Extracts feed title,
- * description, image, and article data including title, link, description,
- * publication date, and embedded images.
+ * Internal function for RSS/Atom parsing. Use parseFeed() for public API.
  *
  * @param url - The URL of the RSS/Atom feed to parse
  * @returns Object containing feed metadata and array of parsed articles
  * @throws Error if feed cannot be fetched, parsed, or contains invalid data
  */
-export async function parseFeed(url: string) {
+async function parseRSSFeed(url: string) {
   try {
     const xmlString = await fetchFeedXML(url)
 

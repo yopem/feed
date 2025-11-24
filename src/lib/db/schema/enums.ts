@@ -14,3 +14,11 @@ export const entityStatusEnum = pgEnum("entity_status", [
   "deleted",
   "expired",
 ])
+
+/**
+ * Feed type enum to distinguish content sources
+ *
+ * @property rss - Traditional RSS/Atom feed (default)
+ * @property reddit - Reddit subreddit feed via JSON API
+ */
+export const feedTypeEnum = pgEnum("feed_type", ["rss", "reddit"])

@@ -37,6 +37,12 @@ export const articleTable = pgTable(
     feedId: text("feed_id")
       .notNull()
       .references(() => feedTable.id, { onDelete: "cascade" }),
+    /** Reddit post ID for articles from Reddit feeds */
+    redditPostId: text("reddit_post_id"),
+    /** Reddit permalink for linking to comments */
+    redditPermalink: text("reddit_permalink"),
+    /** Reddit subreddit name */
+    redditSubreddit: text("reddit_subreddit"),
     /** Entity status for soft-delete: published (visible), draft (hidden), deleted (soft-deleted) */
     status: entityStatusEnum("status").notNull().default("published"),
     /** Whether the article is publicly shared via short URL */
@@ -60,6 +66,7 @@ export const articleTable = pgTable(
     index("article_status_idx").on(t.status),
     index("article_feed_status_idx").on(t.feedId, t.status),
     index("article_user_status_idx").on(t.userId, t.status),
+    index("article_reddit_post_id_idx").on(t.redditPostId),
     index("article_share_slug_idx").on(t.shareSlug),
     index("article_is_publicly_shared_idx").on(t.isPubliclyShared),
     index("article_share_expires_at_idx").on(t.shareExpiresAt),

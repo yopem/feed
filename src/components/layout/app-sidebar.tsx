@@ -286,7 +286,7 @@ export function AppSidebar() {
                 size="sm"
               >
                 <PlusIcon className="h-4 w-4" />
-                <span>Add Feed</span>
+                <span>Add Source</span>
               </Button>
               <Button
                 onClick={() => refreshAll.mutate()}
