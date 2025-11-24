@@ -1,4 +1,11 @@
-import { BookOpenIcon, RssIcon, SparklesIcon, TagsIcon } from "lucide-react"
+import {
+  BookOpenIcon,
+  MessageSquareIcon,
+  RssIcon,
+  Share2Icon,
+  SparklesIcon,
+  TagsIcon,
+} from "lucide-react"
 
 import {
   Card,
@@ -17,9 +24,15 @@ export default function FeaturesSection() {
   const features = [
     {
       icon: RssIcon,
-      title: "Subscribe to Feeds",
+      title: "Subscribe to RSS Feeds",
       description:
         "Add unlimited RSS feeds from blogs, news sites, and podcasts. Track all your favorite content sources in one centralized hub without jumping between websites.",
+    },
+    {
+      icon: MessageSquareIcon,
+      title: "Follow Reddit Communities",
+      description:
+        "Subscribe to any subreddit and read posts directly in your feed reader. Jump to Reddit discussions with one click while enjoying a clean reading experience.",
     },
     {
       icon: TagsIcon,
@@ -32,6 +45,12 @@ export default function FeaturesSection() {
       title: "Track Your Reading",
       description:
         "Never lose your place. Mark articles as read or unread, save favorites for later, and maintain a complete history of everything you've consumed.",
+    },
+    {
+      icon: Share2Icon,
+      title: "Share Articles Publicly",
+      description:
+        "Generate shareable links with password protection, expiration dates, and QR codes. Track views, referrers, and geographic analytics for every shared article.",
     },
     {
       icon: SparklesIcon,
@@ -56,12 +75,12 @@ export default function FeaturesSection() {
             Everything You Need
           </h2>
           <p className="text-muted-foreground mt-3 text-sm sm:mt-4 sm:text-base md:text-lg">
-            Powerful features to enhance your RSS reading experience
+            Powerful features to enhance your content reading experience
           </p>
         </div>
 
-        <div className="mx-auto mt-12 max-w-5xl sm:mt-16">
-          <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+        <div className="mx-auto mt-12 max-w-6xl sm:mt-16">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => {
               const Icon = feature.icon
               return (

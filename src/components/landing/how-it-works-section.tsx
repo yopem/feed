@@ -14,7 +14,7 @@ export default function HowItWorksSection() {
       icon: RssIcon,
       title: "Add Your Feeds",
       description:
-        "Paste any blog or website URL and we'll automatically detect their RSS feed. No technical knowledge required—if they publish content, we'll find it.",
+        "Paste any blog URL or Reddit community link and we'll automatically fetch the content. Support for RSS feeds and subreddits—no technical knowledge required.",
     },
     {
       number: "02",
