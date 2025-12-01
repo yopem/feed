@@ -1,0 +1,1 @@
+ALTER TYPE "public"."feed_type" ADD VALUE 'google_news';

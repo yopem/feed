@@ -2,8 +2,8 @@
 
 An open-source, self-hosted alternative to Feedly. A modern RSS feed reader that
 brings all your favorite content into one beautiful, distraction-free interface.
-Subscribe to RSS feeds, follow Reddit communities, and organize your reading
-experience with powerful tagging and tracking features.
+Subscribe to RSS feeds, follow Reddit communities, track Google News topics, and
+organize your reading experience with powerful tagging and tracking features.
 
 ## Features
 
@@ -17,6 +17,12 @@ websites.
 
 Subscribe to any subreddit and read posts directly in your feed reader. Jump to
 Reddit discussions with one click while enjoying a clean reading experience.
+
+### 📰 Track Google News Topics
+
+Follow Google News topics or create custom news searches. Stay updated with the
+latest headlines from technology, business, science, and more through Google
+News RSS feeds.
 
 ### 🏷️ Organize with Tags
 

@@ -1,5 +1,7 @@
 import { XMLParser } from "fast-xml-parser"
 
+import { stripHtml } from "@/lib/utils/html"
+
 /**
  * Detects if a URL is a Reddit subreddit URL
  *
@@ -14,6 +16,113 @@ import { XMLParser } from "fast-xml-parser"
 export function isRedditUrl(url: string): boolean {
   const redditPattern = /^(https?:\/\/)?(www\.)?reddit\.com\/r\/([a-zA-Z0-9_]+)/
   return redditPattern.test(url)
+}
+
+/**
+ * Detects if a URL is a Google News RSS feed URL
+ *
+ * Supports Google News RSS formats:
+ * - https://news.google.com/rss (top stories)
+ * - https://news.google.com/rss/topics/... (topic feeds)
+ * - https://news.google.com/rss/search?q=... (search feeds)
+ *
+ * @param url - The URL to check
+ * @returns True if the URL is a Google News RSS feed URL
+ */
+export function isGoogleNewsUrl(url: string): boolean {
+  return url.includes("news.google.com/rss")
+}
+
+/**
+ * Constructs a Google News RSS search feed URL from a query string
+ *
+ * Builds a properly formatted Google News RSS feed URL for the given search query.
+ * The URL includes language (en), region (US), and edition (US:en) parameters.
+ *
+ * @param query - The search query string
+ * @returns Google News RSS search URL
+ * @example
+ * buildGoogleNewsSearchUrl("artificial intelligence")
+ * // Returns: "https://news.google.com/rss/search?q=artificial%20intelligence&hl=en&gl=US&ceid=US:en"
+ */
+export function buildGoogleNewsSearchUrl(query: string): string {
+  const encodedQuery = encodeURIComponent(query.trim())
+  return `https://news.google.com/rss/search?q=${encodedQuery}&hl=en&gl=US&ceid=US:en`
+}
+
+/**
+ * Extracts a clean, human-readable title from a Google News RSS feed URL
+ *
+ * Converts Google News RSS URLs into readable titles:
+ * - Topic feeds: Maps known topic IDs to their names
+ * - Search feeds: Extracts and decodes the search query
+ * - Publisher feeds: Extracts the domain name from allinurl: queries
+ *
+ * @param url - The Google News RSS feed URL
+ * @returns A clean, human-readable title
+ * @example
+ * generateGoogleNewsTitle("https://news.google.com/rss/search?q=when:24h+allinurl:bbc.com&...")
+ * // Returns: "Google News - BBC"
+ * @example
+ * generateGoogleNewsTitle("https://news.google.com/rss/search?q=artificial+intelligence&...")
+ * // Returns: "Google News - artificial intelligence"
+ */
+export function generateGoogleNewsTitle(url: string): string {
+  try {
+    const urlObj = new URL(url)
+
+    if (urlObj.pathname === "/rss" || urlObj.pathname === "/rss/") {
+      return "Google News - Top Stories"
+    }
+
+    if (urlObj.pathname.includes("/topics/")) {
+      const topicMap: Record<string, string> = {
+        CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FtVnVHZ0pWVXlnQVAB: "World",
+        CAAqJggKIiBDQkFTRWdvSUwyMHZNRGRqTVhZU0FtVnVHZ0pWVXlnQVAB: "Technology",
+        CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB: "Business",
+        CAAqJggKIiBDQkFTRWdvSUwyMHZNRFp0Y1RjU0FtVnVHZ0pWVXlnQVAB: "Science",
+        CAAqIQgKIhtDQkFTRGdvSUwyMHZNR3QwTlRFU0FtVnVLQUFQAQ: "Health",
+        CAAqJggKIiBDQkFTRWdvSUwyMHZNREpxYW5RU0FtVnVHZ0pWVXlnQVAB:
+          "Entertainment",
+        CAAqJggKIiBDQkFTRWdvSUwyMHZNRFp1ZEdvU0FtVnVHZ0pWVXlnQVAB: "Sports",
+      }
+
+      const topicIdMatch = urlObj.pathname.match(/\/topics\/([^?]+)/)
+      if (topicIdMatch) {
+        const topicId = topicIdMatch[1]
+        const topicName = topicMap[topicId]
+        if (topicName) {
+          return `Google News - ${topicName}`
+        }
+      }
+      return "Google News"
+    }
+
+    if (urlObj.pathname.includes("/search")) {
+      const searchParams = urlObj.searchParams
+      const query = searchParams.get("q")
+
+      if (query) {
+        const publisherMatch = query.match(/allinurl:([a-z0-9.-]+)/i)
+        if (publisherMatch) {
+          const domain = publisherMatch[1]
+          const domainName = domain.split(".")[0]
+          return `Google News - ${domainName.toUpperCase()}`
+        }
+
+        const decodedQuery = decodeURIComponent(query)
+          .replace(/when:\d+[hdwmy]/g, "")
+          .replace(/\+/g, " ")
+          .trim()
+
+        return decodedQuery ? `Google News - ${decodedQuery}` : "Google News"
+      }
+    }
+
+    return "Google News"
+  } catch {
+    return "Google News"
+  }
 }
 
 /**
@@ -371,20 +480,20 @@ export async function fetchFeedXML(feedUrl: string): Promise<string> {
 }
 
 /**
- * Parses an RSS, Atom, or Reddit feed and extracts feed metadata and articles
+ * Parses an RSS, Atom, Reddit, or Google News feed and extracts feed metadata and articles
  *
- * Supports RSS 2.0, Atom feed formats, and Reddit subreddits. Automatically
- * detects feed type and routes to appropriate parser. Extracts feed title,
+ * Supports RSS 2.0, Atom feed formats, Reddit subreddits, and Google News RSS feeds.
+ * Automatically detects feed type and routes to appropriate parser. Extracts feed title,
  * description, image, and article data.
  *
- * @param url - The URL of the feed to parse (RSS/Atom or Reddit subreddit)
- * @param feedType - Optional feed type override ('rss' or 'reddit')
+ * @param url - The URL of the feed to parse (RSS/Atom, Reddit subreddit, or Google News)
+ * @param feedType - Optional feed type override ('rss', 'reddit', or 'google_news')
  * @returns Object containing feed metadata and array of parsed articles
  * @throws Error if feed cannot be fetched, parsed, or contains invalid data
  */
 export async function parseFeed(
   url: string,
-  feedType?: "rss" | "reddit",
+  feedType?: "rss" | "reddit" | "google_news",
 ): Promise<{
   title: string
   description: string
@@ -393,6 +502,10 @@ export async function parseFeed(
 }> {
   if (feedType === "reddit" || isRedditUrl(url)) {
     return parseRedditFeed(url)
+  }
+
+  if (feedType === "google_news" || isGoogleNewsUrl(url)) {
+    return parseRSSFeed(url)
   }
 
   return parseRSSFeed(url)
@@ -503,7 +616,7 @@ async function parseRSSFeed(url: string) {
                 ? entry.content["#text"]
                 : typeof entry.content === "string"
                   ? entry.content
-                  : description,
+                  : stripHtml(description),
             imageUrl,
           }
         })
@@ -571,7 +684,9 @@ async function parseRSSFeed(url: string) {
             source: feedTitle.trim(),
             isRead: false,
             isReadLater: false,
-            content: item["content:encoded"] ?? description,
+            content: item["content:encoded"]
+              ? item["content:encoded"]
+              : stripHtml(description),
             imageUrl,
           }
         })

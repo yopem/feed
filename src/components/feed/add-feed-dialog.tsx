@@ -4,7 +4,14 @@ import { useState } from "react"
 import Image from "next/image"
 import { useForm } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { GlobeIcon, PlusIcon, RssIcon, SearchIcon, XIcon } from "lucide-react"
+import {
+  GlobeIcon,
+  NewspaperIcon,
+  PlusIcon,
+  RssIcon,
+  SearchIcon,
+  XIcon,
+} from "lucide-react"
 import { z } from "zod"
 
 import { Badge } from "@/components/ui/badge"
@@ -25,6 +32,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs"
 import { toast } from "@/components/ui/toast"
 import { useTRPC } from "@/lib/trpc/client"
@@ -112,12 +120,115 @@ const POPULAR_RSS_FEEDS = [
   },
 ]
 
+const POPULAR_GOOGLE_NEWS_TOPICS = [
+  {
+    name: "Top Stories",
+    url: "https://news.google.com/rss",
+    icon: "🌍",
+    description: "Breaking news worldwide",
+  },
+  {
+    name: "World",
+    url: "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en",
+    icon: "🌐",
+    description: "International news",
+  },
+  {
+    name: "Technology",
+    url: "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGRqTVhZU0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en",
+    icon: "💻",
+    description: "Tech news and updates",
+  },
+  {
+    name: "Business",
+    url: "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en",
+    icon: "💼",
+    description: "Business and finance",
+  },
+  {
+    name: "Science",
+    url: "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFp0Y1RjU0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en",
+    icon: "🔬",
+    description: "Science discoveries",
+  },
+  {
+    name: "Health",
+    url: "https://news.google.com/rss/topics/CAAqIQgKIhtDQkFTRGdvSUwyMHZNR3QwTlRFU0FtVnVLQUFQAQ?hl=en-US&gl=US&ceid=US:en",
+    icon: "🏥",
+    description: "Health news",
+  },
+  {
+    name: "Entertainment",
+    url: "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNREpxYW5RU0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en",
+    icon: "🎬",
+    description: "Entertainment news",
+  },
+  {
+    name: "Sports",
+    url: "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFp1ZEdvU0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en",
+    icon: "⚽",
+    description: "Sports updates",
+  },
+]
+
+const POPULAR_GOOGLE_NEWS_CHANNELS = [
+  {
+    name: "CNN",
+    url: "https://news.google.com/rss/search?q=when:24h+allinurl:cnn.com&hl=en-US&gl=US&ceid=US:en",
+    icon: "📺",
+    description: "Cable News Network",
+  },
+  {
+    name: "BBC News",
+    url: "https://news.google.com/rss/search?q=when:24h+allinurl:bbc.com&hl=en-US&gl=US&ceid=US:en",
+    icon: "📻",
+    description: "British Broadcasting Corporation",
+  },
+  {
+    name: "The New York Times",
+    url: "https://news.google.com/rss/search?q=when:24h+allinurl:nytimes.com&hl=en-US&gl=US&ceid=US:en",
+    icon: "📰",
+    description: "NYT News",
+  },
+  {
+    name: "Reuters",
+    url: "https://news.google.com/rss/search?q=when:24h+allinurl:reuters.com&hl=en-US&gl=US&ceid=US:en",
+    icon: "📡",
+    description: "International news agency",
+  },
+  {
+    name: "The Guardian",
+    url: "https://news.google.com/rss/search?q=when:24h+allinurl:theguardian.com&hl=en-US&gl=US&ceid=US:en",
+    icon: "🗞️",
+    description: "British daily newspaper",
+  },
+  {
+    name: "TechCrunch",
+    url: "https://news.google.com/rss/search?q=when:24h+allinurl:techcrunch.com&hl=en-US&gl=US&ceid=US:en",
+    icon: "💡",
+    description: "Technology news",
+  },
+  {
+    name: "The Verge",
+    url: "https://news.google.com/rss/search?q=when:24h+allinurl:theverge.com&hl=en-US&gl=US&ceid=US:en",
+    icon: "🔌",
+    description: "Tech and culture",
+  },
+  {
+    name: "Wired",
+    url: "https://news.google.com/rss/search?q=when:24h+allinurl:wired.com&hl=en-US&gl=US&ceid=US:en",
+    icon: "⚡",
+    description: "Technology magazine",
+  },
+]
+
 export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
   const [tagSearchQuery, setTagSearchQuery] = useState("")
   const [showDropdown, setShowDropdown] = useState(false)
   const [activeTab, setActiveTab] = useState("websites")
   const [redditSearch, setRedditSearch] = useState("")
+  const [googleNewsSearch, setGoogleNewsSearch] = useState("")
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
@@ -241,6 +352,7 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
     setSelectedTagIds([])
     setTagSearchQuery("")
     setRedditSearch("")
+    setGoogleNewsSearch("")
     setActiveTab("websites")
     onClose()
   }
@@ -266,6 +378,59 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
       form.reset()
       setSelectedTagIds([])
       setRedditSearch("")
+      onClose()
+      // eslint-disable-next-line no-empty
+    } catch {}
+  }
+
+  /**
+   * Handles submission of a popular Google News topic
+   */
+  const handleGoogleNewsTopicSubmit = async (topic: {
+    name: string
+    url: string
+  }) => {
+    try {
+      const feed = await createFeed.mutateAsync(topic.url)
+
+      if (selectedTagIds.length > 0 && feed) {
+        await assignTags.mutateAsync({
+          feedId: feed.id,
+          tagIds: selectedTagIds,
+        })
+      }
+
+      form.reset()
+      setSelectedTagIds([])
+      onClose()
+      // eslint-disable-next-line no-empty
+    } catch {}
+  }
+
+  /**
+   * Handles submission of a custom Google News search query
+   */
+  const handleGoogleNewsSearchSubmit = async (query: string) => {
+    if (!query.trim()) {
+      toast.error("Please enter a search query")
+      return
+    }
+
+    const searchUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query.trim())}&hl=en&gl=US&ceid=US:en`
+
+    try {
+      const feed = await createFeed.mutateAsync(searchUrl)
+
+      if (selectedTagIds.length > 0 && feed) {
+        await assignTags.mutateAsync({
+          feedId: feed.id,
+          tagIds: selectedTagIds,
+        })
+      }
+
+      form.reset()
+      setSelectedTagIds([])
+      setGoogleNewsSearch("")
       onClose()
       // eslint-disable-next-line no-empty
     } catch {}
@@ -376,7 +541,7 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
 
         <DialogPanel>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTab value="websites" className="gap-2">
                 <RssIcon className="h-4 w-4" />
                 Websites
@@ -384,6 +549,10 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
               <TabsTab value="reddit" className="gap-2">
                 <GlobeIcon className="h-4 w-4" />
                 Reddit
+              </TabsTab>
+              <TabsTab value="google-news" className="gap-2">
+                <NewspaperIcon className="h-4 w-4" />
+                Google News
               </TabsTab>
             </TabsList>
 
@@ -641,6 +810,126 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
                     {createFeed.isPending || assignTags.isPending
                       ? "Adding..."
                       : "Add Subreddit"}
+                  </Button>
+                </DialogFooter>
+              </div>
+            </TabsPanel>
+
+            {/* Google News Tab */}
+            <TabsPanel value="google-news">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-foreground mb-2 block text-sm font-medium">
+                    Popular Topics
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {POPULAR_GOOGLE_NEWS_TOPICS.map((topic) => (
+                      <button
+                        key={topic.url}
+                        type="button"
+                        onClick={() => handleGoogleNewsTopicSubmit(topic)}
+                        disabled={
+                          createFeed.isPending ||
+                          assignTags.isPending ||
+                          createTag.isPending
+                        }
+                        className="bg-card hover:bg-accent border-border group hover:border-foreground/10 flex items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all hover:shadow-md disabled:pointer-events-none disabled:opacity-50"
+                      >
+                        <span className="text-2xl">{topic.icon}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-foreground text-sm font-medium">
+                            {topic.name}
+                          </div>
+                          <div className="text-muted-foreground text-xs">
+                            {topic.description}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <label className="text-foreground mb-2 block text-sm font-medium">
+                    Popular Publishers
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {POPULAR_GOOGLE_NEWS_CHANNELS.map((channel) => (
+                      <button
+                        key={channel.url}
+                        type="button"
+                        onClick={() => handleGoogleNewsTopicSubmit(channel)}
+                        disabled={
+                          createFeed.isPending ||
+                          assignTags.isPending ||
+                          createTag.isPending
+                        }
+                        className="bg-card hover:bg-accent border-border group hover:border-foreground/10 flex items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all hover:shadow-md disabled:pointer-events-none disabled:opacity-50"
+                      >
+                        <span className="text-2xl">{channel.icon}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-foreground text-sm font-medium">
+                            {channel.name}
+                          </div>
+                          <div className="text-muted-foreground text-xs">
+                            {channel.description}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="mb-3 text-sm font-medium">
+                    Search Google News
+                  </h3>
+                  <Input
+                    placeholder="e.g., artificial intelligence, climate change..."
+                    value={googleNewsSearch}
+                    onChange={(e) => setGoogleNewsSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        const query = googleNewsSearch.trim()
+                        if (query) {
+                          void handleGoogleNewsSearchSubmit(query)
+                        } else {
+                          toast.error("Please enter a search query")
+                        }
+                      }
+                    }}
+                  />
+                </div>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={handleClose}>
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const query = googleNewsSearch.trim()
+                      if (query) {
+                        void handleGoogleNewsSearchSubmit(query)
+                      } else {
+                        toast.error("Please enter a search query")
+                      }
+                    }}
+                    disabled={
+                      !googleNewsSearch.trim() ||
+                      createFeed.isPending ||
+                      assignTags.isPending ||
+                      createTag.isPending
+                    }
+                  >
+                    {createFeed.isPending || assignTags.isPending
+                      ? "Adding..."
+                      : "Add Feed"}
                   </Button>
                 </DialogFooter>
               </div>

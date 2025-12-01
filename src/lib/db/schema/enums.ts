@@ -20,5 +20,10 @@ export const entityStatusEnum = pgEnum("entity_status", [
  *
  * @property rss - Traditional RSS/Atom feed (default)
  * @property reddit - Reddit subreddit feed via JSON API
+ * @property google_news - Google News RSS feed (topics or search queries)
  */
-export const feedTypeEnum = pgEnum("feed_type", ["rss", "reddit"])
+export const feedTypeEnum = pgEnum("feed_type", [
+  "rss",
+  "reddit",
+  "google_news",
+])

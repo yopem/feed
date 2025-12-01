@@ -15,6 +15,8 @@ import {
 import { cronSecret } from "@/lib/env/server"
 import { createTokenBucket } from "@/lib/utils/rate-limit"
 import {
+  generateGoogleNewsTitle,
+  isGoogleNewsUrl,
   isRedditUrl,
   normalizeRedditUrl,
   parseFeed,
@@ -58,7 +60,12 @@ export const feedRouter = {
         }
 
         const isReddit = isRedditUrl(trimmedInput)
-        const feedType = isReddit ? "reddit" : "rss"
+        const isGoogleNews = isGoogleNewsUrl(trimmedInput)
+        const feedType = isReddit
+          ? "reddit"
+          : isGoogleNews
+            ? "google_news"
+            : "rss"
         const normalizedUrl = isReddit
           ? normalizeRedditUrl(trimmedInput)
           : trimmedInput
@@ -98,7 +105,11 @@ export const feedRouter = {
           timeoutPromise,
         ])
 
-        const baseSlug = slugify(feedData.title)
+        const feedTitle = isGoogleNews
+          ? generateGoogleNewsTitle(normalizedUrl)
+          : feedData.title
+
+        const baseSlug = slugify(feedTitle)
         let slug = baseSlug
         let suffix = 1
 
@@ -120,7 +131,7 @@ export const feedRouter = {
         const [feed] = await ctx.db
           .insert(feedTable)
           .values({
-            title: feedData.title,
+            title: feedTitle,
             description: feedData.description,
             url: normalizedUrl,
             slug,
