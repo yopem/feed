@@ -350,7 +350,7 @@ export function AppSidebar() {
                         {showBadges && count > 0 && (
                           <Badge
                             variant={isActive ? "secondary" : "outline"}
-                            className="ml-auto"
+                            className="ml-auto rounded-xl px-2 py-0.5"
                           >
                             {count}
                           </Badge>
@@ -680,7 +680,7 @@ export function AppSidebar() {
                           {showBadges && feed.unreadCount > 0 && (
                             <Badge
                               variant={isSelected ? "secondary" : "outline"}
-                              className="ml-auto shrink-0"
+                              className="ml-auto rounded-xl px-2 py-0.5"
                             >
                               {feed.unreadCount}
                             </Badge>
@@ -823,7 +823,7 @@ export function AppSidebar() {
                         size="lg"
                         className="data-[state=open]:bg-accent data-[state=open]:text-accent-foreground hover:bg-accent/50 h-auto w-full py-2.5 transition-colors"
                       >
-                        <Avatar className="border-border/50 h-10 w-10 shrink-0 border-2">
+                        <Avatar className="border-border/50 h-10 w-10 shrink-0 border">
                           <AvatarImage src={user.image ?? undefined} />
                           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                             {user.username.charAt(0).toUpperCase()}
@@ -848,7 +848,7 @@ export function AppSidebar() {
                     sideOffset={8}
                   >
                     <div className="flex items-start gap-3 px-2 py-3">
-                      <Avatar className="border-border/50 h-10 w-10 shrink-0 border-2">
+                      <Avatar className="border-border/50 h-10 w-10 shrink-0 border">
                         <AvatarImage src={user.image ?? undefined} />
                         <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                           {user.username.charAt(0).toUpperCase()}

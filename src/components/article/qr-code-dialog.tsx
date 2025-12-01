@@ -85,7 +85,7 @@ export function QRCodeDialog({
         <div className="flex flex-col items-center gap-4 py-6">
           <div
             ref={qrRef}
-            className="border-border rounded-lg border-2 bg-white p-4 shadow-[4px_4px_0_0_hsl(var(--foreground))]"
+            className="border-border rounded-lg border bg-white p-4 shadow-lg"
           >
             <QRCodeCanvas value={url} size={256} level="H" marginSize={0} />
           </div>

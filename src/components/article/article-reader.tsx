@@ -211,7 +211,7 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
           )}
 
           {article.content ? (
-            <div className="bg-card border-border rounded-lg border-2 p-6 shadow-[4px_4px_0_0_hsl(var(--foreground))] md:rounded-xl md:p-8 lg:p-10">
+            <div className="bg-card border-border rounded-lg border p-6 shadow-lg md:rounded-xl md:p-8 lg:p-10">
               <div
                 className="prose prose-neutral dark:prose-invert prose-sm md:prose-base lg:prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-2xl md:prose-h1:text-3xl prose-h2:text-xl md:prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-lg md:prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-p:leading-relaxed prose-p:my-4 prose-ul:my-6 prose-ol:my-6 prose-li:my-1.5 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-semibold prose-img:rounded-lg prose-img:shadow-md prose-img:my-6 prose-figure:my-6 prose-hr:my-8 prose-hr:border-border prose-pre:bg-muted prose-pre:my-4 prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none max-w-none space-y-4 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
                 dangerouslySetInnerHTML={{
@@ -220,7 +220,7 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
               />
             </div>
           ) : (
-            <div className="bg-muted/30 border-border rounded-lg border-2 p-6 text-center shadow-[4px_4px_0_0_hsl(var(--foreground))] md:rounded-xl md:p-8">
+            <div className="bg-muted/30 border-border rounded-lg border p-6 text-center shadow-md md:rounded-xl md:p-8">
               <p className="text-muted-foreground text-sm md:text-base">
                 No content available. Click{" "}
                 <a

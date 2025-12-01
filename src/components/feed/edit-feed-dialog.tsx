@@ -12,6 +12,7 @@ import {
   Dialog,
   DialogFooter,
   DialogHeader,
+  DialogPanel,
   DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -200,174 +201,176 @@ export function EditFeedDialog({
             e.stopPropagation()
             void form.handleSubmit()
           }}
-          className="space-y-4"
+          className="contents"
         >
-          <form.Field
-            name="title"
-            validators={{
-              onSubmit: ({ value }) => {
-                const result = formSchema.shape.title.safeParse(value)
-                if (!result.success) {
-                  return result.error.issues[0]?.message || "Invalid title"
-                }
-                return undefined
-              },
-            }}
-          >
-            {(field) => (
-              <Field data-invalid={field.state.meta.errors.length > 0}>
-                <FieldContent>
-                  <FieldLabel htmlFor={field.name}>Feed Title</FieldLabel>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    type="text"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="My Favorite Blog"
-                    disabled={updateFeed.isPending}
-                    aria-invalid={field.state.meta.errors.length > 0}
-                  />
-                  {field.state.meta.errors.length > 0 && (
-                    <FieldError>{field.state.meta.errors[0]!}</FieldError>
-                  )}
-                </FieldContent>
-              </Field>
-            )}
-          </form.Field>
-
-          <form.Field
-            name="description"
-            validators={{
-              onSubmit: ({ value }) => {
-                const result = formSchema.shape.description.safeParse(value)
-                if (!result.success) {
-                  return (
-                    result.error.issues[0]?.message || "Invalid description"
-                  )
-                }
-                return undefined
-              },
-            }}
-          >
-            {(field) => (
-              <Field data-invalid={field.state.meta.errors.length > 0}>
-                <FieldContent>
-                  <FieldLabel htmlFor={field.name}>
-                    Description (optional)
-                  </FieldLabel>
-                  <Textarea
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value ?? ""}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="A short description of this feed"
-                    disabled={updateFeed.isPending}
-                    aria-invalid={field.state.meta.errors.length > 0}
-                  />
-                  {field.state.meta.errors.length > 0 && (
-                    <FieldError>{field.state.meta.errors[0]!}</FieldError>
-                  )}
-                </FieldContent>
-              </Field>
-            )}
-          </form.Field>
-
-          <div>
-            <label className="text-foreground mb-2 block text-sm font-medium">
-              Tags (optional)
-            </label>
-            <div className="space-y-2">
-              {selectedTags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {selectedTags.map((tag) => (
-                    <Badge
-                      key={tag.id}
-                      variant="default"
-                      className="cursor-pointer transition-all duration-200 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none motion-reduce:transition-none motion-reduce:hover:transform-none"
-                      onClick={() => removeTag(tag.id)}
-                    >
-                      {tag.name}
-                      <XIcon className="ml-1 h-3 w-3" />
-                    </Badge>
-                  ))}
-                </div>
-              )}
-
-              <div className="relative">
-                <Input
-                  placeholder="Search or create tag..."
-                  value={tagSearchQuery}
-                  onChange={(e) => {
-                    setTagSearchQuery(e.target.value)
-                    setShowDropdown(true)
-                  }}
-                  onFocus={() => setShowDropdown(true)}
-                  onBlur={() => {
-                    setTimeout(() => setShowDropdown(false), 200)
-                  }}
-                  disabled={createTag.isPending}
-                />
-
-                {showDropdown && tagSearchQuery && (
-                  <div className="bg-popover text-popover-foreground border-border absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border-2 shadow-[2px_2px_0_0_hsl(var(--foreground))]">
-                    {filteredTags.length > 0 ? (
-                      <>
-                        {filteredTags
-                          .filter((tag) => !selectedTagIds.includes(tag.id))
-                          .map((tag) => (
-                            <button
-                              key={tag.id}
-                              type="button"
-                              className="hover:bg-accent block w-full px-3 py-2 text-left text-sm transition-colors"
-                              onMouseDown={(e) => {
-                                e.preventDefault()
-                                addTag(tag.id)
-                              }}
-                            >
-                              {tag.name}
-                            </button>
-                          ))}
-                        {!exactMatch && (
-                          <button
-                            type="button"
-                            className="hover:bg-accent border-border block w-full border-t-2 px-3 py-2 text-left text-sm transition-colors"
-                            onMouseDown={(e) => {
-                              e.preventDefault()
-                              handleCreateNewTag()
-                            }}
-                            disabled={createTag.isPending}
-                          >
-                            <PlusIcon className="mr-1 inline h-3 w-3" />
-                            Create "{tagSearchQuery}"
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      <button
-                        type="button"
-                        className="hover:bg-accent block w-full px-3 py-2 text-left text-sm transition-colors"
-                        onMouseDown={(e) => {
-                          e.preventDefault()
-                          handleCreateNewTag()
-                        }}
-                        disabled={createTag.isPending}
-                      >
-                        <PlusIcon className="mr-1 inline h-3 w-3" />
-                        Create "{tagSearchQuery}"
-                      </button>
+          <DialogPanel className="space-y-4">
+            <form.Field
+              name="title"
+              validators={{
+                onSubmit: ({ value }) => {
+                  const result = formSchema.shape.title.safeParse(value)
+                  if (!result.success) {
+                    return result.error.issues[0]?.message || "Invalid title"
+                  }
+                  return undefined
+                },
+              }}
+            >
+              {(field) => (
+                <Field data-invalid={field.state.meta.errors.length > 0}>
+                  <FieldContent className="w-full">
+                    <FieldLabel htmlFor={field.name}>Feed Title</FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="text"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="My Favorite Blog"
+                      disabled={updateFeed.isPending}
+                      aria-invalid={field.state.meta.errors.length > 0}
+                    />
+                    {field.state.meta.errors.length > 0 && (
+                      <FieldError>{field.state.meta.errors[0]!}</FieldError>
                     )}
+                  </FieldContent>
+                </Field>
+              )}
+            </form.Field>
+
+            <form.Field
+              name="description"
+              validators={{
+                onSubmit: ({ value }) => {
+                  const result = formSchema.shape.description.safeParse(value)
+                  if (!result.success) {
+                    return (
+                      result.error.issues[0]?.message || "Invalid description"
+                    )
+                  }
+                  return undefined
+                },
+              }}
+            >
+              {(field) => (
+                <Field data-invalid={field.state.meta.errors.length > 0}>
+                  <FieldContent className="w-full">
+                    <FieldLabel htmlFor={field.name}>
+                      Description (optional)
+                    </FieldLabel>
+                    <Textarea
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value ?? ""}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="A short description of this feed"
+                      disabled={updateFeed.isPending}
+                      aria-invalid={field.state.meta.errors.length > 0}
+                    />
+                    {field.state.meta.errors.length > 0 && (
+                      <FieldError>{field.state.meta.errors[0]!}</FieldError>
+                    )}
+                  </FieldContent>
+                </Field>
+              )}
+            </form.Field>
+
+            <div>
+              <label className="text-foreground mb-2 block text-sm font-medium">
+                Tags (optional)
+              </label>
+              <div className="space-y-2">
+                {selectedTags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedTags.map((tag) => (
+                      <Badge
+                        key={tag.id}
+                        variant="default"
+                        className="hover:border-foreground/10 cursor-pointer transition-all duration-200 hover:shadow-md motion-reduce:transition-none"
+                        onClick={() => removeTag(tag.id)}
+                      >
+                        {tag.name}
+                        <XIcon className="ml-1 h-3 w-3" />
+                      </Badge>
+                    ))}
                   </div>
                 )}
-              </div>
 
-              <p className="text-muted-foreground text-xs">
-                Type to search existing tags or create a new one
-              </p>
+                <div className="relative">
+                  <Input
+                    placeholder="Search or create tag..."
+                    value={tagSearchQuery}
+                    onChange={(e) => {
+                      setTagSearchQuery(e.target.value)
+                      setShowDropdown(true)
+                    }}
+                    onFocus={() => setShowDropdown(true)}
+                    onBlur={() => {
+                      setTimeout(() => setShowDropdown(false), 200)
+                    }}
+                    disabled={createTag.isPending}
+                  />
+
+                  {showDropdown && tagSearchQuery && (
+                    <div className="bg-popover text-popover-foreground border-border absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border shadow-md">
+                      {filteredTags.length > 0 ? (
+                        <>
+                          {filteredTags
+                            .filter((tag) => !selectedTagIds.includes(tag.id))
+                            .map((tag) => (
+                              <button
+                                key={tag.id}
+                                type="button"
+                                className="hover:bg-accent block w-full px-3 py-2 text-left text-sm transition-colors"
+                                onMouseDown={(e) => {
+                                  e.preventDefault()
+                                  addTag(tag.id)
+                                }}
+                              >
+                                {tag.name}
+                              </button>
+                            ))}
+                          {!exactMatch && (
+                            <button
+                              type="button"
+                              className="hover:bg-accent border-border block w-full border-t px-3 py-2 text-left text-sm transition-colors"
+                              onMouseDown={(e) => {
+                                e.preventDefault()
+                                handleCreateNewTag()
+                              }}
+                              disabled={createTag.isPending}
+                            >
+                              <PlusIcon className="mr-1 inline h-3 w-3" />
+                              Create "{tagSearchQuery}"
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className="hover:bg-accent block w-full px-3 py-2 text-left text-sm transition-colors"
+                          onMouseDown={(e) => {
+                            e.preventDefault()
+                            handleCreateNewTag()
+                          }}
+                          disabled={createTag.isPending}
+                        >
+                          <PlusIcon className="mr-1 inline h-3 w-3" />
+                          Create "{tagSearchQuery}"
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-muted-foreground text-xs">
+                  Type to search existing tags or create a new one
+                </p>
+              </div>
             </div>
-          </div>
+          </DialogPanel>
 
           <form.Subscribe
             selector={(state) => [state.isSubmitting, state.canSubmit]}

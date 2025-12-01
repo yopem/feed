@@ -112,7 +112,7 @@ export function BulkShareDialog({
         </div>
 
         <div className="space-y-4">
-          <div className="bg-muted border-border rounded-md border-2 p-4">
+          <div className="bg-muted border-border rounded-md border p-4">
             <p className="text-foreground mb-2 text-sm font-semibold">
               {feedTitle}
             </p>
@@ -172,7 +172,7 @@ export function BulkShareDialog({
             </>
           ) : (
             <>
-              <div className="rounded-md border-2 border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950/20">
+              <div className="rounded-md border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950/20">
                 <p className="text-sm font-semibold text-green-800 dark:text-green-200">
                   Bulk sharing is currently enabled
                 </p>
@@ -210,7 +210,7 @@ export function BulkShareDialog({
                 </>
               ) : (
                 <>
-                  <div className="bg-destructive/10 border-destructive rounded-md border-2 p-4">
+                  <div className="bg-destructive/10 border-destructive rounded-md border p-4">
                     <p className="text-destructive text-sm font-semibold">
                       Are you sure?
                     </p>

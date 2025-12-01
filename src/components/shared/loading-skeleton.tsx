@@ -34,7 +34,7 @@ export function LoadingSkeleton({
               flexDirection: "column",
             }}
             className={cn(
-              "bg-card text-card-foreground border-border animate-pulse gap-0 rounded-md border-2 py-6 shadow-[4px_4px_0_0_hsl(var(--foreground))]",
+              "bg-card text-card-foreground border-border flex animate-pulse flex-col gap-6 rounded-md border p-3 shadow-sm",
               className,
             )}
           >
@@ -77,7 +77,7 @@ export function LoadingSkeleton({
           <div
             key={i}
             className={cn(
-              "bg-card text-card-foreground border-border flex animate-pulse flex-col gap-6 rounded-md border-2 p-3 shadow-[4px_4px_0_0_hsl(var(--foreground))]",
+              "bg-card text-card-foreground border-border flex animate-pulse flex-col gap-6 rounded-md border p-3 shadow-sm",
               className,
             )}
           >
@@ -131,7 +131,7 @@ export function LoadingSkeleton({
           <div
             key={i}
             className={cn(
-              "bg-card text-card-foreground border-border flex animate-pulse flex-col gap-6 rounded-md border-2 p-3 shadow-[4px_4px_0_0_hsl(var(--foreground))]",
+              "bg-card text-card-foreground border-border flex animate-pulse flex-col gap-6 rounded-md border p-3 shadow-sm",
               className,
             )}
           >
@@ -156,7 +156,7 @@ export function LoadingSkeleton({
             key={i}
             className={cn(
               "bg-card/50",
-              "border-border border-2 shadow-[4px_4px_0_0_hsl(var(--foreground))]",
+              "border-border border shadow-sm",
               "rounded-xl",
               "animate-pulse p-4",
               className,

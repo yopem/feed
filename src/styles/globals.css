@@ -50,19 +50,19 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --animate-skeleton: skeleton 2s -1s infinite linear;
   @keyframes skeleton {
-  to {
-    background-position: -200% 0;
+    to {
+      background-position: -200% 0;
     }
   }
   @keyframes skeleton {
-  to {
-    background-position: -200% 0;
+    to {
+      background-position: -200% 0;
     }
   }
 }
 
 :root {
-  --radius: 0.25rem;
+  --radius: 0.875rem;
   --card: var(--color-white);
   --card-foreground: var(--color-zinc-900);
   --popover: var(--color-white);
@@ -152,3 +152,4 @@
     @apply bg-background text-foreground;
   }
 }
+

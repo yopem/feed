@@ -63,7 +63,7 @@ export default function FeaturesSection() {
   return (
     <section
       id="features"
-      className="border-border border-b-2 py-16 sm:py-20 md:py-28"
+      className="border-border border-b py-16 sm:py-20 md:py-28"
       aria-labelledby="features-heading"
     >
       <div className="container mx-auto px-4">
@@ -86,10 +86,10 @@ export default function FeaturesSection() {
               return (
                 <Card
                   key={feature.title}
-                  className="transition-all duration-200 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none motion-reduce:transition-none motion-reduce:hover:transform-none"
+                  className="hover:border-foreground/10 transition-all duration-200 hover:shadow-md motion-reduce:transition-none"
                 >
                   <CardHeader className="space-y-3 p-5 sm:space-y-4 sm:p-6">
-                    <div className="bg-muted border-border inline-flex h-10 w-10 items-center justify-center rounded-lg border-2 sm:h-12 sm:w-12">
+                    <div className="bg-muted border-border inline-flex h-10 w-10 items-center justify-center rounded-lg border sm:h-12 sm:w-12">
                       <Icon
                         className="text-foreground h-5 w-5 sm:h-6 sm:w-6"
                         aria-hidden="true"

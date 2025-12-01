@@ -13,6 +13,7 @@ import {
   Dialog,
   DialogFooter,
   DialogHeader,
+  DialogPanel,
   DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -284,7 +285,7 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
               <Badge
                 key={tag.id}
                 variant="default"
-                className="cursor-pointer transition-all duration-200 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none motion-reduce:transition-none motion-reduce:hover:transform-none"
+                className="hover:border-foreground/10 cursor-pointer transition-all duration-200 hover:shadow-md motion-reduce:transition-none"
                 onClick={() => removeTag(tag.id)}
               >
                 {tag.name}
@@ -331,7 +332,7 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
                   {!exactMatch && (
                     <button
                       type="button"
-                      className="hover:bg-accent border-border block w-full border-t-2 px-3 py-2 text-left text-sm transition-colors"
+                      className="hover:bg-accent border-border block w-full border-t px-3 py-2 text-left text-sm transition-colors"
                       onMouseDown={(e) => {
                         e.preventDefault()
                         handleCreateNewTag()
@@ -375,275 +376,279 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
           <DialogTitle>Add New Feed</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTab value="websites" className="gap-2">
-              <RssIcon className="h-4 w-4" />
-              Websites
-            </TabsTab>
-            <TabsTab value="reddit" className="gap-2">
-              <GlobeIcon className="h-4 w-4" />
-              Reddit
-            </TabsTab>
-          </TabsList>
+        <DialogPanel>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTab value="websites" className="gap-2">
+                <RssIcon className="h-4 w-4" />
+                Websites
+              </TabsTab>
+              <TabsTab value="reddit" className="gap-2">
+                <GlobeIcon className="h-4 w-4" />
+                Reddit
+              </TabsTab>
+            </TabsList>
 
-          <TabsPanel value="websites" className="space-y-4">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                void form.handleSubmit()
-              }}
-              className="space-y-4"
-            >
-              <form.Field
-                name="url"
-                validators={{
-                  onChange: ({ value }) => {
-                    const result = formSchema.shape.url.safeParse(value)
-                    if (!result.success) {
-                      return result.error.issues[0]?.message || "Invalid URL"
-                    }
-                    return undefined
-                  },
-                  onSubmit: ({ value }) => {
-                    const result = formSchema.shape.url.safeParse(value)
-                    if (!result.success) {
-                      return result.error.issues[0]?.message || "Invalid URL"
-                    }
-                    return undefined
-                  },
+            <TabsPanel value="websites" className="mt-4 space-y-4">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  void form.handleSubmit()
                 }}
+                className="space-y-4"
               >
-                {(field) => (
-                  <Field data-invalid={field.state.meta.errors.length > 0}>
-                    <FieldContent>
-                      <FieldLabel htmlFor={field.name}>
-                        RSS/Atom Feed URL
-                      </FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        type="text"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder="https://example.com/feed.xml"
-                        disabled={createFeed.isPending}
-                        aria-invalid={field.state.meta.errors.length > 0}
-                      />
-                      <FieldDescription>
-                        Enter the URL of an RSS or Atom feed. Common paths:
-                        /feed, /rss, /atom.xml
-                      </FieldDescription>
-                      {field.state.meta.errors.length > 0 && (
-                        <FieldError>{field.state.meta.errors[0]!}</FieldError>
-                      )}
-                    </FieldContent>
-                  </Field>
-                )}
-              </form.Field>
-
-              <div>
-                <label className="text-foreground mb-3 block text-sm font-medium">
-                  Popular RSS Feeds
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {POPULAR_RSS_FEEDS.map((feed) => (
-                    <button
-                      key={feed.url}
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          const newFeed = await createFeed.mutateAsync(feed.url)
-
-                          if (selectedTagIds.length > 0 && newFeed) {
-                            await assignTags.mutateAsync({
-                              feedId: newFeed.id,
-                              tagIds: selectedTagIds,
-                            })
-                          }
-
-                          form.reset()
-                          setSelectedTagIds([])
-                          onClose()
-                          // eslint-disable-next-line no-empty
-                        } catch {}
-                      }}
-                      disabled={createFeed.isPending}
-                      className="bg-card hover:bg-accent border-border group flex items-start gap-3 rounded-lg border-2 p-3 text-left transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none disabled:pointer-events-none disabled:opacity-50"
-                    >
-                      <div className="flex h-8 w-8 items-center justify-center">
-                        <Image
-                          src={feed.favicon}
-                          alt={feed.name}
-                          width={20}
-                          height={20}
-                          className="h-5 w-5"
-                          unoptimized
+                <form.Field
+                  name="url"
+                  validators={{
+                    onChange: ({ value }) => {
+                      const result = formSchema.shape.url.safeParse(value)
+                      if (!result.success) {
+                        return result.error.issues[0]?.message || "Invalid URL"
+                      }
+                      return undefined
+                    },
+                    onSubmit: ({ value }) => {
+                      const result = formSchema.shape.url.safeParse(value)
+                      if (!result.success) {
+                        return result.error.issues[0]?.message || "Invalid URL"
+                      }
+                      return undefined
+                    },
+                  }}
+                >
+                  {(field) => (
+                    <Field data-invalid={field.state.meta.errors.length > 0}>
+                      <FieldContent className="w-full">
+                        <FieldLabel htmlFor={field.name}>
+                          RSS/Atom Feed URL
+                        </FieldLabel>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          type="text"
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          placeholder="https://example.com/feed.xml"
+                          disabled={createFeed.isPending}
+                          aria-invalid={field.state.meta.errors.length > 0}
                         />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-foreground text-sm font-medium">
-                          {feed.name}
+                        <FieldDescription>
+                          Enter the URL of an RSS or Atom feed. Common paths:
+                          /feed, /rss, /atom.xml
+                        </FieldDescription>
+                        {field.state.meta.errors.length > 0 && (
+                          <FieldError>{field.state.meta.errors[0]!}</FieldError>
+                        )}
+                      </FieldContent>
+                    </Field>
+                  )}
+                </form.Field>
+
+                <div>
+                  <label className="text-foreground mb-2 block text-sm font-medium">
+                    Popular RSS Feeds
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {POPULAR_RSS_FEEDS.map((feed) => (
+                      <button
+                        key={feed.url}
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const newFeed = await createFeed.mutateAsync(
+                              feed.url,
+                            )
+
+                            if (selectedTagIds.length > 0 && newFeed) {
+                              await assignTags.mutateAsync({
+                                feedId: newFeed.id,
+                                tagIds: selectedTagIds,
+                              })
+                            }
+
+                            form.reset()
+                            setSelectedTagIds([])
+                            onClose()
+                            // eslint-disable-next-line no-empty
+                          } catch {}
+                        }}
+                        disabled={createFeed.isPending}
+                        className="bg-card hover:bg-accent border-border group hover:border-foreground/10 flex items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all hover:shadow-md disabled:pointer-events-none disabled:opacity-50"
+                      >
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center">
+                          <Image
+                            src={feed.favicon}
+                            alt={feed.name}
+                            width={16}
+                            height={16}
+                            className="h-4 w-4"
+                            unoptimized
+                          />
                         </div>
-                        <div className="text-muted-foreground text-xs">
-                          {feed.description}
+                        <div className="min-w-0 flex-1">
+                          <div className="text-foreground text-sm font-medium">
+                            {feed.name}
+                          </div>
+                          <div className="text-muted-foreground text-xs">
+                            {feed.description}
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <TagsSection />
+                <TagsSection />
 
-              <form.Subscribe
-                selector={(state) => [state.isSubmitting, state.canSubmit]}
-              >
-                {([isSubmitting, canSubmit]) => (
-                  <DialogFooter>
-                    <Button
-                      type="button"
-                      onClick={handleClose}
-                      variant="secondary"
-                      disabled={
-                        createFeed.isPending ||
-                        assignTags.isPending ||
-                        createTag.isPending
-                      }
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={
-                        isSubmitting ||
-                        !canSubmit ||
-                        createFeed.isPending ||
-                        assignTags.isPending ||
-                        createTag.isPending
-                      }
-                    >
-                      {createFeed.isPending || assignTags.isPending
-                        ? "Adding..."
-                        : createTag.isPending
-                          ? "Creating tag..."
-                          : "Add Feed"}
-                    </Button>
-                  </DialogFooter>
-                )}
-              </form.Subscribe>
-            </form>
-          </TabsPanel>
+                <form.Subscribe
+                  selector={(state) => [state.isSubmitting, state.canSubmit]}
+                >
+                  {([isSubmitting, canSubmit]) => (
+                    <DialogFooter variant="bare">
+                      <Button
+                        type="button"
+                        onClick={handleClose}
+                        variant="secondary"
+                        disabled={
+                          createFeed.isPending ||
+                          assignTags.isPending ||
+                          createTag.isPending
+                        }
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={
+                          isSubmitting ||
+                          !canSubmit ||
+                          createFeed.isPending ||
+                          assignTags.isPending ||
+                          createTag.isPending
+                        }
+                      >
+                        {createFeed.isPending || assignTags.isPending
+                          ? "Adding..."
+                          : createTag.isPending
+                            ? "Creating tag..."
+                            : "Add Feed"}
+                      </Button>
+                    </DialogFooter>
+                  )}
+                </form.Subscribe>
+              </form>
+            </TabsPanel>
 
-          <TabsPanel value="reddit" className="space-y-4">
-            <div className="space-y-4">
-              <div>
-                <label className="text-foreground mb-2 block text-sm font-medium">
-                  What Reddit searches or communities do you want to follow?
-                </label>
-                <div className="relative">
-                  <SearchIcon className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                  <Input
-                    placeholder="Search term, r/subreddit, or Reddit URL"
-                    value={redditSearch}
-                    onChange={(e) => setRedditSearch(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault()
-                        const input = redditSearch.trim()
-                        if (input) {
-                          // Extract subreddit name from various formats
-                          const pattern = /(?:r\/)?([a-zA-Z0-9_]+)/
-                          const match = pattern.exec(input)
-                          if (match?.[1]) {
-                            void handleRedditSubmit(match[1])
+            <TabsPanel value="reddit" className="mt-4 space-y-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-foreground mb-2 block text-sm font-medium">
+                    What Reddit searches or communities do you want to follow?
+                  </label>
+                  <div className="relative">
+                    <SearchIcon className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                    <Input
+                      placeholder="Search term, r/subreddit, or Reddit URL"
+                      value={redditSearch}
+                      onChange={(e) => setRedditSearch(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          const input = redditSearch.trim()
+                          if (input) {
+                            // Extract subreddit name from various formats
+                            const pattern = /(?:r\/)?([a-zA-Z0-9_]+)/
+                            const match = pattern.exec(input)
+                            if (match?.[1]) {
+                              void handleRedditSubmit(match[1])
+                            }
                           }
                         }
+                      }}
+                      className="pl-10"
+                      disabled={createFeed.isPending}
+                    />
+                  </div>
+                  <p className="text-muted-foreground mt-2 text-xs">
+                    Enter a subreddit name (e.g., "programming", "r/technology",
+                    or full URL)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-foreground mb-2 block text-sm font-medium">
+                    Examples
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {POPULAR_SUBREDDITS.map((subreddit) => (
+                      <button
+                        key={subreddit.name}
+                        type="button"
+                        onClick={() => void handleRedditSubmit(subreddit.name)}
+                        disabled={createFeed.isPending}
+                        className="bg-card hover:bg-accent border-border group hover:border-foreground/10 flex items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all hover:shadow-md disabled:pointer-events-none disabled:opacity-50"
+                      >
+                        <span className="text-2xl">{subreddit.icon}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-foreground text-sm font-medium">
+                            r/{subreddit.name}
+                          </div>
+                          <div className="text-muted-foreground text-xs">
+                            {subreddit.description}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <TagsSection />
+
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    onClick={handleClose}
+                    variant="secondary"
+                    disabled={
+                      createFeed.isPending ||
+                      assignTags.isPending ||
+                      createTag.isPending
+                    }
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const input = redditSearch.trim()
+                      if (input) {
+                        const pattern = /(?:r\/)?([a-zA-Z0-9_]+)/
+                        const match = pattern.exec(input)
+                        if (match?.[1]) {
+                          void handleRedditSubmit(match[1])
+                        }
+                      } else {
+                        toast.error("Please enter a subreddit name")
                       }
                     }}
-                    className="pl-10"
-                    disabled={createFeed.isPending}
-                  />
-                </div>
-                <p className="text-muted-foreground mt-2 text-xs">
-                  Enter a subreddit name (e.g., "programming", "r/technology",
-                  or full URL)
-                </p>
-              </div>
-
-              <div>
-                <label className="text-foreground mb-3 block text-sm font-medium">
-                  Examples
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {POPULAR_SUBREDDITS.map((subreddit) => (
-                    <button
-                      key={subreddit.name}
-                      type="button"
-                      onClick={() => void handleRedditSubmit(subreddit.name)}
-                      disabled={createFeed.isPending}
-                      className="bg-card hover:bg-accent border-border group flex items-start gap-3 rounded-lg border-2 p-3 text-left transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none disabled:pointer-events-none disabled:opacity-50"
-                    >
-                      <span className="text-2xl">{subreddit.icon}</span>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-foreground text-sm font-medium">
-                          r/{subreddit.name}
-                        </div>
-                        <div className="text-muted-foreground text-xs">
-                          {subreddit.description}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <TagsSection />
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  onClick={handleClose}
-                  variant="secondary"
-                  disabled={
-                    createFeed.isPending ||
-                    assignTags.isPending ||
-                    createTag.isPending
-                  }
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => {
-                    const input = redditSearch.trim()
-                    if (input) {
-                      const pattern = /(?:r\/)?([a-zA-Z0-9_]+)/
-                      const match = pattern.exec(input)
-                      if (match?.[1]) {
-                        void handleRedditSubmit(match[1])
-                      }
-                    } else {
-                      toast.error("Please enter a subreddit name")
+                    disabled={
+                      !redditSearch.trim() ||
+                      createFeed.isPending ||
+                      assignTags.isPending ||
+                      createTag.isPending
                     }
-                  }}
-                  disabled={
-                    !redditSearch.trim() ||
-                    createFeed.isPending ||
-                    assignTags.isPending ||
-                    createTag.isPending
-                  }
-                >
-                  {createFeed.isPending || assignTags.isPending
-                    ? "Adding..."
-                    : "Add Subreddit"}
-                </Button>
-              </DialogFooter>
-            </div>
-          </TabsPanel>
-        </Tabs>
+                  >
+                    {createFeed.isPending || assignTags.isPending
+                      ? "Adding..."
+                      : "Add Subreddit"}
+                  </Button>
+                </DialogFooter>
+              </div>
+            </TabsPanel>
+          </Tabs>
+        </DialogPanel>
       </DialogPopup>
     </Dialog>
   )

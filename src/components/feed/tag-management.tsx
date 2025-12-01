@@ -285,7 +285,7 @@ function TagItem({
   }
 
   return (
-    <Card className="group cursor-pointer p-3 transition-all duration-200 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none motion-reduce:transition-none motion-reduce:hover:transform-none">
+    <Card className="group hover:border-foreground/10 cursor-pointer p-3 transition-all duration-200 hover:shadow-md motion-reduce:transition-none">
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <h4 className="text-foreground truncate text-sm font-semibold">

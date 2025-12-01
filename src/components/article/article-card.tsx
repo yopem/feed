@@ -112,9 +112,9 @@ export function ArticleCard({
   return (
     <Card
       className={cn(
-        "group cursor-pointer gap-0 transition-all duration-200 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none motion-reduce:transition-none motion-reduce:hover:transform-none",
+        "group hover:border-foreground/10 cursor-pointer gap-0 transition-all duration-200 hover:shadow-md",
         isSelected && "ring-ring bg-accent ring-2",
-        isRead && "border-muted-foreground/30",
+        isRead && "border-muted-foreground/30 opacity-75",
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
