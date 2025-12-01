@@ -18,7 +18,6 @@ import {
   RssIcon,
   SearchIcon,
   SettingsIcon,
-  ShareIcon,
   StarIcon,
   SunIcon,
   Trash2Icon,
@@ -28,7 +27,6 @@ import { parseAsString, useQueryState } from "nuqs"
 
 import { AddFeedDialog } from "@/components/feed/add-feed-dialog"
 import { AddTagDialog } from "@/components/feed/add-tag-dialog"
-import { BulkShareDialog } from "@/components/feed/bulk-share-dialog"
 import { DeleteFeedDialog } from "@/components/feed/delete-feed-dialog"
 import { DeleteTagDialog } from "@/components/feed/delete-tag-dialog"
 import { EditFeedDialog } from "@/components/feed/edit-feed-dialog"
@@ -76,7 +74,6 @@ interface FeedWithTags {
   updatedAt: Date | null
   url: string
   lastUpdated: Date | null
-  isBulkShared: boolean
   isFavorited: boolean
   tags?: {
     tag: {
@@ -129,12 +126,6 @@ export function AppSidebar() {
   const [deletingTag, setDeletingTag] = useState<{
     id: string
     name: string
-  } | null>(null)
-  const [bulkSharingFeed, setBulkSharingFeed] = useState<{
-    id: string
-    title: string
-    articleCount: number
-    isBulkShared: boolean
   } | null>(null)
   const trpc = useTRPC()
   const queryClient = useQueryClient()
@@ -501,6 +492,7 @@ export function AppSidebar() {
                         key={tag.id}
                         onMouseEnter={() => setHoveredTagId(tag.id)}
                         onMouseLeave={() => setHoveredTagId(null)}
+                        className="flex items-center gap-1"
                       >
                         <SidebarMenuButton
                           isActive={isSelected}
@@ -509,86 +501,86 @@ export function AppSidebar() {
                             if (isMobile) setOpenMobile(false)
                           }}
                           className={cn(
-                            "group cursor-pointer",
+                            "group flex-1 cursor-pointer",
                             isSelected && "bg-accent",
                           )}
                         >
                           <span className="truncate text-sm font-medium">
                             {tag.name}
                           </span>
-                          <Menu modal={false}>
-                            <MenuTrigger
+                        </SidebarMenuButton>
+                        <Menu modal={false}>
+                          <MenuTrigger
+                            onClick={(e) => {
+                              e.stopPropagation()
+                            }}
+                            className={cn(
+                              "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring h-6 w-6 shrink-0 items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:ring-1 focus-visible:outline-none",
+                              isHovered ? "inline-flex" : "hidden",
+                            )}
+                          >
+                            <span className="sr-only">More options</span>
+                            <MoreHorizontalIcon className="h-4 w-4" />
+                          </MenuTrigger>
+                          <MenuPopup
+                            align="end"
+                            side="bottom"
+                            className="w-48"
+                            sideOffset={8}
+                          >
+                            <MenuItem
                               onClick={(e) => {
                                 e.stopPropagation()
+                                setEditingTag({
+                                  id: tag.id,
+                                  name: tag.name,
+                                  description: tag.description ?? undefined,
+                                })
                               }}
-                              className={cn(
-                                "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring ml-auto h-6 w-6 shrink-0 items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:ring-1 focus-visible:outline-none",
-                                isHovered ? "inline-flex" : "hidden",
-                              )}
+                              className="cursor-pointer py-2.5"
                             >
-                              <span className="sr-only">More options</span>
-                              <MoreHorizontalIcon className="h-4 w-4" />
-                            </MenuTrigger>
-                            <MenuPopup
-                              align="end"
-                              side="bottom"
-                              className="w-48"
-                              sideOffset={8}
+                              <PencilIcon className="h-4 w-4" />
+                              <span>Edit tag</span>
+                            </MenuItem>
+                            <MenuItem
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                toggleTagFavorited.mutate({
+                                  id: tag.id,
+                                  isFavorited: !tag.isFavorited,
+                                })
+                              }}
+                              className="cursor-pointer py-2.5"
                             >
-                              <MenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setEditingTag({
-                                    id: tag.id,
-                                    name: tag.name,
-                                    description: tag.description ?? undefined,
-                                  })
-                                }}
-                                className="cursor-pointer py-2.5"
-                              >
-                                <PencilIcon className="h-4 w-4" />
-                                <span>Edit tag</span>
-                              </MenuItem>
-                              <MenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  toggleTagFavorited.mutate({
-                                    id: tag.id,
-                                    isFavorited: !tag.isFavorited,
-                                  })
-                                }}
-                                className="cursor-pointer py-2.5"
-                              >
-                                <StarIcon
-                                  className={cn(
-                                    "h-4 w-4",
-                                    tag.isFavorited && "fill-current",
-                                  )}
-                                />
-                                <span>
-                                  {tag.isFavorited
-                                    ? "Remove from Favorites"
-                                    : "Add to Favorites"}
-                                </span>
-                              </MenuItem>
-                              <MenuSeparator />
-                              <MenuItem
-                                variant="destructive"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setDeletingTag({
-                                    id: tag.id,
-                                    name: tag.name,
-                                  })
-                                }}
-                                className="cursor-pointer py-2.5"
-                              >
-                                <Trash2Icon className="h-4 w-4" />
-                                <span>Delete tag</span>
-                              </MenuItem>
-                            </MenuPopup>
-                          </Menu>
-                        </SidebarMenuButton>
+                              <StarIcon
+                                className={cn(
+                                  "h-4 w-4",
+                                  tag.isFavorited && "fill-current",
+                                )}
+                              />
+                              <span>
+                                {tag.isFavorited
+                                  ? "Remove from Favorites"
+                                  : "Add to Favorites"}
+                              </span>
+                            </MenuItem>
+                            <MenuSeparator />
+                            <MenuItem
+                              variant="destructive"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setDeletingTag({
+                                  id: tag.id,
+                                  name: tag.name,
+                                })
+                              }}
+                              className="cursor-pointer py-2.5"
+                            >
+                              <Trash2Icon className="h-4 w-4" />
+                              <span>Delete tag</span>
+                            </MenuItem>
+                          </MenuPopup>
+                        </Menu>
                       </SidebarMenuItem>
                     )
                   })}
@@ -654,6 +646,7 @@ export function AppSidebar() {
                         key={feed.id}
                         onMouseEnter={() => setHoveredFeedId(feed.id)}
                         onMouseLeave={() => setHoveredFeedId(null)}
+                        className="flex items-center gap-1"
                       >
                         <SidebarMenuButton
                           isActive={isSelected}
@@ -662,7 +655,7 @@ export function AppSidebar() {
                             if (isMobile) setOpenMobile(false)
                           }}
                           className={cn(
-                            "group h-auto cursor-pointer py-2",
+                            "group h-auto flex-1 cursor-pointer py-2",
                             isSelected && "bg-accent",
                           )}
                         >
@@ -685,115 +678,95 @@ export function AppSidebar() {
                               {feed.unreadCount}
                             </Badge>
                           )}
-                          <Menu modal={false}>
-                            <MenuTrigger
-                              render={(props) => (
-                                <button
-                                  {...props}
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    props.onClick?.(e)
-                                  }}
-                                  className={cn(
-                                    "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring ml-2 h-6 w-6 shrink-0 items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:ring-1 focus-visible:outline-none",
-                                    isHovered ? "inline-flex" : "hidden",
-                                  )}
-                                >
-                                  <span className="sr-only">More options</span>
-                                  <MoreHorizontalIcon className="h-4 w-4" />
-                                </button>
-                              )}
-                            />
-                            <MenuPopup
-                              align="end"
-                              side="bottom"
-                              className="w-48"
-                              sideOffset={8}
-                            >
-                              <MenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  const feedToEdit = (
-                                    feeds as FeedWithTags[] | undefined
-                                  )?.find((f) => f.id === feed.id)
-                                  if (feedToEdit) {
-                                    const tagIds =
-                                      feedToEdit.tags?.map((t) => t.tag.id) ??
-                                      []
-                                    setEditingFeed({
-                                      id: feedToEdit.id,
-                                      title: feedToEdit.title,
-                                      description:
-                                        feedToEdit.description ?? undefined,
-                                      tagIds,
-                                    })
-                                  }
-                                }}
-                                className="cursor-pointer py-2.5"
-                              >
-                                <PencilIcon className="h-4 w-4" />
-                                <span>Edit feed</span>
-                              </MenuItem>
-                              <MenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  toggleFeedFavorited.mutate({
-                                    id: feed.id,
-                                    isFavorited: !feed.isFavorited,
-                                  })
-                                }}
-                                className="cursor-pointer py-2.5"
-                              >
-                                <StarIcon
-                                  className={cn(
-                                    "h-4 w-4",
-                                    feed.isFavorited && "fill-current",
-                                  )}
-                                />
-                                <span>
-                                  {feed.isFavorited
-                                    ? "Add to Favorites"
-                                    : "Remove from Favorites"}
-                                </span>
-                              </MenuItem>
-                              <MenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  const stats = statistics?.find(
-                                    (s: { feedId: string }) =>
-                                      s.feedId === feed.id,
-                                  )
-                                  setBulkSharingFeed({
-                                    id: feed.id,
-                                    title: feed.title,
-                                    articleCount: stats?.totalCount ?? 0,
-                                    isBulkShared: feed.isBulkShared,
-                                  })
-                                }}
-                                className="cursor-pointer py-2.5"
-                              >
-                                <ShareIcon className="h-4 w-4" />
-                                <span>Bulk Share</span>
-                              </MenuItem>
-                              <MenuSeparator />
-                              <MenuItem
-                                variant="destructive"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setDeletingFeed({
-                                    id: feed.id,
-                                    title: feed.title,
-                                  })
-                                }}
-                                className="cursor-pointer py-2.5"
-                              >
-                                <Trash2Icon className="h-4 w-4" />
-                                <span>Delete feed</span>
-                              </MenuItem>
-                            </MenuPopup>
-                          </Menu>
                         </SidebarMenuButton>
+                        <Menu modal={false}>
+                          <MenuTrigger
+                            render={(props) => (
+                              <button
+                                {...props}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  props.onClick?.(e)
+                                }}
+                                className={cn(
+                                  "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring h-6 w-6 shrink-0 items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:ring-1 focus-visible:outline-none",
+                                  isHovered ? "inline-flex" : "hidden",
+                                )}
+                              >
+                                <span className="sr-only">More options</span>
+                                <MoreHorizontalIcon className="h-4 w-4" />
+                              </button>
+                            )}
+                          />
+                          <MenuPopup
+                            align="end"
+                            side="bottom"
+                            className="w-48"
+                            sideOffset={8}
+                          >
+                            <MenuItem
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                const feedToEdit = (
+                                  feeds as FeedWithTags[] | undefined
+                                )?.find((f) => f.id === feed.id)
+                                if (feedToEdit) {
+                                  const tagIds =
+                                    feedToEdit.tags?.map((t) => t.tag.id) ?? []
+                                  setEditingFeed({
+                                    id: feedToEdit.id,
+                                    title: feedToEdit.title,
+                                    description:
+                                      feedToEdit.description ?? undefined,
+                                    tagIds,
+                                  })
+                                }
+                              }}
+                              className="cursor-pointer py-2.5"
+                            >
+                              <PencilIcon className="h-4 w-4" />
+                              <span>Edit feed</span>
+                            </MenuItem>
+                            <MenuItem
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                toggleFeedFavorited.mutate({
+                                  id: feed.id,
+                                  isFavorited: !feed.isFavorited,
+                                })
+                              }}
+                              className="cursor-pointer py-2.5"
+                            >
+                              <StarIcon
+                                className={cn(
+                                  "h-4 w-4",
+                                  feed.isFavorited && "fill-current",
+                                )}
+                              />
+                              <span>
+                                {feed.isFavorited
+                                  ? "Add to Favorites"
+                                  : "Remove from Favorites"}
+                              </span>
+                            </MenuItem>
+                            <MenuSeparator />
+                            <MenuItem
+                              variant="destructive"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setDeletingFeed({
+                                  id: feed.id,
+                                  title: feed.title,
+                                })
+                              }}
+                              className="cursor-pointer py-2.5"
+                            >
+                              <Trash2Icon className="h-4 w-4" />
+                              <span>Delete feed</span>
+                            </MenuItem>
+                          </MenuPopup>
+                        </Menu>
                       </SidebarMenuItem>
                     )
                   })
@@ -966,17 +939,6 @@ export function AppSidebar() {
               void setTagSlug(null)
             }
           }}
-        />
-      )}
-
-      {bulkSharingFeed && (
-        <BulkShareDialog
-          isOpen={true}
-          onClose={() => setBulkSharingFeed(null)}
-          feedId={bulkSharingFeed.id}
-          feedTitle={bulkSharingFeed.title}
-          articleCount={bulkSharingFeed.articleCount}
-          isBulkShared={bulkSharingFeed.isBulkShared}
         />
       )}
     </>

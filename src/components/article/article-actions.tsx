@@ -1,17 +1,9 @@
 "use client"
 
-import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import {
-  BarChart3Icon,
-  BookmarkIcon,
-  ExternalLinkIcon,
-  Share2Icon,
-  StarIcon,
-} from "lucide-react"
+import { BookmarkIcon, ExternalLinkIcon, StarIcon } from "lucide-react"
 
-import { ShareAnalyticsDialog } from "@/components/article/share-analytics-dialog"
-import { ShareSettingsDialog } from "@/components/article/share-settings-dialog"
+import { SocialShareButtons } from "@/components/article/social-share-buttons"
 import { Button } from "@/components/ui/button"
 import { useTRPC } from "@/lib/trpc/client"
 import { cn } from "@/lib/utils"
@@ -31,8 +23,6 @@ export function ArticleActions({
   isReadLater,
   link,
 }: ArticleActionsProps) {
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
-  const [isAnalyticsDialogOpen, setIsAnalyticsDialogOpen] = useState(false)
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
@@ -58,10 +48,6 @@ export function ArticleActions({
       },
     }),
   )
-
-  const handleShare = () => {
-    setIsShareDialogOpen(true)
-  }
 
   const currentIsFavorited = article?.isFavorited ?? isFavorited
   const currentIsReadLater = article?.isReadLater ?? isReadLater
@@ -121,29 +107,7 @@ export function ArticleActions({
           />
         </Button>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9"
-          onClick={handleShare}
-          title="Share article publicly"
-          aria-label="Share article publicly"
-        >
-          <Share2Icon className="text-muted-foreground hover:text-foreground h-5 w-5 transition-colors" />
-        </Button>
-
-        {article?.isPubliclyShared && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9"
-            onClick={() => setIsAnalyticsDialogOpen(true)}
-            title="View share analytics"
-            aria-label="View share analytics"
-          >
-            <BarChart3Icon className="text-muted-foreground hover:text-foreground h-5 w-5 transition-colors" />
-          </Button>
-        )}
+        <SocialShareButtons url={link} title={articleTitle} />
       </div>
 
       <Button
@@ -153,20 +117,6 @@ export function ArticleActions({
         <span>Open Original</span>
         <ExternalLinkIcon className="ml-2 h-4 w-4" />
       </Button>
-
-      <ShareSettingsDialog
-        isOpen={isShareDialogOpen}
-        onClose={() => setIsShareDialogOpen(false)}
-        articleId={articleId}
-        articleTitle={articleTitle}
-      />
-
-      <ShareAnalyticsDialog
-        isOpen={isAnalyticsDialogOpen}
-        onClose={() => setIsAnalyticsDialogOpen(false)}
-        articleId={articleId}
-        articleTitle={articleTitle}
-      />
     </div>
   )
 }

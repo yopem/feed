@@ -6,7 +6,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import { ExternalLinkIcon } from "lucide-react"
 
-import { ArticleShareBadges } from "@/components/article/article-share-badges"
 import { EmptyState } from "@/components/shared/empty-state"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import { Button } from "@/components/ui/button"
@@ -27,10 +26,6 @@ interface ArticleWithFeed {
   isRead: boolean
   isFavorited: boolean
   isReadLater: boolean
-  isPubliclyShared: boolean
-  sharePassword: string | null
-  shareExpiresAt: Date | null
-  shareViewCount: number
   redditPermalink: string | null
   feed: {
     title: string
@@ -156,14 +151,6 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
                 {dayjs(article.pubDate).format("MMMM D, YYYY")}
               </time>
             </div>
-
-            <ArticleShareBadges
-              isPubliclyShared={article.isPubliclyShared}
-              hasPassword={!!article.sharePassword}
-              expiresAt={article.shareExpiresAt}
-              viewCount={article.shareViewCount}
-              className="mt-2"
-            />
 
             {article.redditPermalink && (
               <div className="mt-4">

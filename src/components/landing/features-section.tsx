@@ -48,9 +48,9 @@ export default function FeaturesSection() {
     },
     {
       icon: Share2Icon,
-      title: "Share Articles Publicly",
+      title: "Share to Social Media",
       description:
-        "Generate shareable links with password protection, expiration dates, and QR codes. Track views, referrers, and geographic analytics for every shared article.",
+        "Easily share interesting articles to Twitter, Facebook, LinkedIn, and more with one click. Spread knowledge and discover content through your social networks.",
     },
     {
       icon: SparklesIcon,
