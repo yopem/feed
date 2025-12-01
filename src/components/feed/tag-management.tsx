@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { EditIcon, PlusIcon, TagIcon, TrashIcon } from "lucide-react"
-import { toast } from "sonner"
 
 import { EmptyState } from "@/components/shared/empty-state"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
@@ -11,15 +10,16 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogPopup,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { toast } from "@/components/ui/toast"
 import { useTRPC } from "@/lib/trpc/client"
 
 export function TagManagement() {
@@ -195,7 +195,7 @@ export function TagManagement() {
 
       {deletingTag && (
         <AlertDialog open={true} onOpenChange={() => setDeletingTag(null)}>
-          <AlertDialogContent>
+          <AlertDialogPopup>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Tag</AlertDialogTitle>
               <AlertDialogDescription>
@@ -215,7 +215,7 @@ export function TagManagement() {
                 {deleteTag.isPending ? "Deleting..." : "Delete"}
               </AlertDialogAction>
             </AlertDialogFooter>
-          </AlertDialogContent>
+          </AlertDialogPopup>
         </AlertDialog>
       )}
     </>

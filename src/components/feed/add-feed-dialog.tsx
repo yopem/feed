@@ -5,16 +5,15 @@ import Image from "next/image"
 import { useForm } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { GlobeIcon, PlusIcon, RssIcon, SearchIcon, XIcon } from "lucide-react"
-import { toast } from "sonner"
 import { z } from "zod"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
@@ -25,7 +24,8 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs"
+import { toast } from "@/components/ui/toast"
 import { useTRPC } from "@/lib/trpc/client"
 
 interface AddFeedDialogProps {
@@ -370,24 +370,24 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogPopup className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Add New Feed</DialogTitle>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="websites" className="gap-2">
+            <TabsTab value="websites" className="gap-2">
               <RssIcon className="h-4 w-4" />
               Websites
-            </TabsTrigger>
-            <TabsTrigger value="reddit" className="gap-2">
+            </TabsTab>
+            <TabsTab value="reddit" className="gap-2">
               <GlobeIcon className="h-4 w-4" />
               Reddit
-            </TabsTrigger>
+            </TabsTab>
           </TabsList>
 
-          <TabsContent value="websites" className="space-y-4">
+          <TabsPanel value="websites" className="space-y-4">
             <form
               onSubmit={(e) => {
                 e.preventDefault()
@@ -535,9 +535,9 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
                 )}
               </form.Subscribe>
             </form>
-          </TabsContent>
+          </TabsPanel>
 
-          <TabsContent value="reddit" className="space-y-4">
+          <TabsPanel value="reddit" className="space-y-4">
             <div className="space-y-4">
               <div>
                 <label className="text-foreground mb-2 block text-sm font-medium">
@@ -642,9 +642,9 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
                 </Button>
               </DialogFooter>
             </div>
-          </TabsContent>
+          </TabsPanel>
         </Tabs>
-      </DialogContent>
+      </DialogPopup>
     </Dialog>
   )
 }

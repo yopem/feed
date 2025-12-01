@@ -4,7 +4,6 @@ import { Suspense } from "react"
 import { useForm } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { parseAsString, useQueryState } from "nuqs"
-import { toast } from "sonner"
 import type { z } from "zod"
 
 import { SettingsSidebar } from "@/components/layout/settings-sidebar"
@@ -19,6 +18,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { toast } from "@/components/ui/toast"
 import { updateUserSettingsSchema } from "@/lib/db/schema"
 import type { SelectUserSettings } from "@/lib/db/schema/user-settings"
 import { useTRPC } from "@/lib/trpc/client"

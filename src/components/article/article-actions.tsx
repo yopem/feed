@@ -146,11 +146,12 @@ export function ArticleActions({
         )}
       </div>
 
-      <Button asChild variant="secondary">
-        <a href={link} target="_blank" rel="noopener noreferrer">
-          <span>Open Original</span>
-          <ExternalLinkIcon className="ml-2 h-4 w-4" />
-        </a>
+      <Button
+        variant="secondary"
+        render={<a href={link} target="_blank" rel="noopener noreferrer" />}
+      >
+        <span>Open Original</span>
+        <ExternalLinkIcon className="ml-2 h-4 w-4" />
       </Button>
 
       <ShareSettingsDialog

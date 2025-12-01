@@ -12,10 +12,10 @@ import {
   MessageCircleIcon,
   StarIcon,
 } from "lucide-react"
-import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { Card, CardFooter, CardHeader, CardPanel } from "@/components/ui/card"
+import { toast } from "@/components/ui/toast"
 import { useTRPC } from "@/lib/trpc/client"
 import { cn } from "@/lib/utils"
 import { stripHtml } from "@/lib/utils/html"
@@ -139,7 +139,7 @@ export function ArticleCard({
         </div>
       </CardHeader>
 
-      <CardContent className="pb-2">
+      <CardPanel className="pb-2">
         <div className="flex gap-3">
           {imageUrl && (
             <div className="bg-muted h-16 w-20 shrink-0 overflow-hidden rounded-md">
@@ -171,7 +171,7 @@ export function ArticleCard({
             </p>
           </div>
         </div>
-      </CardContent>
+      </CardPanel>
 
       <CardFooter
         className={cn(

@@ -194,7 +194,7 @@ export function GlobalSearchProvider({
           <CommandInput
             placeholder="Search articles and feeds..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onValueChange={setQuery}
             autoFocus
           />
           <CommandList>
@@ -215,7 +215,6 @@ export function GlobalSearchProvider({
                       return (
                         <CommandItem
                           key={feed.id}
-                          selected={selectedIndex === globalIndex}
                           onSelect={() =>
                             handleSelect({ type: "feed", item: feed })
                           }
@@ -246,7 +245,6 @@ export function GlobalSearchProvider({
                       return (
                         <CommandItem
                           key={article.id}
-                          selected={selectedIndex === globalIndex}
                           onSelect={() =>
                             handleSelect({ type: "article", item: article })
                           }

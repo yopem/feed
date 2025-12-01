@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react"
 import Image from "next/image"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
-import { MessageCircle } from "lucide-react"
+import { ExternalLinkIcon } from "lucide-react"
 
 import { ArticleShareBadges } from "@/components/article/article-share-badges"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -62,11 +62,11 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
               const queryKey = query.queryKey as unknown[]
               return Boolean(
                 queryKey[0] === "article" &&
-                  queryKey[1] === "byId" &&
-                  queryKey[2] &&
-                  typeof queryKey[2] === "object" &&
-                  "input" in queryKey[2] &&
-                  queryKey[2].input === articleId,
+                queryKey[1] === "byId" &&
+                queryKey[2] &&
+                typeof queryKey[2] === "object" &&
+                "input" in queryKey[2] &&
+                queryKey[2].input === articleId,
               )
             },
           })
@@ -167,16 +167,22 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
 
             {article.redditPermalink && (
               <div className="mt-4">
-                <Button variant="outline" size="sm" asChild className="gap-2">
-                  <a
-                    href={`https://www.reddit.com${article.redditPermalink}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    View Discussion on Reddit
-                  </a>
-                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  render={(props) => (
+                    <a
+                      href={`https://www.reddit.com${article.redditPermalink}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      {...props}
+                    >
+                      <ExternalLinkIcon className="h-4 w-4" />
+                      View Discussion on Reddit
+                    </a>
+                  )}
+                />
               </div>
             )}
 

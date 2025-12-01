@@ -1,18 +1,18 @@
 "use client"
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { toast } from "sonner"
 
 import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogPopup,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { toast } from "@/components/ui/toast"
 import { useTRPC } from "@/lib/trpc/client"
 
 interface DeleteFeedDialogProps {
@@ -51,7 +51,7 @@ export function DeleteFeedDialog({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent>
+      <AlertDialogPopup>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Feed</AlertDialogTitle>
           <AlertDialogDescription>
@@ -71,7 +71,7 @@ export function DeleteFeedDialog({
             {deleteFeed.isPending ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
-      </AlertDialogContent>
+      </AlertDialogPopup>
     </AlertDialog>
   )
 }

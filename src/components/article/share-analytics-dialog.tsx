@@ -15,12 +15,12 @@ import {
 
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardHeader, CardPanel, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useTRPC } from "@/lib/trpc/client"
@@ -91,7 +91,7 @@ export function ShareAnalyticsDialog({
   if (!article?.isPubliclyShared) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent>
+        <DialogPopup>
           <DialogHeader>
             <DialogTitle>Analytics Unavailable</DialogTitle>
             <DialogDescription>
@@ -99,14 +99,14 @@ export function ShareAnalyticsDialog({
               analytics.
             </DialogDescription>
           </DialogHeader>
-        </DialogContent>
+        </DialogPopup>
       </Dialog>
     )
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] !max-w-6xl overflow-y-auto">
+      <DialogPopup className="max-h-[90vh] !max-w-6xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Share Analytics</DialogTitle>
           <DialogDescription>Analytics for "{articleTitle}"</DialogDescription>
@@ -126,14 +126,14 @@ export function ShareAnalyticsDialog({
                   </CardTitle>
                   <EyeIcon className="text-muted-foreground h-4 w-4" />
                 </CardHeader>
-                <CardContent>
+                <CardPanel>
                   <div className="text-3xl font-bold">
                     {analytics.totalViews.toLocaleString()}
                   </div>
                   <p className="text-muted-foreground mt-1 text-xs">
                     All time views
                   </p>
-                </CardContent>
+                </CardPanel>
               </Card>
 
               <Card>
@@ -143,14 +143,14 @@ export function ShareAnalyticsDialog({
                   </CardTitle>
                   <UsersIcon className="text-muted-foreground h-4 w-4" />
                 </CardHeader>
-                <CardContent>
+                <CardPanel>
                   <div className="text-3xl font-bold">
                     {analytics.uniqueViews.toLocaleString()}
                   </div>
                   <p className="text-muted-foreground mt-1 text-xs">
                     Distinct visitors
                   </p>
-                </CardContent>
+                </CardPanel>
               </Card>
 
               <Card>
@@ -160,7 +160,7 @@ export function ShareAnalyticsDialog({
                   </CardTitle>
                   <TrendingUpIcon className="text-muted-foreground h-4 w-4" />
                 </CardHeader>
-                <CardContent>
+                <CardPanel>
                   <div className="text-xl font-bold">
                     {analytics.shareLastViewedAt
                       ? dayjs(analytics.shareLastViewedAt).fromNow()
@@ -169,7 +169,7 @@ export function ShareAnalyticsDialog({
                   <p className="text-muted-foreground mt-1 text-xs">
                     Most recent view
                   </p>
-                </CardContent>
+                </CardPanel>
               </Card>
             </div>
 
@@ -181,7 +181,7 @@ export function ShareAnalyticsDialog({
                     Views Over Time (Last 30 Days)
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardPanel>
                   <div className="space-y-3">
                     {analytics.viewsOverTime
                       .slice(0, 10)
@@ -207,7 +207,7 @@ export function ShareAnalyticsDialog({
                         </div>
                       ))}
                   </div>
-                </CardContent>
+                </CardPanel>
               </Card>
             )}
 
@@ -220,7 +220,7 @@ export function ShareAnalyticsDialog({
                       Top Referrers
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardPanel>
                     <div className="space-y-3">
                       {analytics.topReferrers.map(
                         (
@@ -247,7 +247,7 @@ export function ShareAnalyticsDialog({
                         ),
                       )}
                     </div>
-                  </CardContent>
+                  </CardPanel>
                 </Card>
               )}
 
@@ -259,7 +259,7 @@ export function ShareAnalyticsDialog({
                       Geographic Distribution
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardPanel>
                     <div className="space-y-3">
                       {analytics.geographicData.map(
                         (
@@ -280,31 +280,31 @@ export function ShareAnalyticsDialog({
                         ),
                       )}
                     </div>
-                  </CardContent>
+                  </CardPanel>
                 </Card>
               )}
             </div>
 
             {analytics.totalViews === 0 && (
               <Card>
-                <CardContent className="py-12 text-center">
+                <CardPanel className="py-12 text-center">
                   <p className="text-muted-foreground text-sm">
                     No views yet. Share your link to start tracking analytics!
                   </p>
-                </CardContent>
+                </CardPanel>
               </Card>
             )}
           </div>
         ) : (
           <Card>
-            <CardContent className="py-12 text-center">
+            <CardPanel className="py-12 text-center">
               <p className="text-muted-foreground text-sm">
                 Unable to load analytics. Please try again later.
               </p>
-            </CardContent>
+            </CardPanel>
           </Card>
         )}
-      </DialogContent>
+      </DialogPopup>
     </Dialog>
   )
 }

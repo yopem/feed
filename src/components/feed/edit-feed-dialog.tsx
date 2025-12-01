@@ -4,16 +4,15 @@ import { useEffect, useState } from "react"
 import { useForm } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { PlusIcon, XIcon } from "lucide-react"
-import { toast } from "sonner"
 import type { z } from "zod"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
@@ -24,6 +23,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { toast } from "@/components/ui/toast"
 import { updateFeedSchema } from "@/lib/db/schema"
 import { useTRPC } from "@/lib/trpc/client"
 
@@ -189,7 +189,7 @@ export function EditFeedDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogPopup className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Feed</DialogTitle>
         </DialogHeader>
@@ -399,7 +399,7 @@ export function EditFeedDialog({
             )}
           </form.Subscribe>
         </form>
-      </DialogContent>
+      </DialogPopup>
     </Dialog>
   )
 }

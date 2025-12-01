@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation"
 import { ForesightManager, type ForesightRect } from "js.foresight"
 
 interface LinkProps
-  extends React.ComponentProps<typeof NextLink>,
+  extends
+    React.ComponentProps<typeof NextLink>,
     Omit<NextLinkProps, "prefetch"> {
   children: React.ReactNode
   className?: string

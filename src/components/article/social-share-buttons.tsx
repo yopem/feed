@@ -2,25 +2,25 @@
 
 import { useState } from "react"
 import {
-  Check,
-  Copy,
-  Facebook,
-  Linkedin,
-  Mail,
-  QrCode,
-  Share2,
-  Twitter,
+  CheckIcon,
+  CopyIcon,
+  FacebookIcon,
+  LinkedinIcon,
+  MailIcon,
+  QrCodeIcon,
+  Share2Icon,
+  TwitterIcon,
 } from "lucide-react"
-import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuSeparator,
+  MenuTrigger,
+} from "@/components/ui/menu"
+import { toast } from "@/components/ui/toast"
 import {
   Tooltip,
   TooltipContent,
@@ -81,67 +81,61 @@ export function SocialShareButtons({
   }
 
   return (
-    <DropdownMenu>
+    <Menu>
       <Tooltip>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
+        <TooltipTrigger>
+          <MenuTrigger>
             <Button variant="outline" size="sm">
-              <Share2 className="h-4 w-4" />
+              <Share2Icon className="h-4 w-4" />
               Share
             </Button>
-          </DropdownMenuTrigger>
+          </MenuTrigger>
         </TooltipTrigger>
         <TooltipContent>Share this article</TooltipContent>
       </Tooltip>
 
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem onClick={handleCopyLink}>
+      <MenuPopup align="end" className="w-48">
+        <MenuItem onClick={handleCopyLink}>
           {copied ? (
-            <Check className="mr-2 h-4 w-4 text-green-500" />
+            <CheckIcon className="mr-2 h-4 w-4 text-green-500" />
           ) : (
-            <Copy className="mr-2 h-4 w-4" />
+            <CopyIcon className="mr-2 h-4 w-4" />
           )}
           {copied ? "Copied!" : "Copy Link"}
-        </DropdownMenuItem>
+        </MenuItem>
 
-        <DropdownMenuSeparator />
+        <MenuSeparator />
 
-        <DropdownMenuItem
-          onClick={() => handleSocialShare(shareLinks.facebook)}
-        >
-          <Facebook className="mr-2 h-4 w-4" />
+        <MenuItem onClick={() => handleSocialShare(shareLinks.facebook)}>
+          <FacebookIcon className="mr-2 h-4 w-4" />
           Share on Facebook
-        </DropdownMenuItem>
+        </MenuItem>
 
-        <DropdownMenuItem onClick={() => handleSocialShare(shareLinks.twitter)}>
-          <Twitter className="mr-2 h-4 w-4" />
+        <MenuItem onClick={() => handleSocialShare(shareLinks.twitter)}>
+          <TwitterIcon className="mr-2 h-4 w-4" />
           Share on X
-        </DropdownMenuItem>
+        </MenuItem>
 
-        <DropdownMenuItem
-          onClick={() => handleSocialShare(shareLinks.linkedin)}
-        >
-          <Linkedin className="mr-2 h-4 w-4" />
+        <MenuItem onClick={() => handleSocialShare(shareLinks.linkedin)}>
+          <LinkedinIcon className="mr-2 h-4 w-4" />
           Share on LinkedIn
-        </DropdownMenuItem>
+        </MenuItem>
 
-        <DropdownMenuItem
-          onClick={() => window.open(shareLinks.email, "_blank")}
-        >
-          <Mail className="mr-2 h-4 w-4" />
+        <MenuItem onClick={() => window.open(shareLinks.email, "_blank")}>
+          <MailIcon className="mr-2 h-4 w-4" />
           Share via Email
-        </DropdownMenuItem>
+        </MenuItem>
 
         {onQRCodeClick && (
           <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onQRCodeClick}>
-              <QrCode className="mr-2 h-4 w-4" />
+            <MenuSeparator />
+            <MenuItem onClick={onQRCodeClick}>
+              <QrCodeIcon className="mr-2 h-4 w-4" />
               Show QR Code
-            </DropdownMenuItem>
+            </MenuItem>
           </>
         )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </MenuPopup>
+    </Menu>
   )
 }

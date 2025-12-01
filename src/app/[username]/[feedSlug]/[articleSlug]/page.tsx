@@ -135,11 +135,17 @@ export default async function ArticlePage({ params }: PageProps) {
     <div className="flex min-h-screen flex-col">
       <header className="bg-background border-border sticky top-0 z-10 border-b-2 px-4 py-3">
         <div className="mx-auto flex max-w-6xl items-center gap-4">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/">
-              <ChevronLeftIcon className="h-4 w-4" />
-              <span>Back</span>
-            </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            render={(props) => (
+              <Link href="/" {...props}>
+                {props.children}
+              </Link>
+            )}
+          >
+            <ChevronLeftIcon className="h-4 w-4" />
+            <span>Back</span>
           </Button>
 
           <Breadcrumb>

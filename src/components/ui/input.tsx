@@ -1,21 +1,53 @@
-import * as React from "react"
+"use client"
 
-import { cn } from "@/lib/utils"
+import type * as React from "react"
+import { Input as InputPrimitive } from "@base-ui-components/react/input"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+import { cn } from "@/lib/utils/style"
+
+type InputProps = Omit<
+  InputPrimitive.Props & React.RefAttributes<HTMLInputElement>,
+  "size"
+> & {
+  size?: "sm" | "default" | "lg" | number
+  unstyled?: boolean
+}
+
+function Input({
+  className,
+  size = "default",
+  unstyled = false,
+  ...props
+}: InputProps) {
   return (
-    <input
-      type={type}
-      data-slot="input"
-      className={cn(
-        "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-border bg-background h-9 w-full min-w-0 rounded border-2 px-3 py-1 text-base transition-all outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        "focus:translate-x-[-2px] focus:translate-y-[-2px] focus:shadow-[2px_2px_0_0_hsl(var(--primary))]",
-        "aria-invalid:border-destructive aria-invalid:focus:shadow-[2px_2px_0_0_hsl(var(--destructive))]",
-        className,
-      )}
-      {...props}
-    />
+    <span
+      className={
+        cn(
+          !unstyled &&
+            "border-input bg-background ring-ring/24 has-focus-visible:has-aria-invalid:border-destructive/64 has-focus-visible:has-aria-invalid:ring-destructive/16 has-aria-invalid:border-destructive/36 has-focus-visible:border-ring dark:bg-input/32 dark:has-aria-invalid:ring-destructive/24 relative inline-flex w-full rounded-lg border bg-clip-padding text-base/5 shadow-xs transition-shadow before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-lg)-1px)] not-has-disabled:not-has-focus-visible:not-has-aria-invalid:before:shadow-[0_1px_--theme(--color-black/4%)] has-focus-visible:ring-[3px] has-disabled:opacity-64 has-[:disabled,:focus-visible,[aria-invalid]]:shadow-none sm:text-sm dark:not-in-data-[slot=group]:bg-clip-border dark:not-has-disabled:not-has-focus-visible:not-has-aria-invalid:before:shadow-[0_-1px_--theme(--color-white/8%)]",
+          className,
+        ) || undefined
+      }
+      data-size={size}
+      data-slot="input-control"
+    >
+      <InputPrimitive
+        className={cn(
+          "placeholder:text-muted-foreground/64 w-full min-w-0 rounded-[inherit] px-[calc(--spacing(3)-1px)] py-[calc(--spacing(1.5)-1px)] outline-none",
+          size === "sm" &&
+            "px-[calc(--spacing(2.5)-1px)] py-[calc(--spacing(1)-1px)]",
+          size === "lg" && "py-[calc(--spacing(2)-1px)]",
+          props.type === "search" &&
+            "[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none",
+          props.type === "file" &&
+            "text-muted-foreground file:text-foreground file:me-3 file:bg-transparent file:text-sm file:font-medium",
+        )}
+        data-slot="input"
+        size={typeof size === "number" ? size : undefined}
+        {...props}
+      />
+    </span>
   )
 }
 
-export { Input }
+export { Input, type InputProps }

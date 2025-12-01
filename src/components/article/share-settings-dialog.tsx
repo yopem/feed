@@ -12,17 +12,16 @@ import {
   QrCodeIcon,
   XIcon,
 } from "lucide-react"
-import { toast } from "sonner"
 import { z } from "zod"
 
 import { QRCodeDialog } from "@/components/article/qr-code-dialog"
 import {
   AlertDialog,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogPopup,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
@@ -35,6 +34,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { toast } from "@/components/ui/toast"
 import { useTRPC } from "@/lib/trpc/client"
 
 interface ShareSettingsDialogProps {
@@ -392,7 +392,7 @@ export function ShareSettingsDialog({
   if (!article?.isPubliclyShared && !justEnabled) {
     return (
       <AlertDialog open={isOpen} onOpenChange={onClose}>
-        <AlertDialogContent>
+        <AlertDialogPopup>
           <AlertDialogHeader>
             <AlertDialogTitle>Share Article</AlertDialogTitle>
             <AlertDialogDescription>
@@ -419,14 +419,14 @@ export function ShareSettingsDialog({
               {toggleShare.isPending ? "Enabling..." : "Enable Sharing"}
             </Button>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </AlertDialogPopup>
       </AlertDialog>
     )
   }
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent key={article?.shareSlug} className="max-w-2xl">
+      <AlertDialogPopup key={article?.shareSlug} className="max-w-2xl">
         <AlertDialogHeader>
           <AlertDialogTitle>Share Settings</AlertDialogTitle>
           <AlertDialogDescription>
@@ -535,7 +535,7 @@ export function ShareSettingsDialog({
           </Button>
           <AlertDialogCancel className="m-0 w-full">Close</AlertDialogCancel>
         </AlertDialogFooter>
-      </AlertDialogContent>
+      </AlertDialogPopup>
 
       <QRCodeDialog
         isOpen={showQrCode}

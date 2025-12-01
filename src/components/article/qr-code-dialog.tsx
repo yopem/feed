@@ -3,18 +3,18 @@
 import { useRef } from "react"
 import { Download } from "lucide-react"
 import { QRCodeCanvas } from "qrcode.react"
-import { toast } from "sonner"
 
 import {
   AlertDialog,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogPopup,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/toast"
 
 interface QRCodeDialogProps {
   isOpen: boolean
@@ -74,7 +74,7 @@ export function QRCodeDialog({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent>
+      <AlertDialogPopup>
         <AlertDialogHeader>
           <AlertDialogTitle>QR Code</AlertDialogTitle>
           <AlertDialogDescription>
@@ -102,7 +102,7 @@ export function QRCodeDialog({
           </Button>
           <AlertDialogCancel>Close</AlertDialogCancel>
         </AlertDialogFooter>
-      </AlertDialogContent>
+      </AlertDialogPopup>
     </AlertDialog>
   )
 }

@@ -25,7 +25,6 @@ import {
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { parseAsString, useQueryState } from "nuqs"
-import { toast } from "sonner"
 
 import { AddFeedDialog } from "@/components/feed/add-feed-dialog"
 import { AddTagDialog } from "@/components/feed/add-tag-dialog"
@@ -42,12 +41,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuSeparator,
+  MenuTrigger,
+} from "@/components/ui/menu"
 import {
   Sidebar,
   SidebarContent,
@@ -61,6 +60,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "@/components/ui/toast"
 import { logout } from "@/lib/auth/logout"
 import { useTRPC } from "@/lib/trpc/client"
 import { cn } from "@/lib/utils"
@@ -333,7 +333,6 @@ export function AppSidebar() {
                   return (
                     <SidebarMenuItem key={filterItem.value}>
                       <SidebarMenuButton
-                        asChild
                         isActive={isActive}
                         onClick={() => {
                           void setFilter(isActive ? "all" : filterItem.value)
@@ -344,20 +343,18 @@ export function AppSidebar() {
                           isActive && "bg-accent",
                         )}
                       >
-                        <div>
-                          <Icon className="h-4 w-4" />
-                          <span className="truncate text-sm font-medium">
-                            {filterItem.label}
-                          </span>
-                          {showBadges && count > 0 && (
-                            <Badge
-                              variant={isActive ? "secondary" : "outline"}
-                              className="ml-auto"
-                            >
-                              {count}
-                            </Badge>
-                          )}
-                        </div>
+                        <Icon className="h-4 w-4" />
+                        <span className="truncate text-sm font-medium">
+                          {filterItem.label}
+                        </span>
+                        {showBadges && count > 0 && (
+                          <Badge
+                            variant={isActive ? "secondary" : "outline"}
+                            className="ml-auto"
+                          >
+                            {count}
+                          </Badge>
+                        )}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )
@@ -379,7 +376,6 @@ export function AppSidebar() {
                       return (
                         <SidebarMenuItem key={`fav-feed-${feed.id}`}>
                           <SidebarMenuButton
-                            asChild
                             isActive={isSelected}
                             onClick={() => {
                               void setFeedSlug(isSelected ? "" : feed.slug)
@@ -391,27 +387,25 @@ export function AppSidebar() {
                               isSelected && "bg-accent",
                             )}
                           >
-                            <div>
-                              <Avatar className="h-6 w-6 shrink-0">
-                                <AvatarImage src={feed.imageUrl ?? undefined} />
-                                <AvatarFallback className="text-xs">
-                                  {feed.title.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="truncate text-sm font-medium">
-                                {feed.title}
-                              </span>
-                              <StarIcon
-                                className="ml-auto h-3.5 w-3.5 shrink-0 cursor-pointer fill-current text-yellow-500 transition-opacity hover:opacity-70"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  toggleFeedFavorited.mutate({
-                                    id: feed.id,
-                                    isFavorited: false,
-                                  })
-                                }}
-                              />
-                            </div>
+                            <Avatar className="h-6 w-6 shrink-0">
+                              <AvatarImage src={feed.imageUrl ?? undefined} />
+                              <AvatarFallback className="text-xs">
+                                {feed.title.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="truncate text-sm font-medium">
+                              {feed.title}
+                            </span>
+                            <StarIcon
+                              className="ml-auto h-3.5 w-3.5 shrink-0 cursor-pointer fill-current text-yellow-500 transition-opacity hover:opacity-70"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                toggleFeedFavorited.mutate({
+                                  id: feed.id,
+                                  isFavorited: false,
+                                })
+                              }}
+                            />
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       )
@@ -423,7 +417,6 @@ export function AppSidebar() {
                       return (
                         <SidebarMenuItem key={`fav-tag-${tag.id}`}>
                           <SidebarMenuButton
-                            asChild
                             isActive={isSelected}
                             onClick={() => {
                               void setTagSlug(isSelected ? null : tag.id)
@@ -435,21 +428,19 @@ export function AppSidebar() {
                               isSelected && "bg-accent",
                             )}
                           >
-                            <div>
-                              <span className="truncate text-sm font-medium">
-                                {tag.name}
-                              </span>
-                              <StarIcon
-                                className="ml-auto h-3.5 w-3.5 shrink-0 cursor-pointer fill-current text-yellow-500 transition-opacity hover:opacity-70"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  toggleTagFavorited.mutate({
-                                    id: tag.id,
-                                    isFavorited: false,
-                                  })
-                                }}
-                              />
-                            </div>
+                            <span className="truncate text-sm font-medium">
+                              {tag.name}
+                            </span>
+                            <StarIcon
+                              className="ml-auto h-3.5 w-3.5 shrink-0 cursor-pointer fill-current text-yellow-500 transition-opacity hover:opacity-70"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                toggleTagFavorited.mutate({
+                                  id: tag.id,
+                                  isFavorited: false,
+                                })
+                              }}
+                            />
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       )
@@ -485,7 +476,6 @@ export function AppSidebar() {
                     onMouseLeave={() => setHoveredTagId(null)}
                   >
                     <SidebarMenuButton
-                      asChild
                       isActive={!selectedTag}
                       onClick={() => {
                         void setTagSlug(null)
@@ -496,11 +486,9 @@ export function AppSidebar() {
                         !selectedTag && "bg-accent",
                       )}
                     >
-                      <div>
-                        <span className="cursor-pointer truncate text-sm font-medium">
-                          All
-                        </span>
-                      </div>
+                      <span className="cursor-pointer truncate text-sm font-medium">
+                        All
+                      </span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
 
@@ -515,7 +503,6 @@ export function AppSidebar() {
                         onMouseLeave={() => setHoveredTagId(null)}
                       >
                         <SidebarMenuButton
-                          asChild
                           isActive={isSelected}
                           onClick={() => {
                             void setTagSlug(isSelected ? null : tag.id)
@@ -526,86 +513,81 @@ export function AppSidebar() {
                             isSelected && "bg-accent",
                           )}
                         >
-                          <div>
-                            <span className="truncate text-sm font-medium">
-                              {tag.name}
-                            </span>
-                            <DropdownMenu modal={false}>
-                              <DropdownMenuTrigger asChild>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                  }}
-                                  className={cn(
-                                    "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring ml-auto h-6 w-6 shrink-0 items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:ring-1 focus-visible:outline-none",
-                                    isHovered ? "inline-flex" : "hidden",
-                                  )}
-                                >
-                                  <span className="sr-only">More options</span>
-                                  <MoreHorizontalIcon className="h-4 w-4" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent
-                                align="end"
-                                side="bottom"
-                                className="w-48"
-                                sideOffset={8}
+                          <span className="truncate text-sm font-medium">
+                            {tag.name}
+                          </span>
+                          <Menu modal={false}>
+                            <MenuTrigger
+                              onClick={(e) => {
+                                e.stopPropagation()
+                              }}
+                              className={cn(
+                                "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring ml-auto h-6 w-6 shrink-0 items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:ring-1 focus-visible:outline-none",
+                                isHovered ? "inline-flex" : "hidden",
+                              )}
+                            >
+                              <span className="sr-only">More options</span>
+                              <MoreHorizontalIcon className="h-4 w-4" />
+                            </MenuTrigger>
+                            <MenuPopup
+                              align="end"
+                              side="bottom"
+                              className="w-48"
+                              sideOffset={8}
+                            >
+                              <MenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setEditingTag({
+                                    id: tag.id,
+                                    name: tag.name,
+                                    description: tag.description ?? undefined,
+                                  })
+                                }}
+                                className="cursor-pointer py-2.5"
                               >
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setEditingTag({
-                                      id: tag.id,
-                                      name: tag.name,
-                                      description: tag.description ?? undefined,
-                                    })
-                                  }}
-                                  className="cursor-pointer py-2.5"
-                                >
-                                  <PencilIcon className="h-4 w-4" />
-                                  <span>Edit tag</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    toggleTagFavorited.mutate({
-                                      id: tag.id,
-                                      isFavorited: !tag.isFavorited,
-                                    })
-                                  }}
-                                  className="cursor-pointer py-2.5"
-                                >
-                                  <StarIcon
-                                    className={cn(
-                                      "h-4 w-4",
-                                      tag.isFavorited && "fill-current",
-                                    )}
-                                  />
-                                  <span>
-                                    {tag.isFavorited
-                                      ? "Remove from Favorites"
-                                      : "Add to Favorites"}
-                                  </span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  variant="destructive"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setDeletingTag({
-                                      id: tag.id,
-                                      name: tag.name,
-                                    })
-                                  }}
-                                  className="cursor-pointer py-2.5"
-                                >
-                                  <Trash2Icon className="h-4 w-4" />
-                                  <span>Delete tag</span>
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
+                                <PencilIcon className="h-4 w-4" />
+                                <span>Edit tag</span>
+                              </MenuItem>
+                              <MenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toggleTagFavorited.mutate({
+                                    id: tag.id,
+                                    isFavorited: !tag.isFavorited,
+                                  })
+                                }}
+                                className="cursor-pointer py-2.5"
+                              >
+                                <StarIcon
+                                  className={cn(
+                                    "h-4 w-4",
+                                    tag.isFavorited && "fill-current",
+                                  )}
+                                />
+                                <span>
+                                  {tag.isFavorited
+                                    ? "Remove from Favorites"
+                                    : "Add to Favorites"}
+                                </span>
+                              </MenuItem>
+                              <MenuSeparator />
+                              <MenuItem
+                                variant="destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setDeletingTag({
+                                    id: tag.id,
+                                    name: tag.name,
+                                  })
+                                }}
+                                className="cursor-pointer py-2.5"
+                              >
+                                <Trash2Icon className="h-4 w-4" />
+                                <span>Delete tag</span>
+                              </MenuItem>
+                            </MenuPopup>
+                          </Menu>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     )
@@ -674,7 +656,6 @@ export function AppSidebar() {
                         onMouseLeave={() => setHoveredFeedId(null)}
                       >
                         <SidebarMenuButton
-                          asChild
                           isActive={isSelected}
                           onClick={() => {
                             void setFeedSlug(isSelected ? "" : feed.slug)
@@ -685,32 +666,34 @@ export function AppSidebar() {
                             isSelected && "bg-accent",
                           )}
                         >
-                          <div>
-                            <Avatar className="h-8 w-8 shrink-0">
-                              <AvatarImage src={feed.imageUrl ?? undefined} />
-                              <AvatarFallback className="text-xs">
-                                {feed.title.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
-                              <span className="truncate text-sm font-medium">
-                                {feed.title}
-                              </span>
-                            </div>
-                            {showBadges && feed.unreadCount > 0 && (
-                              <Badge
-                                variant={isSelected ? "secondary" : "outline"}
-                                className="ml-auto shrink-0"
-                              >
-                                {feed.unreadCount}
-                              </Badge>
-                            )}
-                            <DropdownMenu modal={false}>
-                              <DropdownMenuTrigger asChild>
+                          <Avatar className="h-8 w-8 shrink-0">
+                            <AvatarImage src={feed.imageUrl ?? undefined} />
+                            <AvatarFallback className="text-xs">
+                              {feed.title.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
+                            <span className="truncate text-sm font-medium">
+                              {feed.title}
+                            </span>
+                          </div>
+                          {showBadges && feed.unreadCount > 0 && (
+                            <Badge
+                              variant={isSelected ? "secondary" : "outline"}
+                              className="ml-auto shrink-0"
+                            >
+                              {feed.unreadCount}
+                            </Badge>
+                          )}
+                          <Menu modal={false}>
+                            <MenuTrigger
+                              render={(props) => (
                                 <button
+                                  {...props}
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation()
+                                    props.onClick?.(e)
                                   }}
                                   className={cn(
                                     "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring ml-2 h-6 w-6 shrink-0 items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:ring-1 focus-visible:outline-none",
@@ -720,96 +703,96 @@ export function AppSidebar() {
                                   <span className="sr-only">More options</span>
                                   <MoreHorizontalIcon className="h-4 w-4" />
                                 </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent
-                                align="end"
-                                side="bottom"
-                                className="w-48"
-                                sideOffset={8}
+                              )}
+                            />
+                            <MenuPopup
+                              align="end"
+                              side="bottom"
+                              className="w-48"
+                              sideOffset={8}
+                            >
+                              <MenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  const feedToEdit = (
+                                    feeds as FeedWithTags[] | undefined
+                                  )?.find((f) => f.id === feed.id)
+                                  if (feedToEdit) {
+                                    const tagIds =
+                                      feedToEdit.tags?.map((t) => t.tag.id) ??
+                                      []
+                                    setEditingFeed({
+                                      id: feedToEdit.id,
+                                      title: feedToEdit.title,
+                                      description:
+                                        feedToEdit.description ?? undefined,
+                                      tagIds,
+                                    })
+                                  }
+                                }}
+                                className="cursor-pointer py-2.5"
                               >
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    const feedToEdit = (
-                                      feeds as FeedWithTags[] | undefined
-                                    )?.find((f) => f.id === feed.id)
-                                    if (feedToEdit) {
-                                      const tagIds =
-                                        feedToEdit.tags?.map((t) => t.tag.id) ??
-                                        []
-                                      setEditingFeed({
-                                        id: feedToEdit.id,
-                                        title: feedToEdit.title,
-                                        description:
-                                          feedToEdit.description ?? undefined,
-                                        tagIds,
-                                      })
-                                    }
-                                  }}
-                                  className="cursor-pointer py-2.5"
-                                >
-                                  <PencilIcon className="h-4 w-4" />
-                                  <span>Edit feed</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    toggleFeedFavorited.mutate({
-                                      id: feed.id,
-                                      isFavorited: !feed.isFavorited,
-                                    })
-                                  }}
-                                  className="cursor-pointer py-2.5"
-                                >
-                                  <StarIcon
-                                    className={cn(
-                                      "h-4 w-4",
-                                      feed.isFavorited && "fill-current",
-                                    )}
-                                  />
-                                  <span>
-                                    {feed.isFavorited
-                                      ? "Add to Favorites"
-                                      : "Remove from Favorites"}
-                                  </span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    const stats = statistics?.find(
-                                      (s: { feedId: string }) =>
-                                        s.feedId === feed.id,
-                                    )
-                                    setBulkSharingFeed({
-                                      id: feed.id,
-                                      title: feed.title,
-                                      articleCount: stats?.totalCount ?? 0,
-                                      isBulkShared: feed.isBulkShared,
-                                    })
-                                  }}
-                                  className="cursor-pointer py-2.5"
-                                >
-                                  <ShareIcon className="h-4 w-4" />
-                                  <span>Bulk Share</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  variant="destructive"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setDeletingFeed({
-                                      id: feed.id,
-                                      title: feed.title,
-                                    })
-                                  }}
-                                  className="cursor-pointer py-2.5"
-                                >
-                                  <Trash2Icon className="h-4 w-4" />
-                                  <span>Delete feed</span>
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
+                                <PencilIcon className="h-4 w-4" />
+                                <span>Edit feed</span>
+                              </MenuItem>
+                              <MenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toggleFeedFavorited.mutate({
+                                    id: feed.id,
+                                    isFavorited: !feed.isFavorited,
+                                  })
+                                }}
+                                className="cursor-pointer py-2.5"
+                              >
+                                <StarIcon
+                                  className={cn(
+                                    "h-4 w-4",
+                                    feed.isFavorited && "fill-current",
+                                  )}
+                                />
+                                <span>
+                                  {feed.isFavorited
+                                    ? "Add to Favorites"
+                                    : "Remove from Favorites"}
+                                </span>
+                              </MenuItem>
+                              <MenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  const stats = statistics?.find(
+                                    (s: { feedId: string }) =>
+                                      s.feedId === feed.id,
+                                  )
+                                  setBulkSharingFeed({
+                                    id: feed.id,
+                                    title: feed.title,
+                                    articleCount: stats?.totalCount ?? 0,
+                                    isBulkShared: feed.isBulkShared,
+                                  })
+                                }}
+                                className="cursor-pointer py-2.5"
+                              >
+                                <ShareIcon className="h-4 w-4" />
+                                <span>Bulk Share</span>
+                              </MenuItem>
+                              <MenuSeparator />
+                              <MenuItem
+                                variant="destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setDeletingFeed({
+                                    id: feed.id,
+                                    title: feed.title,
+                                  })
+                                }}
+                                className="cursor-pointer py-2.5"
+                              >
+                                <Trash2Icon className="h-4 w-4" />
+                                <span>Delete feed</span>
+                              </MenuItem>
+                            </MenuPopup>
+                          </Menu>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     )
@@ -832,30 +815,33 @@ export function AppSidebar() {
                   </div>
                 </div>
               ) : user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton
-                      size="lg"
-                      className="data-[state=open]:bg-accent data-[state=open]:text-accent-foreground hover:bg-accent/50 h-auto w-full py-2.5 transition-colors"
-                    >
-                      <Avatar className="border-border/50 h-10 w-10 shrink-0 border-2">
-                        <AvatarImage src={user.image ?? undefined} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                          {user.username.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
-                        <span className="truncate text-sm leading-tight font-semibold">
-                          {user.name ?? user.username}
-                        </span>
-                        <span className="text-muted-foreground truncate text-xs leading-tight">
-                          {user.email}
-                        </span>
-                      </div>
-                      <ChevronUpIcon className="text-foreground ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                    </SidebarMenuButton>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
+                <Menu>
+                  <MenuTrigger
+                    render={(props) => (
+                      <SidebarMenuButton
+                        {...props}
+                        size="lg"
+                        className="data-[state=open]:bg-accent data-[state=open]:text-accent-foreground hover:bg-accent/50 h-auto w-full py-2.5 transition-colors"
+                      >
+                        <Avatar className="border-border/50 h-10 w-10 shrink-0 border-2">
+                          <AvatarImage src={user.image ?? undefined} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                            {user.username.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+                          <span className="truncate text-sm leading-tight font-semibold">
+                            {user.name ?? user.username}
+                          </span>
+                          <span className="text-muted-foreground truncate text-xs leading-tight">
+                            {user.email}
+                          </span>
+                        </div>
+                        <ChevronUpIcon className="text-foreground ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                      </SidebarMenuButton>
+                    )}
+                  />
+                  <MenuPopup
                     align="end"
                     side="top"
                     className="w-64"
@@ -877,8 +863,8 @@ export function AppSidebar() {
                         </p>
                       </div>
                     </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
+                    <MenuSeparator />
+                    <MenuItem
                       onClick={() =>
                         setTheme(theme === "dark" ? "light" : "dark")
                       }
@@ -894,27 +880,35 @@ export function AppSidebar() {
                           ? "Switch to light mode"
                           : "Switch to dark mode"}
                       </span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="cursor-pointer py-2.5">
-                      <Link href="/settings">
-                        <SettingsIcon className="h-4 w-4" />
-                        <span>Settings</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <form action={logout} className="w-full">
-                        <button
-                          type="submit"
-                          className="flex w-full cursor-pointer items-center gap-2 py-2.5"
+                    </MenuItem>
+                    <MenuItem
+                      render={(props) => (
+                        <Link
+                          {...props}
+                          href="/settings"
+                          className="cursor-pointer py-2.5"
                         >
-                          <LogOutIcon className="h-4 w-4" />
-                          <span>Log out</span>
-                        </button>
-                      </form>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                          <SettingsIcon className="h-4 w-4" />
+                          <span>Settings</span>
+                        </Link>
+                      )}
+                    />
+                    <MenuSeparator />
+                    <MenuItem
+                      render={(props) => (
+                        <form {...props} action={logout} className="w-full">
+                          <button
+                            type="submit"
+                            className="flex w-full cursor-pointer items-center gap-2 py-2.5"
+                          >
+                            <LogOutIcon className="h-4 w-4" />
+                            <span>Log out</span>
+                          </button>
+                        </form>
+                      )}
+                    />
+                  </MenuPopup>
+                </Menu>
               ) : null}
             </SidebarMenuItem>
           </SidebarMenu>

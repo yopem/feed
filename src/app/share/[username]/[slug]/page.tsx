@@ -13,10 +13,10 @@ import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogPopup,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
@@ -106,7 +106,7 @@ export default function SharedArticlePage({
           open={showPasswordDialog}
           onOpenChange={setShowPasswordDialog}
         >
-          <AlertDialogContent>
+          <AlertDialogPopup>
             <AlertDialogHeader>
               <AlertDialogTitle>Password Required</AlertDialogTitle>
               <AlertDialogDescription>
@@ -143,7 +143,7 @@ export default function SharedArticlePage({
                 </AlertDialogAction>
               </AlertDialogFooter>
             </form>
-          </AlertDialogContent>
+          </AlertDialogPopup>
         </AlertDialog>
       </div>
     )

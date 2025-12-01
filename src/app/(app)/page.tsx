@@ -20,8 +20,8 @@ import {
 } from "@/components/ui/breadcrumb"
 import {
   Sheet,
-  SheetContent,
   SheetHeader,
+  SheetPopup,
   SheetTitle,
 } from "@/components/ui/sheet"
 import {
@@ -166,7 +166,7 @@ function DashboardContent() {
               open={isReaderOpen}
               onOpenChange={(open) => !open && setSelectedArticleId(null)}
             >
-              <SheetContent
+              <SheetPopup
                 side={isMobile ? "bottom" : "right"}
                 className={
                   isMobile
@@ -182,7 +182,7 @@ function DashboardContent() {
                 <div className="min-h-0 flex-1 overflow-y-auto">
                   <ArticleReader articleId={selectedArticleId} />
                 </div>
-              </SheetContent>
+              </SheetPopup>
             </Sheet>
           </div>
         </SidebarInset>

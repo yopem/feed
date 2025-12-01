@@ -2,15 +2,14 @@
 
 import { useForm } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { toast } from "sonner"
 import type { z } from "zod"
 
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
@@ -21,6 +20,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { toast } from "@/components/ui/toast"
 import { updateTagSchema } from "@/lib/db/schema"
 import { useTRPC } from "@/lib/trpc/client"
 
@@ -83,7 +83,7 @@ export function EditTagDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogPopup className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Tag</DialogTitle>
         </DialogHeader>
@@ -192,7 +192,7 @@ export function EditTagDialog({
             )}
           </form.Subscribe>
         </form>
-      </DialogContent>
+      </DialogPopup>
     </Dialog>
   )
 }
