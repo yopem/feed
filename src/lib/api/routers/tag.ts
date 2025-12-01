@@ -10,6 +10,17 @@ import { tagTable, updateTagSchema, type SelectTag } from "@/lib/db/schema"
  * Tag management router for organizing feeds into categories
  */
 export const tagRouter = createTRPCRouter({
+  /**
+   * Create a new tag for organizing feeds
+   *
+   * Creates a new tag that can be assigned to multiple feeds for better organization
+   * and categorization. Tags help users group related feeds together.
+   *
+   * @param input.name - Tag name (required)
+   * @param input.description - Optional tag description
+   * @returns The newly created tag with ID and metadata
+   * @throws TRPCError if creation fails or duplicate tag name exists
+   */
   create: protectedProcedure
     .input(
       z.object({
@@ -36,6 +47,17 @@ export const tagRouter = createTRPCRouter({
       }
     }),
 
+  /**
+   * Update an existing tag's name or description
+   *
+   * Allows modification of tag properties. All associated feeds will reflect
+   * the updated tag information. Invalidates relevant caches to ensure
+   * consistency across the application.
+   *
+   * @param input - Tag ID with updated name and/or description
+   * @returns Updated tag data
+   * @throws TRPCError if tag not found or user lacks permission
+   */
   update: protectedProcedure
     .input(updateTagSchema)
     .mutation(async ({ ctx, input }) => {
@@ -179,6 +201,14 @@ export const tagRouter = createTRPCRouter({
       }
     }),
 
+  /**
+   * Retrieve all tags for the current user
+   *
+   * Fetches all non-deleted tags owned by the authenticated user, ordered by
+   * creation date (newest first). Results are cached for 30 minutes.
+   *
+   * @returns Array of user's tags with full metadata
+   */
   all: protectedProcedure.query(async ({ ctx }) => {
     try {
       const cacheKey = `feed:tags:user:${ctx.session.id}`
@@ -198,6 +228,16 @@ export const tagRouter = createTRPCRouter({
     }
   }),
 
+  /**
+   * Retrieve a specific tag by ID
+   *
+   * Fetches detailed information for a single tag. Results are cached for
+   * 30 minutes. Only returns tags with published status.
+   *
+   * @param input - Tag ID to fetch
+   * @returns Tag data with full metadata
+   * @throws TRPCError if tag not found
+   */
   byId: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
     try {
       const cacheKey = `feed:tag:${input}:user:${ctx.session.id}`

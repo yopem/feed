@@ -32,6 +32,17 @@ const refreshAllRateLimiter = createTokenBucket<string>(1, 300)
  * including parsing, refreshing, and tag assignment
  */
 export const feedRouter = {
+  /**
+   * Create a new feed subscription from RSS/Atom or Reddit URL
+   *
+   * Parses the feed, extracts articles, and stores them in the database.
+   * Automatically generates a unique slug for the feed. Supports both RSS/Atom
+   * feeds and Reddit subreddits. Validates feed URL and checks for duplicates.
+   *
+   * @param input - Feed URL (RSS/Atom or Reddit subreddit)
+   * @returns Created feed with metadata
+   * @throws TRPCError if URL is invalid, feed already exists, or parsing fails
+   */
   create: protectedProcedure
     .input(
       z.string().url("Please provide a valid URL").min(1, "URL is required"),
@@ -182,6 +193,19 @@ export const feedRouter = {
       }
     }),
 
+  /**
+   * Update feed title and/or description
+   *
+   * Allows modification of feed metadata without re-parsing the feed.
+   * Only the title and description can be updated; URL and other properties
+   * remain unchanged. Invalidates feed caches.
+   *
+   * @param input.id - Feed ID to update
+   * @param input.title - New title (optional)
+   * @param input.description - New description (optional)
+   * @returns Updated feed data
+   * @throws TRPCError if feed not found or user lacks permission
+   */
   update: protectedProcedure
     .input(
       z.object({

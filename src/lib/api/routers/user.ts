@@ -9,6 +9,14 @@ import { articleTable, userSettingsTable } from "@/lib/db/schema"
  * User management router providing operations for user profile and settings
  */
 export const userRouter = createTRPCRouter({
+  /**
+   * Get current authenticated user information
+   *
+   * Returns the current user's profile data from the session including
+   * ID, email, name, username, image, and role.
+   *
+   * @returns Current user profile data
+   */
   getCurrentUser: protectedProcedure.query(({ ctx }) => {
     return {
       id: ctx.session.id,

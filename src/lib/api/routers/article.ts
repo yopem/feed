@@ -20,6 +20,17 @@ type ArticleWithFeed = SelectArticle & {
  * for articles with caching support via Redis
  */
 export const articleRouter = createTRPCRouter({
+  /**
+   * Retrieve paginated list of all published articles for the current user
+   *
+   * Fetches articles ordered by creation date with Redis caching (30 minutes).
+   * Only returns articles with published status.
+   *
+   * @param input.page - Page number (1-indexed)
+   * @param input.perPage - Number of articles per page
+   * @returns Array of articles with feed information
+   * @throws TRPCError if no articles found
+   */
   all: protectedProcedure
     .input(z.object({ page: z.number(), perPage: z.number() }))
     .query(async ({ ctx, input }) => {
@@ -61,6 +72,16 @@ export const articleRouter = createTRPCRouter({
       }
     }),
 
+  /**
+   * Retrieve a specific article by ID
+   *
+   * Fetches detailed article information including associated feed data.
+   * Results are cached for 30 minutes. Only returns published articles.
+   *
+   * @param input - Article ID to fetch
+   * @returns Article data with feed information
+   * @throws TRPCError if article not found
+   */
   byId: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
     try {
       const cacheKey = `feed:article:${input}:user:${ctx.session.id}`
@@ -94,6 +115,17 @@ export const articleRouter = createTRPCRouter({
     }
   }),
 
+  /**
+   * Retrieve an article by feed slug and article slug
+   *
+   * Finds an article using human-readable slugs for both feed and article.
+   * Useful for URL-based article access. Results are cached for 30 minutes.
+   *
+   * @param input.feedSlug - Feed's URL-friendly identifier
+   * @param input.articleSlug - Article's URL-friendly identifier
+   * @returns Article data with feed information
+   * @throws TRPCError if feed or article not found
+   */
   byFeedAndArticleSlug: protectedProcedure
     .input(
       z.object({
@@ -155,6 +187,15 @@ export const articleRouter = createTRPCRouter({
       }
     }),
 
+  /**
+   * Count total articles for a specific feed
+   *
+   * Returns the number of published articles belonging to a feed.
+   * Results are cached for 30 minutes.
+   *
+   * @param input - Feed ID to count articles for
+   * @returns Number of articles in the feed
+   */
   countByFeedId: protectedProcedure
     .input(z.string())
     .query(async ({ ctx, input }) => {
@@ -181,6 +222,19 @@ export const articleRouter = createTRPCRouter({
       }
     }),
 
+  /**
+   * Retrieve articles filtered by status, optionally scoped to a specific feed
+   *
+   * Supports multiple filter types: all, unread, starred (favorited), readLater,
+   * today (last 24h), and recentlyRead (read in last 7 days). Results are paginated
+   * and cached for 30 minutes.
+   *
+   * @param input.filter - Filter type to apply
+   * @param input.feedId - Optional feed ID to scope results
+   * @param input.page - Page number (default: 1)
+   * @param input.perPage - Articles per page (default: 50)
+   * @returns Paginated array of filtered articles with feed information
+   */
   byFilter: protectedProcedure
     .input(
       z.object({
@@ -255,6 +309,16 @@ export const articleRouter = createTRPCRouter({
       }
     }),
 
+  /**
+   * Update the read status of an article
+   *
+   * Marks an article as read or unread. Invalidates article and statistics caches
+   * to keep the UI in sync.
+   *
+   * @param input.id - Article ID
+   * @param input.isRead - Desired read status
+   * @returns Updated article data
+   */
   updateReadStatus: protectedProcedure
     .input(z.object({ id: z.string(), isRead: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
@@ -326,6 +390,16 @@ export const articleRouter = createTRPCRouter({
       }
     }),
 
+  /**
+   * Update the read-later status of an article
+   *
+   * Marks an article for reading later or removes it from the read-later list.
+   * Invalidates relevant caches to keep the UI in sync.
+   *
+   * @param input.id - Article ID
+   * @param input.isReadLater - Desired read-later status
+   * @returns Updated article data
+   */
   updateReadLater: protectedProcedure
     .input(z.object({ id: z.string(), isReadLater: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
@@ -356,6 +430,15 @@ export const articleRouter = createTRPCRouter({
       }
     }),
 
+  /**
+   * Mark all articles as read, optionally scoped to a specific feed
+   *
+   * Bulk operation to mark multiple articles as read. Can be applied to all
+   * articles or limited to a specific feed. Invalidates relevant caches.
+   *
+   * @param input.feedId - Optional feed ID to scope operation
+   * @returns Success status
+   */
   markAllRead: protectedProcedure
     .input(z.object({ feedId: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
@@ -388,6 +471,19 @@ export const articleRouter = createTRPCRouter({
       }
     }),
 
+  /**
+   * Retrieve articles with cursor-based pagination for infinite scroll
+   *
+   * Similar to byFilter but uses cursor-based pagination (publication date)
+   * instead of page numbers. Ideal for infinite scroll UI patterns.
+   *
+   * @param input.filter - Filter type (default: "all")
+   * @param input.feedId - Optional feed ID to scope results
+   * @param input.limit - Number of articles to fetch (default: 50)
+   * @param input.cursor - ISO date string cursor for pagination
+   * @returns Articles array with nextCursor for pagination
+   * @throws TRPCError if cursor date format is invalid
+   */
   byFilterInfinite: protectedProcedure
     .input(
       z.object({
@@ -482,15 +578,15 @@ export const articleRouter = createTRPCRouter({
     }),
 
   /**
-   * Public endpoint to fetch article by username and share slug
+   * Global search across articles and feeds
    *
-   * Fetches a publicly shared article using username and slug combination.
-   * This allows multiple users to use the same slug without conflicts.
-   * Checks expiration and returns password protection status.
+   * Searches article titles, descriptions, and feed names for matching content.
+   * Returns combined results sorted by relevance (exact matches first).
+   * Results are cached for 5 minutes.
    *
-   * @param username - The article owner's username
-   * @param slug - Share slug
-   * @returns Publicly shared article with feed information
+   * @param input.query - Search query string (minimum 2 characters)
+   * @param input.limit - Maximum number of results (default 20, max 50)
+   * @returns Combined search results with articles and feeds
    */
   search: protectedProcedure
     .input(

@@ -63,7 +63,6 @@ const formSchema = z.object({
 })
 type FormData = z.infer<typeof formSchema>
 
-// Popular subreddits examples
 const POPULAR_SUBREDDITS = [
   { name: "worldnews", icon: "🌍", description: "Global news" },
   { name: "science", icon: "🔬", description: "Science news" },
@@ -73,7 +72,6 @@ const POPULAR_SUBREDDITS = [
   { name: "todayilearned", icon: "💡", description: "Interesting facts" },
 ]
 
-// Popular RSS feeds examples
 const POPULAR_RSS_FEEDS = [
   {
     url: "https://hnrss.org/frontpage",
