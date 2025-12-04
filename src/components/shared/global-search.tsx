@@ -56,8 +56,13 @@ export function GlobalSearchProvider({
   const [query, setQuery] = useState("")
   const [debouncedQuery, setDebouncedQuery] = useState("")
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const trpc = useTRPC()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const [, setFeedSlug] = useQueryState("feed", parseAsString.withDefault(""))
   const [, setFilter] = useQueryState(
@@ -189,88 +194,92 @@ export function GlobalSearchProvider({
   return (
     <GlobalSearchContext.Provider value={{ open, setOpen }}>
       {children}
-      <CommandDialog open={open} onOpenChange={handleOpenChange}>
-        <Command onKeyDown={handleKeyDown}>
-          <CommandInput
-            placeholder="Search articles and feeds..."
-            value={query}
-            onValueChange={setQuery}
-            autoFocus
-          />
-          <CommandList>
-            {query.length < 2 ? (
-              <CommandEmpty>Type at least 2 characters to search</CommandEmpty>
-            ) : isLoading ? (
-              <CommandEmpty>Searching...</CommandEmpty>
-            ) : allResults.length === 0 ? (
-              <CommandEmpty>
-                No results found. Try a different search term.
-              </CommandEmpty>
-            ) : (
-              <>
-                {data?.feeds && data.feeds.length > 0 && (
-                  <CommandGroup heading="Feeds">
-                    {data.feeds.map((feed, index) => {
-                      const globalIndex = index
-                      return (
-                        <CommandItem
-                          key={feed.id}
-                          onSelect={() =>
-                            handleSelect({ type: "feed", item: feed })
-                          }
-                          className={cn(
-                            selectedIndex === globalIndex && "bg-accent",
-                          )}
-                        >
-                          <RssIcon className="h-4 w-4 shrink-0" />
-                          <div className="flex min-w-0 flex-1 flex-col gap-1">
-                            <span className="truncate font-medium">
-                              {feed.title}
-                            </span>
-                            {feed.description && (
-                              <span className="text-muted-foreground truncate text-xs">
-                                {feed.description}
-                              </span>
+      {mounted && (
+        <CommandDialog open={open} onOpenChange={handleOpenChange}>
+          <Command onKeyDown={handleKeyDown}>
+            <CommandInput
+              placeholder="Search articles and feeds..."
+              value={query}
+              onValueChange={setQuery}
+              autoFocus
+            />
+            <CommandList>
+              {query.length < 2 ? (
+                <CommandEmpty>
+                  Type at least 2 characters to search
+                </CommandEmpty>
+              ) : isLoading ? (
+                <CommandEmpty>Searching...</CommandEmpty>
+              ) : allResults.length === 0 ? (
+                <CommandEmpty>
+                  No results found. Try a different search term.
+                </CommandEmpty>
+              ) : (
+                <>
+                  {data?.feeds && data.feeds.length > 0 && (
+                    <CommandGroup heading="Feeds">
+                      {data.feeds.map((feed, index) => {
+                        const globalIndex = index
+                        return (
+                          <CommandItem
+                            key={feed.id}
+                            onSelect={() =>
+                              handleSelect({ type: "feed", item: feed })
+                            }
+                            className={cn(
+                              selectedIndex === globalIndex && "bg-accent",
                             )}
-                          </div>
-                        </CommandItem>
-                      )
-                    })}
-                  </CommandGroup>
-                )}
-                {data?.articles && data.articles.length > 0 && (
-                  <CommandGroup heading="Articles">
-                    {data.articles.map((article, index) => {
-                      const globalIndex = (data.feeds.length || 0) + index
-                      return (
-                        <CommandItem
-                          key={article.id}
-                          onSelect={() =>
-                            handleSelect({ type: "article", item: article })
-                          }
-                          className={cn(
-                            selectedIndex === globalIndex && "bg-accent",
-                          )}
-                        >
-                          <FileTextIcon className="h-4 w-4 shrink-0" />
-                          <div className="flex min-w-0 flex-1 flex-col gap-1">
-                            <span className="truncate font-medium">
-                              {article.title}
-                            </span>
-                            <span className="text-muted-foreground truncate text-xs">
-                              {article.feed.title}
-                            </span>
-                          </div>
-                        </CommandItem>
-                      )
-                    })}
-                  </CommandGroup>
-                )}
-              </>
-            )}
-          </CommandList>
-        </Command>
-      </CommandDialog>
+                          >
+                            <RssIcon className="h-4 w-4 shrink-0" />
+                            <div className="flex min-w-0 flex-1 flex-col gap-1">
+                              <span className="truncate font-medium">
+                                {feed.title}
+                              </span>
+                              {feed.description && (
+                                <span className="text-muted-foreground truncate text-xs">
+                                  {feed.description}
+                                </span>
+                              )}
+                            </div>
+                          </CommandItem>
+                        )
+                      })}
+                    </CommandGroup>
+                  )}
+                  {data?.articles && data.articles.length > 0 && (
+                    <CommandGroup heading="Articles">
+                      {data.articles.map((article, index) => {
+                        const globalIndex = (data.feeds.length || 0) + index
+                        return (
+                          <CommandItem
+                            key={article.id}
+                            onSelect={() =>
+                              handleSelect({ type: "article", item: article })
+                            }
+                            className={cn(
+                              selectedIndex === globalIndex && "bg-accent",
+                            )}
+                          >
+                            <FileTextIcon className="h-4 w-4 shrink-0" />
+                            <div className="flex min-w-0 flex-1 flex-col gap-1">
+                              <span className="truncate font-medium">
+                                {article.title}
+                              </span>
+                              <span className="text-muted-foreground truncate text-xs">
+                                {article.feed.title}
+                              </span>
+                            </div>
+                          </CommandItem>
+                        )
+                      })}
+                    </CommandGroup>
+                  )}
+                </>
+              )}
+            </CommandList>
+          </Command>
+        </CommandDialog>
+      )}
     </GlobalSearchContext.Provider>
   )
 }

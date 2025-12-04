@@ -7,7 +7,6 @@ import { parseAsString, useQueryState } from "nuqs"
 
 import type { FilterType } from "@/components/feed/feed-filter"
 import { EmptyState } from "@/components/shared/empty-state"
-import { ScrollToTopButton } from "@/components/shared/scroll-to-top-button"
 import { useTRPC } from "@/lib/trpc/client"
 import { ArticleCard } from "./article-card"
 
@@ -75,7 +74,7 @@ export function ArticleList() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto">
+    <div className="flex h-full flex-col">
       <div className="flex-1 space-y-3 p-4 md:mx-auto md:max-w-4xl md:px-6">
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
@@ -134,8 +133,6 @@ export function ArticleList() {
           </>
         )}
       </div>
-
-      <ScrollToTopButton />
     </div>
   )
 }

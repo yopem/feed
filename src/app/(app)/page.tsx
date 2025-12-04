@@ -155,7 +155,7 @@ function DashboardContent() {
             </div>
           </header>
 
-          <div className="flex h-[calc(100vh-3.5rem)] w-full overflow-hidden">
+          <div className="flex h-[calc(100vh-3.5rem)] w-full">
             {/* Article List - Full Width */}
             <main className="min-w-0 flex-1 overflow-y-auto">
               <ArticleList />
