@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query"
 import { FileTextIcon, RssIcon } from "lucide-react"
 import { parseAsString, useQueryState } from "nuqs"
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Command,
   CommandDialog,
@@ -46,6 +47,16 @@ export function useGlobalSearch() {
 
 /**
  * Global search provider component
+ *
+ * Provides a search dialog accessible via Cmd+K (Mac) or Ctrl+K (Windows/Linux).
+ * Searches across article titles, descriptions, and feed names with debounced input.
+ *
+ * Features:
+ * - Real-time search with 200ms debounce
+ * - Keyboard navigation (arrow keys, Enter, Escape)
+ * - Error handling with retry mechanism
+ * - Development mode logging for debugging
+ * - Authentication and rate limit error detection
  */
 export function GlobalSearchProvider({
   children,
@@ -78,25 +89,40 @@ export function GlobalSearchProvider({
     return () => clearTimeout(timer)
   }, [query])
 
-  const { data, isLoading } = useQuery({
+  /**
+   * Execute search query with error handling and retry logic
+   *
+   * - Debounced to 200ms to avoid excessive queries
+   * - Retries once on failure
+   * - Caches results for 1 minute (staleTime)
+   * - Only executes when query is 2+ characters and dialog is open
+   */
+
+  const { data, isFetching, error, refetch } = useQuery({
     ...trpc.article.search.queryOptions({
       query: debouncedQuery,
       limit: 20,
     }),
     enabled: debouncedQuery.length >= 2 && open,
+    retry: 1,
+    staleTime: 1000 * 60,
   })
 
-  const allResults = useMemo(
-    () => [
-      ...(data?.feeds.map((feed) => ({ type: "feed" as const, item: feed })) ??
-        []),
-      ...(data?.articles.map((article) => ({
+  // Show searching only when fetching AND no data exists yet
+  const isSearching = isFetching && debouncedQuery.length >= 2 && !data
+
+  const allResults = useMemo(() => {
+    const feeds = data?.feeds ?? []
+    const articles = data?.articles ?? []
+
+    return [
+      ...feeds.map((feed) => ({ type: "feed" as const, item: feed })),
+      ...articles.map((article) => ({
         type: "article" as const,
         item: article,
-      })) ?? []),
-    ],
-    [data],
-  )
+      })),
+    ]
+  }, [data])
 
   const handleOpenChange = useCallback((newOpen: boolean) => {
     setOpen(newOpen)
@@ -196,7 +222,7 @@ export function GlobalSearchProvider({
       {children}
       {mounted && (
         <CommandDialog open={open} onOpenChange={handleOpenChange}>
-          <Command onKeyDown={handleKeyDown}>
+          <Command onKeyDown={handleKeyDown} shouldFilter={false}>
             <CommandInput
               placeholder="Search articles and feeds..."
               value={query}
@@ -204,11 +230,31 @@ export function GlobalSearchProvider({
               autoFocus
             />
             <CommandList>
-              {query.length < 2 ? (
+              {debouncedQuery.length < 2 ? (
                 <CommandEmpty>
                   Type at least 2 characters to search
                 </CommandEmpty>
-              ) : isLoading ? (
+              ) : error ? (
+                <CommandEmpty>
+                  <div className="flex flex-col items-center gap-2 py-4">
+                    <p className="text-destructive">
+                      {error instanceof Error &&
+                      error.message.includes("UNAUTHORIZED")
+                        ? "Please log in to search"
+                        : error instanceof Error &&
+                            error.message.includes("Rate limit")
+                          ? "Too many searches. Please wait a moment."
+                          : "Failed to search. Please try again."}
+                    </p>
+                    <button
+                      onClick={() => refetch()}
+                      className="text-primary mt-2 text-sm hover:underline"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </CommandEmpty>
+              ) : isSearching ? (
                 <CommandEmpty>Searching...</CommandEmpty>
               ) : allResults.length === 0 ? (
                 <CommandEmpty>
@@ -230,7 +276,21 @@ export function GlobalSearchProvider({
                               selectedIndex === globalIndex && "bg-accent",
                             )}
                           >
-                            <RssIcon className="h-4 w-4 shrink-0" />
+                            {feed.imageUrl ? (
+                              <Avatar className="h-8 w-8 shrink-0">
+                                <AvatarImage
+                                  src={feed.imageUrl}
+                                  alt={feed.title}
+                                />
+                                <AvatarFallback>
+                                  <RssIcon className="h-4 w-4" />
+                                </AvatarFallback>
+                              </Avatar>
+                            ) : (
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center">
+                                <RssIcon className="h-4 w-4" />
+                              </div>
+                            )}
                             <div className="flex min-w-0 flex-1 flex-col gap-1">
                               <span className="truncate font-medium">
                                 {feed.title}
@@ -260,7 +320,25 @@ export function GlobalSearchProvider({
                               selectedIndex === globalIndex && "bg-accent",
                             )}
                           >
-                            <FileTextIcon className="h-4 w-4 shrink-0" />
+                            {article.imageUrl || article.feed.imageUrl ? (
+                              <Avatar className="h-8 w-8 shrink-0 rounded-md">
+                                <AvatarImage
+                                  src={
+                                    article.imageUrl ??
+                                    article.feed.imageUrl ??
+                                    undefined
+                                  }
+                                  alt={article.title}
+                                />
+                                <AvatarFallback>
+                                  <FileTextIcon className="h-4 w-4" />
+                                </AvatarFallback>
+                              </Avatar>
+                            ) : (
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center">
+                                <FileTextIcon className="h-4 w-4" />
+                              </div>
+                            )}
                             <div className="flex min-w-0 flex-1 flex-col gap-1">
                               <span className="truncate font-medium">
                                 {article.title}
