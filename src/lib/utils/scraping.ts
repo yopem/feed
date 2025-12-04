@@ -87,7 +87,8 @@ export function generateGoogleNewsTitle(url: string): string {
         CAAqJggKIiBDQkFTRWdvSUwyMHZNRFp1ZEdvU0FtVnVHZ0pWVXlnQVAB: "Sports",
       }
 
-      const topicIdMatch = urlObj.pathname.match(/\/topics\/([^?]+)/)
+      const topicIdRegex = /\/topics\/([^?]+)/
+      const topicIdMatch = topicIdRegex.exec(urlObj.pathname)
       if (topicIdMatch) {
         const topicId = topicIdMatch[1]
         const topicName = topicMap[topicId]
@@ -103,7 +104,8 @@ export function generateGoogleNewsTitle(url: string): string {
       const query = searchParams.get("q")
 
       if (query) {
-        const publisherMatch = query.match(/allinurl:([a-z0-9.-]+)/i)
+        const publisherRegex = /allinurl:([a-z0-9.-]+)/i
+        const publisherMatch = publisherRegex.exec(query)
         if (publisherMatch) {
           const domain = publisherMatch[1]
           const domainName = domain.split(".")[0]
@@ -684,9 +686,7 @@ async function parseRSSFeed(url: string) {
             source: feedTitle.trim(),
             isRead: false,
             isReadLater: false,
-            content: item["content:encoded"]
-              ? item["content:encoded"]
-              : stripHtml(description),
+            content: item["content:encoded"] ?? stripHtml(description),
             imageUrl,
           }
         })
