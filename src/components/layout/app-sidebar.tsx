@@ -859,9 +859,9 @@ export function AppSidebar() {
                         <Link
                           {...props}
                           href="/settings"
-                          className="cursor-pointer py-2.5"
+                          className="inline-flex cursor-pointer items-center gap-2 px-2 py-2.5"
                         >
-                          <SettingsIcon className="h-4 w-4" />
+                          <SettingsIcon className="size-4" />
                           <span>Settings</span>
                         </Link>
                       )}
@@ -872,7 +872,7 @@ export function AppSidebar() {
                         <form {...props} action={logout} className="w-full">
                           <button
                             type="submit"
-                            className="flex w-full cursor-pointer items-center gap-2 py-2.5"
+                            className="flex w-full cursor-pointer items-center gap-2 px-2 py-2.5"
                           >
                             <LogOutIcon className="h-4 w-4" />
                             <span>Log out</span>
