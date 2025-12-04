@@ -1,6 +1,6 @@
 import { XMLParser } from "fast-xml-parser"
 
-import { stripHtml } from "@/lib/utils/html"
+import { sanitizeHtml, stripHtml } from "@/lib/utils/html"
 
 /**
  * Detects if a URL is a Reddit subreddit URL
@@ -606,7 +606,9 @@ async function parseRSSFeed(url: string) {
             id: `${Date.now()}-${idx}`,
             title: typeof title === "string" ? title.trim() : "",
             description: truncate(
-              typeof description === "string" ? description.trim() : "",
+              typeof description === "string"
+                ? stripHtml(description.trim())
+                : "",
             ),
             link: typeof link === "string" ? link.trim() : "",
             pubDate,
@@ -618,7 +620,7 @@ async function parseRSSFeed(url: string) {
                 ? entry.content["#text"]
                 : typeof entry.content === "string"
                   ? entry.content
-                  : stripHtml(description),
+                  : sanitizeHtml(description),
             imageUrl,
           }
         })
@@ -679,14 +681,16 @@ async function parseRSSFeed(url: string) {
             id: `${Date.now()}-${idx}`,
             title: typeof title === "string" ? title.trim() : "",
             description: truncate(
-              typeof description === "string" ? description.trim() : "",
+              typeof description === "string"
+                ? stripHtml(description.trim())
+                : "",
             ),
             link: typeof link === "string" ? link.trim() : "",
             pubDate,
             source: feedTitle.trim(),
             isRead: false,
             isReadLater: false,
-            content: item["content:encoded"] ?? stripHtml(description),
+            content: item["content:encoded"] ?? sanitizeHtml(description),
             imageUrl,
           }
         })
