@@ -7,40 +7,34 @@ organize your reading experience with powerful tagging and tracking features.
 
 ## Features
 
-### 📰 Subscribe to RSS Feeds
+### Subscribe to RSS Feeds
 
 Add unlimited RSS feeds from blogs, news sites, and podcasts. Track all your
 favorite content sources in one centralized hub without jumping between
 websites.
 
-### 💬 Follow Reddit Communities
+### Follow Reddit Communities
 
 Subscribe to any subreddit and read posts directly in your feed reader. Jump to
 Reddit discussions with one click while enjoying a clean reading experience.
 
-### 📰 Track Google News Topics
+### Track Google News Topics
 
 Follow Google News topics or create custom news searches. Stay updated with the
 latest headlines from technology, business, science, and more through Google
 News RSS feeds.
 
-### 🏷️ Organize with Tags
+### Organize with Tags
 
 Group feeds by topics, priorities, or projects with custom tags. Create your
 perfect organization system and find content exactly when you need it.
 
-### 📖 Track Your Reading
+### Track Your Reading
 
 Never lose your place. Mark articles as read or unread, save favorites for
 later, and maintain a complete history of everything you've consumed.
 
-### 🔗 Share Articles Publicly
-
-Generate shareable links with password protection, expiration dates, and QR
-codes. Track views, referrers, and geographic analytics for every shared
-article.
-
-### ✨ Clean Reading Experience
+### Clean Reading Experience
 
 Focus on content, not clutter. Enjoy a beautiful, distraction-free reader with
 customizable themes that automatically adapts to your preferences.
@@ -84,7 +78,7 @@ Note: When using Docker, PostgreSQL and Redis are provided automatically.
 
 ```bash
 git clone https://github.com/yopem/read.git
-cd yopem-read
+cd read
 ```
 
 2. **Install dependencies**
@@ -107,7 +101,7 @@ Edit `.env` and configure the required variables (see
 4. **Run database migrations**
 
 ```bash
-bun run db:migrate
+bun run db:generate && bun run db:migrate
 ```
 
 5. **Start the development server**
