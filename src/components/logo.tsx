@@ -1,0 +1,31 @@
+import type { ComponentProps } from "react"
+
+const Logo = (props: ComponentProps<"svg">) => (
+  <svg
+    version="1.0"
+    xmlns="http://www.w3.org/2000/svg"
+    width="240.000000pt"
+    height="240.000000pt"
+    viewBox="0 0 240.000000 240.000000"
+    preserveAspectRatio="xMidYMid meet"
+    shapeRendering="geometricPrecision"
+    {...props}
+  >
+    <g
+      transform="translate(0.000000,240.000000) scale(0.100000,-0.100000)"
+      fill="currentColor"
+      stroke="none"
+    >
+      <path
+        d="M1169 2263 c-81 -85 -143 -178 -198 -294 -71 -150 -85 -210 -85 -359
+1 -158 21 -224 141 -457 l85 -167 -83 74 c-46 41 -101 94 -122 119 -38 47 -77
+134 -77 174 -1 52 -17 48 -42 -10 -51 -116 -63 -164 -62 -263 0 -146 33 -212
+196 -393 206 -231 278 -369 278 -534 0 -40 4 -73 9 -73 5 0 43 22 83 49 90 60
+230 204 281 287 109 180 133 385 72 600 -16 57 -77 195 -169 384 -80 162 -160
+341 -180 398 -65 187 -91 378 -67 485 5 20 6 37 1 37 -4 0 -31 -26 -61 -57z"
+      />
+    </g>
+  </svg>
+)
+
+export default Logo

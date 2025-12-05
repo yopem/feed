@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
 
+import Logo from "@/components/logo"
 import ThemeSwitcher from "@/components/theme/theme-switcher"
 
 /**
@@ -50,11 +50,7 @@ export default function LandingHeader() {
             rel="noopener noreferrer"
             className="flex items-center"
           >
-            <Image
-              src="/logo.png"
-              alt="Yopem"
-              width={32}
-              height={32}
+            <Logo
               className={`transition-all duration-200 ${
                 isScrolled ? "h-6 w-6" : "h-8 w-8"
               }`}

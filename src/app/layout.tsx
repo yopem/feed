@@ -10,7 +10,23 @@ import { siteDescription, siteTitle } from "@/lib/env/client"
 export const metadata: Metadata = {
   title: siteTitle,
   description: siteDescription,
-  icons: [{ rel: "icon", url: "/favicon.png" }],
+  icons: [
+    {
+      rel: "icon",
+      type: "image/svg+xml",
+      url: "/favicon.svg",
+    },
+  ],
+}
+
+export function generateViewport() {
+  return {
+    themeColor: [
+      { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+      { media: "(prefers-color-scheme: dark)", color: "#000000" },
+    ],
+    colorScheme: "light dark",
+  }
 }
 
 const adwaita = localFont({
