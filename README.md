@@ -5,6 +5,8 @@ brings all your favorite content into one beautiful, distraction-free interface.
 Subscribe to RSS feeds, follow Reddit communities, track Google News topics, and
 organize your reading experience with powerful tagging and tracking features.
 
+![preview](https://raw.githubusercontent.com/yopem/read/main/preview.png) <br />
+
 ## Features
 
 ### Subscribe to RSS Feeds
