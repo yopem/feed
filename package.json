@@ -16,13 +16,13 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:up": "drizzle-kit up",
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack -p 3001",
     "format:check": "prettier --check \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
     "format:write": "prettier --write \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix",
     "preview": "next build && next start",
-    "start": "next start",
+    "start": "next start -p 3001",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
