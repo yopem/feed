@@ -5,6 +5,7 @@ import Link from "next/link"
 import { AlertCircleIcon, HomeIcon, RefreshCwIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { appEnv } from "@/lib/env/client"
 
 /**
  * Error boundary for route segment errors
@@ -41,7 +42,7 @@ export default function Error({
             We encountered an error while loading this page. Please try again or
             return to the homepage.
           </p>
-          {process.env.NODE_ENV === "development" && (
+          {appEnv === "development" && (
             <details className="mt-4 rounded-lg border p-4 text-left">
               <summary className="text-muted-foreground cursor-pointer text-xs font-medium">
                 Error Details (Development)
