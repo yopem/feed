@@ -4,7 +4,7 @@ import { login } from "@/lib/auth/login"
 const LoginButton = () => {
   return (
     <form action={login}>
-      <Button>
+      <Button type="submit">
         <svg
           className="mr-2 size-4"
           viewBox="-3 0 262 262"
