@@ -18,7 +18,7 @@ import { subjects } from "./subjects"
 export async function setTokens(
   access: string,
   refresh: string,
-  secure: boolean = true,
+  secure = true,
 ) {
   const cookies = await getCookies()
 
