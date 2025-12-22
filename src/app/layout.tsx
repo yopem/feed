@@ -29,25 +29,43 @@ export function generateViewport() {
   }
 }
 
-const adwaita = localFont({
+const adwaitaSans = localFont({
   src: [
     {
-      path: "/fonts/adwaita-sans-regular.woff2",
+      path: "/fonts/AdwaitaSans-Regular.woff2",
       style: "normal",
     },
     {
-      path: "/fonts/adwaita-sans-italic.woff2",
+      path: "/fonts/AdwaitaSans-Italic.woff2",
       style: "italic",
     },
   ],
   variable: "--font-adwaita-sans",
 })
 
+const adwaitaMono = localFont({
+  src: [
+    {
+      path: "/fonts/AdwaitaMono-Regular.woff2",
+      style: "normal",
+    },
+    {
+      path: "/fonts/AdwaitaMono-Italic.woff2",
+      style: "italic",
+    },
+  ],
+  variable: "--font-adwaita-mono",
+})
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${adwaita.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${adwaitaSans.variable} ${adwaitaMono.variable}`}
+      suppressHydrationWarning
+    >
       <body>
         <Providers>{children}</Providers>
         <Scripts />
