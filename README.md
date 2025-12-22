@@ -114,7 +114,7 @@ bun run dev
 
 6. **Access the application**
 
-Open your browser and navigate to [http://localhost:3000](http://localhost:3000)
+Open your browser and navigate to [http://localhost:3001](http://localhost:3001)
 
 ### Docker Setup
 
@@ -217,7 +217,7 @@ For a complete list of environment variables, see [.env.example](.env.example).
 
 ## Usage
 
-1. **Access the application** at `http://localhost:3000` (or
+1. **Access the application** at `http://localhost:3001` (or
    `http://localhost:3069` for Docker)
 
 2. **Create an account or log in** using the authentication system
