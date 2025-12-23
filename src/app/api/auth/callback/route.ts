@@ -20,6 +20,11 @@ export async function GET(req: NextRequest) {
   const code = url.searchParams.get("code")
   const host = req.headers.get("host")
 
+  const protocol =
+    req.headers.get("x-forwarded-proto") ||
+    (host?.includes("localhost") ? "http" : "https")
+  const origin = `${protocol}://${host}`
+
   if (!code) {
     console.error("OAuth callback error: Missing authorization code", {
       timestamp: new Date().toISOString(),
@@ -27,36 +32,34 @@ export async function GET(req: NextRequest) {
       searchParams: Object.fromEntries(url.searchParams.entries()),
     })
 
-    return NextResponse.redirect(
-      `${url.origin}/auth/login?error=missing_code`,
-      { status: 302 },
-    )
+    return NextResponse.redirect(`${origin}/auth/login?error=missing_code`, {
+      status: 302,
+    })
   }
 
   try {
     const exchanged = await authClient.exchange(
       code,
-      `${url.origin}/api/auth/callback`,
+      `${origin}/api/auth/callback`,
     )
 
     if (exchanged.err) {
       console.error("OAuth token exchange failed:", {
         timestamp: new Date().toISOString(),
         error: exchanged.err,
-        callbackUrl: `${url.origin}/api/auth/callback`,
+        callbackUrl: `${origin}/api/auth/callback`,
         host,
       })
 
-      return NextResponse.redirect(
-        `${url.origin}/auth/login?error=auth_failed`,
-        { status: 302 },
-      )
+      return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`, {
+        status: 302,
+      })
     }
 
     const secure = isProduction(host)
     await setTokens(exchanged.tokens.access, exchanged.tokens.refresh, secure)
 
-    return NextResponse.redirect(`${url.origin}/`)
+    return NextResponse.redirect(`${origin}/`)
   } catch (error) {
     console.error("Unexpected error during OAuth callback:", {
       timestamp: new Date().toISOString(),
@@ -65,7 +68,7 @@ export async function GET(req: NextRequest) {
       host,
     })
 
-    return NextResponse.redirect(`${url.origin}/auth/login?error=auth_failed`, {
+    return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`, {
       status: 302,
     })
   }
