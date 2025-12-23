@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   const host = req.headers.get("host")
 
   const protocol =
-    req.headers.get("x-forwarded-proto") ||
+    req.headers.get("x-forwarded-proto") ??
     (host?.includes("localhost") ? "http" : "https")
   const origin = `${protocol}://${host}`
 
