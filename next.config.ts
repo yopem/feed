@@ -1,12 +1,4 @@
 import type { NextConfig } from "next"
-import withBundleAnalyzer from "@next/bundle-analyzer"
-
-const bundleAnalyzer = withBundleAnalyzer({
-  enabled: process.env["ANALYZE"] === "true",
-  openAnalyzer: true,
-})
-
-const plugins = [bundleAnalyzer]
 
 const securityHeaders = [
   {
@@ -91,10 +83,4 @@ const config: NextConfig = {
   },
 }
 
-let finalConfig = { ...config } as NextConfig
-
-for (const plugin of plugins) {
-  finalConfig = plugin(finalConfig)
-}
-
-export default finalConfig
+export default config
