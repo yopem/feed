@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-import { authClient, setTokens } from "@/lib/auth/client"
+import { authClient } from "@/lib/auth/client"
+import { setTokens } from "@/lib/auth/session"
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url)
