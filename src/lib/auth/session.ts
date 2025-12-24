@@ -27,23 +27,32 @@ export async function setTokens(access: string, refresh: string) {
 }
 
 export const auth = cache(async () => {
-  const cookies = await getCookies()
-  const accessToken = cookies.get("access_token")
-  const refreshToken = cookies.get("refresh_token")
+  try {
+    const cookies = await getCookies()
+    const accessToken = cookies.get("access_token")
+    const refreshToken = cookies.get("refresh_token")
 
-  if (!accessToken) {
+    if (!accessToken) {
+      return false
+    }
+
+    const verified = await authClient.verify(subjects, accessToken.value, {
+      refresh: refreshToken?.value,
+    })
+
+    if (verified.err) {
+      console.error("Error verifying token:", verified.err)
+      return false
+    }
+
+    if (!verified.subject || !verified.subject.properties) {
+      console.error("Token verified but no subject properties found")
+      return false
+    }
+
+    return verified.subject.properties
+  } catch (error) {
+    console.error("Unexpected error in auth():", error)
     return false
   }
-
-  const verified = await authClient.verify(subjects, accessToken.value, {
-    refresh: refreshToken?.value,
-  })
-
-  if (verified.err) {
-    console.error("Error verifying token:", verified.err)
-
-    return false
-  }
-
-  return verified.subject.properties
 })

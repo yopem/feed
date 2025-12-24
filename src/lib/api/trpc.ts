@@ -18,12 +18,16 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await auth()
   const redis = createRedisCache()
 
+  console.log(
+    "tRPC Context - Session:",
+    session ? "authenticated" : "not authenticated",
+  )
+
   let clientIP =
     opts.headers.get("x-forwarded-for") ??
     opts.headers.get("x-real-ip") ??
     "unknown"
 
-  // For development: If localhost/private IP, use a test public IP for geolocation testing
   if (
     appEnv === "development" &&
     (clientIP === "unknown" ||
@@ -38,7 +42,6 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
       clientIP.startsWith("172.") ||
       clientIP.startsWith("127."))
   ) {
-    // Use a real public IP for testing (Google DNS)
     clientIP = "8.8.8.8"
   }
 
