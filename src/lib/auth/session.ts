@@ -33,6 +33,13 @@ export const auth = cache(async () => {
     const refreshToken = cookies.get("refresh_token")
 
     if (!accessToken) {
+      console.error(
+        "[AUTH] No access token in cookies. Available cookies:",
+        cookies
+          .getAll()
+          .map((c) => c.name)
+          .join(", "),
+      )
       return false
     }
 
@@ -41,18 +48,21 @@ export const auth = cache(async () => {
     })
 
     if (verified.err) {
-      console.error("Error verifying token:", verified.err)
+      console.error(
+        "[AUTH] Token verification failed:",
+        JSON.stringify(verified.err),
+      )
       return false
     }
 
     if (!verified.subject || !verified.subject.properties) {
-      console.error("Token verified but no subject properties found")
+      console.error("[AUTH] No subject properties found in verified token")
       return false
     }
 
     return verified.subject.properties
   } catch (error) {
-    console.error("Unexpected error in auth():", error)
+    console.error("[AUTH] Unexpected error:", error)
     return false
   }
 })

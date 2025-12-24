@@ -8,19 +8,15 @@ import { createRedisCache } from "@/lib/db/redis"
 import { appEnv } from "@/lib/env/server"
 import { createTokenBucket } from "@/lib/utils/rate-limit"
 
-/**
- * Rate limiter for public endpoints
- * 50 requests per minute per IP
- */
 const publicRateLimiter = createTokenBucket<string>(50, 60)
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await auth()
   const redis = createRedisCache()
 
-  console.log(
-    "tRPC Context - Session:",
-    session ? "authenticated" : "not authenticated",
+  console.error(
+    "[TRPC] Context session:",
+    session === false ? "false" : typeof session,
   )
 
   let clientIP =
@@ -88,10 +84,6 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
   return result
 })
 
-/**
- * Rate limiting middleware for public endpoints
- * Limits requests based on client IP address
- */
 const rateLimitMiddleware = t.middleware(async ({ ctx, next }) => {
   const clientIP = ctx.clientIP
 
@@ -107,11 +99,6 @@ const rateLimitMiddleware = t.middleware(async ({ ctx, next }) => {
 
 export const publicProcedure = t.procedure.use(timingMiddleware)
 
-/**
- * Rate-limited public procedure for sensitive public endpoints
- * Use this for endpoints that are accessible without authentication
- * and need protection from abuse
- */
 export const rateLimitedPublicProcedure = t.procedure
   .use(timingMiddleware)
   .use(rateLimitMiddleware)
@@ -119,7 +106,15 @@ export const rateLimitedPublicProcedure = t.procedure
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
   .use(({ ctx, next }) => {
+    console.error(
+      "[PROTECTED] Session type:",
+      typeof ctx.session,
+      "value:",
+      ctx.session === false ? "false" : "object",
+    )
+
     if (!ctx.session || typeof ctx.session !== "object") {
+      console.error("[PROTECTED] UNAUTHORIZED")
       throw new TRPCError({ code: "UNAUTHORIZED" })
     }
 
