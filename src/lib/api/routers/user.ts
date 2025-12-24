@@ -5,18 +5,7 @@ import { handleTRPCError } from "@/lib/api/error"
 import { createTRPCRouter, protectedProcedure } from "@/lib/api/trpc"
 import { articleTable, userSettingsTable } from "@/lib/db/schema"
 
-/**
- * User management router providing operations for user profile and settings
- */
 export const userRouter = createTRPCRouter({
-  /**
-   * Get current authenticated user information
-   *
-   * Returns the current user's profile data from the session including
-   * ID, email, name, username, image, and role.
-   *
-   * @returns Current user profile data
-   */
   getCurrentUser: protectedProcedure.query(({ ctx }) => {
     return {
       id: ctx.session.id,
@@ -28,14 +17,6 @@ export const userRouter = createTRPCRouter({
     }
   }),
 
-  /**
-   * Get user settings for auto-refresh configuration and display preferences
-   *
-   * If settings don't exist yet, creates them with default values
-   * (autoRefreshEnabled: true, refreshIntervalHours: 24, articleRetentionDays: 30, showFilterCountBadges: true)
-   *
-   * @returns User settings with auto-refresh, retention, and display preferences
-   */
   getSettings: protectedProcedure.query(async ({ ctx }) => {
     try {
       const cacheKey = `user:settings:${ctx.session.id}`
@@ -69,16 +50,6 @@ export const userRouter = createTRPCRouter({
     }
   }),
 
-  /**
-   * Update user settings for auto-refresh configuration, article retention, and display preferences
-   *
-   * @param autoRefreshEnabled - Enable/disable automatic feed refresh
-   * @param refreshIntervalHours - Hours between automatic refreshes (1-168)
-   * @param articleRetentionDays - Days to keep articles before expiring (1-365)
-   * @param showFilterCountBadges - Show/hide article count badges on filter options
-   * @returns Updated user settings
-   * @throws TRPCError if settings not found
-   */
   updateSettings: protectedProcedure
     .input(
       z.object({
@@ -138,16 +109,6 @@ export const userRouter = createTRPCRouter({
       }
     }),
 
-  /**
-   * Expire articles for current user based on their retention settings
-   *
-   * Marks articles as "expired" if they are older than the user's configured
-   * articleRetentionDays setting. Only affects articles with status "published".
-   * This provides immediate expiration when user changes retention settings,
-   * complementing the scheduled cron job that runs system-wide.
-   *
-   * @returns Statistics about expired articles
-   */
   expireMyArticles: protectedProcedure.mutation(async ({ ctx }) => {
     try {
       const settings = await ctx.db.query.userSettingsTable.findFirst({

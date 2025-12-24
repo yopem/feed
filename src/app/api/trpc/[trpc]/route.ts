@@ -9,15 +9,29 @@ import { appEnv } from "@/lib/env/server"
 const handler = async (req: NextRequest) => {
   const cookieStore = await cookies()
 
+  console.error(
+    "[TRPC ROUTE] Cookies from request:",
+    cookieStore
+      .getAll()
+      .map((c) => c.name)
+      .join(", "),
+  )
+
   return fetchRequestHandler({
     endpoint: "/api/trpc",
     req,
     router: appRouter,
     createContext: async () => {
-      return createTRPCContext({
+      console.error("[TRPC ROUTE] Creating context...")
+      const ctx = await createTRPCContext({
         headers: req.headers,
         cookies: cookieStore,
       })
+      console.error(
+        "[TRPC ROUTE] Context created, session:",
+        ctx.session === false ? "false" : "object",
+      )
+      return ctx
     },
     onError: ({ path, error }) => {
       console.error(

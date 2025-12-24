@@ -18,11 +18,6 @@ export const createTRPCContext = async (opts: {
   const session = await auth()
   const redis = createRedisCache()
 
-  console.error(
-    "[TRPC] Context session:",
-    session === false ? "false" : typeof session,
-  )
-
   let clientIP =
     opts.headers.get("x-forwarded-for") ??
     opts.headers.get("x-real-ip") ??
@@ -109,20 +104,12 @@ export const rateLimitedPublicProcedure = t.procedure
 
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
-  .use(({ ctx, next }) => {
-    console.error(
-      "[PROTECTED] Session type:",
-      typeof ctx.session,
-      "value:",
-      ctx.session === false ? "false" : "object",
-    )
-
+  .use(async ({ ctx, next }) => {
     if (!ctx.session || typeof ctx.session !== "object") {
-      console.error("[PROTECTED] UNAUTHORIZED")
       throw new TRPCError({ code: "UNAUTHORIZED" })
     }
 
-    return next({
+    return await next({
       ctx: {
         session: { ...ctx.session },
       },
