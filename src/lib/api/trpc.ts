@@ -1,3 +1,4 @@
+import { type ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies"
 import { initTRPC, TRPCError } from "@trpc/server"
 import superjson from "superjson"
 import z, { ZodError } from "zod"
@@ -10,7 +11,10 @@ import { createTokenBucket } from "@/lib/utils/rate-limit"
 
 const publicRateLimiter = createTokenBucket<string>(50, 60)
 
-export const createTRPCContext = async (opts: { headers: Headers }) => {
+export const createTRPCContext = async (opts: {
+  headers: Headers
+  cookies: ReadonlyRequestCookies
+}) => {
   const session = await auth()
   const redis = createRedisCache()
 
