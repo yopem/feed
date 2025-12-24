@@ -1,5 +1,5 @@
 import { cache } from "react"
-import { headers } from "next/headers"
+import { cookies, headers } from "next/headers"
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query"
 import {
   createTRPCOptionsProxy,
@@ -10,16 +10,14 @@ import { appRouter, type AppRouter } from "@/lib/api/root"
 import { createTRPCContext } from "@/lib/api/trpc"
 import { createQueryClient } from "./query-client"
 
-/**
- * This wraps the `createTRPCContext` helper and provides the required context for the tRPC API when
- * handling a tRPC call from a React Server Component.
- */
 const createContext = cache(async () => {
   const heads = new Headers(await headers())
   heads.set("x-trpc-source", "rsc")
+  const cookieStore = await cookies()
 
   return createTRPCContext({
     headers: heads,
+    cookies: cookieStore,
   })
 })
 

@@ -55,11 +55,6 @@ export const auth = cache(async () => {
       return false
     }
 
-    if (!verified.subject || !verified.subject.properties) {
-      console.error("[AUTH] No subject properties found in verified token")
-      return false
-    }
-
     return verified.subject.properties
   } catch (error) {
     console.error("[AUTH] Unexpected error:", error)

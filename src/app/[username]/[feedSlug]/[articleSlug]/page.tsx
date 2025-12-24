@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { unstable_noStore as noStore } from "next/cache"
+import { cookies } from "next/headers"
 import Image from "next/image"
 import Link from "next/link"
 import { redirect } from "next/navigation"
@@ -50,8 +51,10 @@ export async function generateMetadata({
   }
 
   try {
+    const cookieStore = await cookies()
     const ctx = await createTRPCContext({
       headers: new Headers(),
+      cookies: cookieStore,
     })
     const caller = appRouter.createCaller(ctx)
 
@@ -115,8 +118,10 @@ export default async function ArticlePage({ params }: PageProps) {
     redirect("/")
   }
 
+  const cookieStore = await cookies()
   const ctx = await createTRPCContext({
     headers: new Headers(),
+    cookies: cookieStore,
   })
   const caller = appRouter.createCaller(ctx)
 
