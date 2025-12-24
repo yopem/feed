@@ -45,9 +45,5 @@ export const auth = cache(async () => {
     return false
   }
 
-  if (verified.tokens) {
-    await setTokens(verified.tokens.access, verified.tokens.refresh)
-  }
-
   return verified.subject.properties
 })
