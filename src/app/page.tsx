@@ -25,15 +25,7 @@ export default async function RootPage() {
   const session = await auth()
 
   if (session) {
-    return (
-      <>
-        <DashboardPage />
-        <div className="fixed right-4 bottom-4 text-xs text-gray-500">
-          <div className="font-semibold">Logged in as:</div>
-          {session.email}
-        </div>
-      </>
-    )
+    return <DashboardPage />
   }
 
   return <LandingPage />
