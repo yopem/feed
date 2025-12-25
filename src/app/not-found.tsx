@@ -3,11 +3,6 @@ import { HomeIcon, SearchIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
-/**
- * 404 Not Found page
- *
- * Displayed when a user navigates to a route that doesn't exist
- */
 export default function NotFound() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">

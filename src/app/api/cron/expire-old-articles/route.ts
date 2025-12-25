@@ -6,17 +6,6 @@ import { and, eq, lt } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { articleTable } from "@/lib/db/schema"
 
-/**
- * Cron job endpoint to expire old articles based on user retention settings
- *
- * This endpoint should be called periodically (e.g., daily) by a cron service
- * to mark articles as "expired" when they exceed the user's configured retention period.
- * Articles with status "published" are updated to "expired" based on their createdAt timestamp.
- *
- * Security: Protected by CRON_SECRET environment variable (if set)
- *
- * @returns Statistics about expired articles and processed users
- */
 export async function GET(request: Request) {
   try {
     const cronSecret = process.env["CRON_SECRET"]
