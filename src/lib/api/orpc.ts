@@ -2,8 +2,8 @@ import { ORPCError, os } from "@orpc/server"
 
 import { auth } from "@/lib/auth/session"
 import { db } from "@/lib/db"
-import { createRedisCache } from "@/lib/db/redis"
 import { appEnv } from "@/lib/env/server"
+import { createRedisCache } from "@/lib/utils/cache"
 import { createTokenBucket } from "@/lib/utils/rate-limit"
 
 const publicRateLimiter = createTokenBucket<string>(50, 60)
