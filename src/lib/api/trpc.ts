@@ -1,6 +1,6 @@
 import { type ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies"
 import { initTRPC, TRPCError } from "@trpc/server"
-import superjson from "superjson"
+import SuperJSON from "superjson"
 import z, { ZodError } from "zod"
 
 import { auth } from "@/lib/auth/session"
@@ -50,7 +50,7 @@ export const createTRPCContext = async (opts: {
 }
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
-  transformer: superjson,
+  transformer: SuperJSON,
   errorFormatter: ({ shape, error }) => ({
     ...shape,
     data: {
