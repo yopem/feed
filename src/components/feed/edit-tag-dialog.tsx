@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/toast"
 import { updateTagSchema } from "@/lib/db/schema"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 
 interface EditTagDialogProps {
   isOpen: boolean
@@ -42,7 +42,6 @@ export function EditTagDialog({
   initialName,
   initialDescription,
 }: EditTagDialogProps) {
-  const trpc = useTRPC()
   const queryClient = useQueryClient()
 
   const form = useForm({
@@ -63,11 +62,15 @@ export function EditTagDialog({
   })
 
   const updateTag = useMutation(
-    trpc.tag.update.mutationOptions({
+    queryApi.tag.update.mutationOptions({
       onSuccess: async () => {
         toast.success("Tag updated successfully")
-        await queryClient.invalidateQueries(trpc.tag.pathFilter())
-        await queryClient.invalidateQueries(trpc.feed.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.tag.key(),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.feed.key(),
+        })
         onClose()
       },
       onError: (err: { message: string }) => {

@@ -38,6 +38,7 @@ export const env = createEnv({
     NEXT_PUBLIC_API_URL: z.string().min(1),
 
     NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().min(1),
+    NEXT_PUBLIC_UMAMI_TRACKING_ID: z.string().min(1),
 
     NEXT_PUBLIC_LOGO_URL: z.string().min(1),
     NEXT_PUBLIC_LOGO_OG_URL: z.string().min(1),
@@ -63,6 +64,7 @@ export const env = createEnv({
     NEXT_PUBLIC_API_URL: `${getProtocol()}${process.env["NEXT_PUBLIC_SITE_DOMAIN"]}/api`,
 
     NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env["NEXT_PUBLIC_GA_MEASUREMENT_ID"],
+    NEXT_PUBLIC_UMAMI_TRACKING_ID: process.env["NEXT_PUBLIC_UMAMI_TRACKING_ID"],
 
     NEXT_PUBLIC_LOGO_URL: process.env["NEXT_PUBLIC_LOGO_URL"],
     NEXT_PUBLIC_LOGO_OG_URL: process.env["NEXT_PUBLIC_LOGO_OG_URL"],

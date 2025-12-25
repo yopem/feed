@@ -4,6 +4,7 @@ export const appEnv = env.APP_ENV
 export const apiUrl = env.NEXT_PUBLIC_API_URL
 
 export const gaMeasurementId = env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+export const umamiTrackingId = env.NEXT_PUBLIC_UMAMI_TRACKING_ID
 
 export const logoUrl = env.NEXT_PUBLIC_LOGO_URL
 export const logoOgUrl = env.NEXT_PUBLIC_LOGO_OG_URL

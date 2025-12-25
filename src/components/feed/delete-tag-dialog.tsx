@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { toast } from "@/components/ui/toast"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 
 interface DeleteTagDialogProps {
   isOpen: boolean
@@ -30,14 +30,17 @@ export function DeleteTagDialog({
   tagName,
   onDeleteSuccess,
 }: DeleteTagDialogProps) {
-  const trpc = useTRPC()
   const queryClient = useQueryClient()
 
   const deleteTag = useMutation(
-    trpc.tag.delete.mutationOptions({
+    queryApi.tag.delete.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.tag.all.queryOptions())
-        await queryClient.invalidateQueries(trpc.feed.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.article.key(),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.feed.key(),
+        })
         onDeleteSuccess?.()
         onClose()
         toast.success("Tag deleted successfully")

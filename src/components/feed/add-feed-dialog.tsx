@@ -35,7 +35,7 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs"
 import { toast } from "@/components/ui/toast"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 
 interface AddFeedDialogProps {
   isOpen: boolean
@@ -229,7 +229,6 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
   const [activeTab, setActiveTab] = useState("websites")
   const [redditSearch, setRedditSearch] = useState("")
   const [googleNewsSearch, setGoogleNewsSearch] = useState("")
-  const trpc = useTRPC()
   const queryClient = useQueryClient()
 
   const form = useForm({
@@ -267,7 +266,7 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
     },
   })
 
-  const { data: tags } = useQuery(trpc.tag.all.queryOptions())
+  const { data: tags } = useQuery(queryApi.tag.all.queryOptions())
 
   const filteredTags =
     tags?.filter((tag) =>
@@ -282,10 +281,14 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
     tags?.filter((tag) => selectedTagIds.includes(tag.id)) ?? []
 
   const createFeed = useMutation(
-    trpc.feed.create.mutationOptions({
+    queryApi.feed.create.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.feed.pathFilter())
-        await queryClient.invalidateQueries(trpc.article.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.article.key(),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.feed.key(),
+        })
         toast.success("Feed added successfully")
       },
       onError: (err: { message: string }) => {
@@ -298,9 +301,11 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
   )
 
   const assignTags = useMutation(
-    trpc.feed.assignTags.mutationOptions({
+    queryApi.feed.assignTags.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.feed.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.feed.key(),
+        })
       },
       onError: (err: { message: string }) => {
         toast.error(err.message || "Failed to assign tags")
@@ -309,13 +314,15 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
   )
 
   const createTag = useMutation(
-    trpc.tag.create.mutationOptions({
+    queryApi.tag.create.mutationOptions({
       onSuccess: async (newTag) => {
         if (newTag) {
           setSelectedTagIds((prev) => [...prev, newTag.id])
         }
 
-        await queryClient.invalidateQueries(trpc.tag.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.tag.key(),
+        })
 
         setTagSearchQuery("")
         setShowDropdown(false)

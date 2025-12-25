@@ -60,7 +60,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/ui/toast"
 import { logout } from "@/lib/auth/logout"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 import { cn } from "@/lib/utils"
 
 interface FeedWithTags {
@@ -127,38 +127,44 @@ export function AppSidebar() {
     id: string
     name: string
   } | null>(null)
-  const trpc = useTRPC()
+
   const queryClient = useQueryClient()
   const { setOpenMobile, isMobile } = useSidebar()
   const { setOpen: setSearchOpen } = useGlobalSearch()
 
   const { data: feeds, isLoading: feedsLoading } = useQuery(
-    trpc.feed.all.queryOptions({
-      page: 1,
-      perPage: 100,
+    queryApi.feed.all.queryOptions({
+      input: {
+        page: 1,
+        perPage: 100,
+      },
     }),
   )
 
-  const { data: statistics } = useQuery(trpc.feed.statistics.queryOptions())
+  const { data: statistics } = useQuery(queryApi.feed.statistics.queryOptions())
 
-  const { data: tags } = useQuery(trpc.tag.all.queryOptions())
+  const { data: tags } = useQuery(queryApi.tag.all.queryOptions())
 
   const { data: user, isLoading: userLoading } = useQuery(
-    trpc.user.getCurrentUser.queryOptions(),
+    queryApi.user.getCurrentUser.queryOptions(),
   )
 
   const { data: userSettings } = useQuery(
-    trpc.user.getSettings.queryOptions(),
+    queryApi.user.getSettings.queryOptions(),
   ) as { data: { showFilterCountBadges: boolean } | undefined }
 
   const { theme, setTheme } = useTheme()
 
   const refreshAll = useMutation(
-    trpc.feed.refreshAll.mutationOptions({
+    queryApi.feed.refreshAll.mutationOptions({
       onSuccess: async (data) => {
         if (data) {
-          await queryClient.invalidateQueries(trpc.feed.pathFilter())
-          await queryClient.invalidateQueries(trpc.article.pathFilter())
+          await queryClient.invalidateQueries({
+            queryKey: queryApi.feed.key(),
+          })
+          await queryClient.invalidateQueries({
+            queryKey: queryApi.article.key(),
+          })
           toast.success(
             `Refreshed ${data.refreshedFeeds} of ${data.totalFeeds} feed${data.totalFeeds !== 1 ? "s" : ""} successfully${
               data.failedFeeds > 0 ? `. ${data.failedFeeds} failed.` : ""
@@ -173,10 +179,12 @@ export function AppSidebar() {
   )
 
   const toggleFeedFavorited = useMutation(
-    trpc.feed.toggleFavorited.mutationOptions({
+    queryApi.feed.toggleFavorited.mutationOptions({
       onSuccess: async (data) => {
         if (data) {
-          await queryClient.invalidateQueries(trpc.feed.pathFilter())
+          await queryClient.invalidateQueries({
+            queryKey: queryApi.feed.key(),
+          })
           toast.success(
             data.isFavorited
               ? "Feed added to favorites"
@@ -191,10 +199,12 @@ export function AppSidebar() {
   )
 
   const toggleTagFavorited = useMutation(
-    trpc.tag.toggleFavorited.mutationOptions({
+    queryApi.tag.toggleFavorited.mutationOptions({
       onSuccess: async (data) => {
         if (data) {
-          await queryClient.invalidateQueries(trpc.tag.pathFilter())
+          await queryClient.invalidateQueries({
+            queryKey: queryApi.tag.key(),
+          })
           toast.success(
             data.isFavorited
               ? "Tag added to favorites"
@@ -280,7 +290,7 @@ export function AppSidebar() {
                 <span>Add Source</span>
               </Button>
               <Button
-                onClick={() => refreshAll.mutate()}
+                onClick={() => refreshAll.mutate({})}
                 className="mt-2 w-full"
                 size="sm"
                 variant="secondary"

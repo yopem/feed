@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { toast } from "@/components/ui/toast"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 
 interface DeleteFeedDialogProps {
   isOpen: boolean
@@ -28,14 +28,17 @@ export function DeleteFeedDialog({
   feedId,
   feedTitle,
 }: DeleteFeedDialogProps) {
-  const trpc = useTRPC()
   const queryClient = useQueryClient()
 
   const deleteFeed = useMutation(
-    trpc.feed.delete.mutationOptions({
+    queryApi.feed.delete.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.feed.pathFilter())
-        await queryClient.invalidateQueries(trpc.article.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.feed.key(),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.article.key(),
+        })
         onClose()
         toast.success("Feed deleted successfully")
       },

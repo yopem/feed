@@ -26,27 +26,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/toast"
 import { updateFeedSchema } from "@/lib/db/schema"
-import { useTRPC } from "@/lib/trpc/client"
-
-/**
- * EditFeedDialog - Form for editing existing feed details
- *
- * This component follows the TanStack Form pattern used throughout the project.
- * For detailed pattern documentation, see AddFeedDialog.
- *
- * Key differences from AddFeedDialog:
- * - Uses updateFeedSchema instead of insertFeedSchema
- * - Picks multiple fields (title, description)
- * - Populates defaultValues from initialProps
- * - Updates existing feed instead of creating new one
- *
- * Pattern Summary:
- * 1. Import database schema, create form schema inline with .pick()
- * 2. Initialize useForm with defaultValues and onSubmit handler
- * 3. Add field-level validation using validators.onSubmit
- * 4. Render fields using form.Field render prop pattern
- * 5. Use form.Subscribe for submit button state management
- */
+import { queryApi } from "@/lib/orpc/query"
 
 interface EditFeedDialogProps {
   isOpen: boolean
@@ -71,7 +51,6 @@ export function EditFeedDialog({
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialTagIds)
   const [tagSearchQuery, setTagSearchQuery] = useState("")
   const [showDropdown, setShowDropdown] = useState(false)
-  const trpc = useTRPC()
   const queryClient = useQueryClient()
 
   useEffect(() => {
@@ -106,7 +85,7 @@ export function EditFeedDialog({
     },
   })
 
-  const { data: tags } = useQuery(trpc.tag.all.queryOptions())
+  const { data: tags } = useQuery(queryApi.tag.all.queryOptions())
 
   const filteredTags =
     tags?.filter((tag) =>
@@ -121,9 +100,11 @@ export function EditFeedDialog({
     tags?.filter((tag) => selectedTagIds.includes(tag.id)) ?? []
 
   const updateFeed = useMutation(
-    trpc.feed.update.mutationOptions({
+    queryApi.feed.update.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.feed.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.feed.key(),
+        })
         onClose()
         toast.success("Feed updated successfully")
       },
@@ -134,9 +115,11 @@ export function EditFeedDialog({
   )
 
   const assignTags = useMutation(
-    trpc.feed.assignTags.mutationOptions({
+    queryApi.feed.assignTags.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.feed.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.feed.key(),
+        })
       },
       onError: (err: { message: string }) => {
         toast.error(err.message || "Failed to update tags")
@@ -145,9 +128,11 @@ export function EditFeedDialog({
   )
 
   const createTag = useMutation(
-    trpc.tag.create.mutationOptions({
+    queryApi.tag.create.mutationOptions({
       onSuccess: async (newTag) => {
-        await queryClient.invalidateQueries(trpc.tag.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.tag.key(),
+        })
         if (newTag) {
           setSelectedTagIds((prev) => [...prev, newTag.id])
         }

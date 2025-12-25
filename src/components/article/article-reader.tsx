@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 import { sanitizeHtml, stripHtml } from "@/lib/utils/html"
 import { ArticleActions } from "./article-actions"
 
@@ -39,17 +39,18 @@ interface ArticleReaderProps {
 }
 
 export function ArticleReader({ articleId }: ArticleReaderProps) {
-  const trpc = useTRPC()
   const queryClient = useQueryClient()
   const hasMarkedAsRead = useRef<Set<string>>(new Set())
 
-  const { data: article, isLoading } = useQuery({
-    ...trpc.article.byId.queryOptions(articleId!),
-    enabled: !!articleId,
-  }) as { data: ArticleWithFeed | undefined; isLoading: boolean }
+  const { data: article, isLoading } = useQuery(
+    queryApi.article.byId.queryOptions({
+      input: articleId!,
+      enabled: !!articleId,
+    }),
+  ) as { data: ArticleWithFeed | undefined; isLoading: boolean }
 
   const markAsRead = useMutation(
-    trpc.article.updateReadStatus.mutationOptions({
+    queryApi.article.updateReadStatus.mutationOptions({
       onSuccess: async (data) => {
         if (data?.id && articleId) {
           await queryClient.invalidateQueries({
@@ -66,8 +67,12 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
             },
           })
         }
-        await queryClient.invalidateQueries(trpc.article.pathFilter())
-        await queryClient.invalidateQueries(trpc.feed.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.article.key(),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.feed.key(),
+        })
       },
     }),
   )

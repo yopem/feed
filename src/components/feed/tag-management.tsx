@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/toast"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 
 export function TagManagement() {
   const [isAddingTag, setIsAddingTag] = useState(false)
@@ -32,15 +32,16 @@ export function TagManagement() {
     name: string
   } | null>(null)
 
-  const trpc = useTRPC()
   const queryClient = useQueryClient()
 
-  const { data: tags, isLoading } = useQuery(trpc.tag.all.queryOptions())
+  const { data: tags, isLoading } = useQuery(queryApi.tag.all.queryOptions())
 
   const createTag = useMutation(
-    trpc.tag.create.mutationOptions({
+    queryApi.tag.create.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.tag.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.tag.key(),
+        })
         setNewTagName("")
         setNewTagDescription("")
         setIsAddingTag(false)
@@ -53,9 +54,11 @@ export function TagManagement() {
   )
 
   const updateTag = useMutation(
-    trpc.tag.update.mutationOptions({
+    queryApi.tag.update.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.tag.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.tag.key(),
+        })
         setEditingTagId(null)
         toast.success("Tag updated successfully")
       },
@@ -66,10 +69,15 @@ export function TagManagement() {
   )
 
   const deleteTag = useMutation(
-    trpc.tag.delete.mutationOptions({
+    queryApi.tag.delete.mutationOptions({
       onSuccess: async () => {
-        await queryClient.refetchQueries(trpc.tag.all.queryOptions())
-        await queryClient.refetchQueries(trpc.feed.pathFilter())
+        await queryClient.refetchQueries(queryApi.tag.all.queryOptions())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.tag.key(),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.feed.key(),
+        })
         setDeletingTag(null)
         toast.success("Tag deleted successfully")
       },

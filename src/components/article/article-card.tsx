@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardFooter, CardHeader, CardPanel } from "@/components/ui/card"
 import { toast } from "@/components/ui/toast"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 import { cn } from "@/lib/utils"
 import { stripHtml } from "@/lib/utils/html"
 
@@ -58,14 +58,17 @@ export function ArticleCard({
   redditPermalink,
 }: ArticleCardProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const trpc = useTRPC()
   const queryClient = useQueryClient()
 
   const updateReadStatus = useMutation(
-    trpc.article.updateReadStatus.mutationOptions({
+    queryApi.article.updateReadStatus.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.article.pathFilter())
-        await queryClient.invalidateQueries(trpc.feed.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.article.key(),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.feed.key(),
+        })
         toast.success(isRead ? "Marked as unread" : "Marked as read")
       },
       onError: () => {
@@ -75,10 +78,14 @@ export function ArticleCard({
   )
 
   const updateFavorited = useMutation(
-    trpc.article.updateFavorited.mutationOptions({
+    queryApi.article.updateFavorited.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.article.pathFilter())
-        await queryClient.invalidateQueries(trpc.feed.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.article.key(),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.feed.key(),
+        })
         toast.success(
           isFavorited ? "Removed from favorites" : "Added to favorites",
         )
@@ -90,10 +97,14 @@ export function ArticleCard({
   )
 
   const updateReadLater = useMutation(
-    trpc.article.updateReadLater.mutationOptions({
+    queryApi.article.updateReadLater.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.article.pathFilter())
-        await queryClient.invalidateQueries(trpc.feed.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.article.key(),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.feed.key(),
+        })
         toast.success(
           isReadLater ? "Removed from read later" : "Added to read later",
         )

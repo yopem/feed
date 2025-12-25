@@ -24,7 +24,7 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 import { cn } from "@/lib/utils"
 
 interface GlobalSearchContextType {
@@ -69,7 +69,6 @@ export function GlobalSearchProvider({
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
-  const trpc = useTRPC()
 
   useEffect(() => {
     setMounted(true)
@@ -98,15 +97,17 @@ export function GlobalSearchProvider({
    * - Only executes when query is 2+ characters and dialog is open
    */
 
-  const { data, isFetching, error, refetch } = useQuery({
-    ...trpc.article.search.queryOptions({
-      query: debouncedQuery,
-      limit: 20,
+  const { data, isFetching, error, refetch } = useQuery(
+    queryApi.article.search.queryOptions({
+      input: {
+        query: debouncedQuery,
+        limit: 20,
+      },
+      enabled: debouncedQuery.length >= 2 && open,
+      retry: 1,
+      staleTime: 1000 * 60,
     }),
-    enabled: debouncedQuery.length >= 2 && open,
-    retry: 1,
-    staleTime: 1000 * 60,
-  })
+  )
 
   // Show searching only when fetching AND no data exists yet
   const isSearching = isFetching && debouncedQuery.length >= 2 && !data

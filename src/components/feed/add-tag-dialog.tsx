@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/toast"
 import { insertTagSchema } from "@/lib/db/schema"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 
 interface AddTagDialogProps {
   isOpen: boolean
@@ -34,7 +34,6 @@ const formSchema = insertTagSchema.pick({ name: true, description: true })
 type FormData = z.infer<typeof formSchema>
 
 export function AddTagDialog({ isOpen, onClose }: AddTagDialogProps) {
-  const trpc = useTRPC()
   const queryClient = useQueryClient()
 
   const form = useForm({
@@ -57,9 +56,11 @@ export function AddTagDialog({ isOpen, onClose }: AddTagDialogProps) {
   })
 
   const createTag = useMutation(
-    trpc.tag.create.mutationOptions({
+    queryApi.tag.create.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.tag.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.tag.key(),
+        })
         toast.success("Tag created successfully")
       },
       onError: (err: { message: string }) => {

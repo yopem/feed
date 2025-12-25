@@ -7,7 +7,7 @@ import { parseAsString, useQueryState } from "nuqs"
 
 import type { FilterType } from "@/components/feed/feed-filter"
 import { EmptyState } from "@/components/shared/empty-state"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 import { ArticleCard } from "./article-card"
 
 export function ArticleList() {
@@ -18,13 +18,14 @@ export function ArticleList() {
     parseAsString,
   )
 
-  const trpc = useTRPC()
   const observerTarget = useRef<HTMLDivElement>(null)
 
   const { data: allFeeds } = useQuery(
-    trpc.feed.all.queryOptions({
-      page: 1,
-      perPage: 100,
+    queryApi.feed.all.queryOptions({
+      input: {
+        page: 1,
+        perPage: 100,
+      },
     }),
   )
 
@@ -35,15 +36,18 @@ export function ArticleList() {
   }, [feedSlug, allFeeds])
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteQuery({
-      ...trpc.article.byFilterInfinite.infiniteQueryOptions({
-        filter: filter as FilterType,
-        feedId: selectedFeedId,
-        limit: 50,
+    useInfiniteQuery(
+      queryApi.article.byFilterInfinite.infiniteOptions({
+        input: (page: string | null) => ({
+          cursor: page,
+          filter: filter as FilterType,
+          feedId: selectedFeedId,
+          limit: 50,
+        }),
+        getNextPageParam: (lastPage) => lastPage?.nextCursor ?? null,
+        initialPageParam: null as string | null,
       }),
-      getNextPageParam: (lastPage) => lastPage?.nextCursor ?? null,
-      initialPageParam: null as string | null,
-    })
+    )
 
   const articles = useMemo(
     () => data?.pages.flatMap((page) => page?.articles ?? []) ?? [],

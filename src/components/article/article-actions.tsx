@@ -5,7 +5,7 @@ import { BookmarkIcon, ExternalLinkIcon, StarIcon } from "lucide-react"
 
 import { SocialShareButtons } from "@/components/article/social-share-buttons"
 import { Button } from "@/components/ui/button"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 import { cn } from "@/lib/utils"
 
 interface ArticleActionsProps {
@@ -23,28 +23,37 @@ export function ArticleActions({
   isReadLater,
   link,
 }: ArticleActionsProps) {
-  const trpc = useTRPC()
   const queryClient = useQueryClient()
 
-  const { data: article } = useQuery({
-    ...trpc.article.byId.queryOptions(articleId),
-    enabled: !!articleId,
-  })
+  const { data: article } = useQuery(
+    queryApi.article.byId.queryOptions({
+      input: articleId,
+      enabled: !!articleId,
+    }),
+  )
 
   const updateFavorited = useMutation(
-    trpc.article.updateFavorited.mutationOptions({
+    queryApi.article.updateFavorited.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.article.pathFilter())
-        await queryClient.invalidateQueries(trpc.feed.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.article.key(),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.feed.key(),
+        })
       },
     }),
   )
 
   const updateReadLater = useMutation(
-    trpc.article.updateReadLater.mutationOptions({
+    queryApi.article.updateReadLater.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.article.pathFilter())
-        await queryClient.invalidateQueries(trpc.feed.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.article.key(),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.feed.key(),
+        })
       },
     }),
   )
