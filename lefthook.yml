@@ -1,9 +1,9 @@
 pre-commit:
   commands:
     quality:
-      run: bun format:check && bun lint && bun typecheck
+      run: bun run check
 
 pre-push:
   commands:
     quality:
-      run: bun format:check && bun lint && bun typecheck
+      run: bun run check
