@@ -39,7 +39,10 @@ export const articleTable = pgTable(
     redditSubreddit: text("reddit_subreddit"),
     status: entityStatusEnum("status").notNull().default("published"),
     createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
   },
   (t) => [
     unique("article_feed_slug_unique").on(t.feedId, t.slug),

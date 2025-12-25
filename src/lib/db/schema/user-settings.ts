@@ -15,7 +15,10 @@ export const userSettingsTable = pgTable("user_settings", {
     .default(true)
     .notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 })
 
 export const insertUserSettingsSchema = createInsertSchema(userSettingsTable)

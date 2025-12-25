@@ -18,7 +18,10 @@ export const tagTable = pgTable(
     status: entityStatusEnum("status").notNull().default("published"),
     isFavorited: boolean("is_favorited").notNull().default(false),
     createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
   },
   (t) => [
     index("tag_status_idx").on(t.status),

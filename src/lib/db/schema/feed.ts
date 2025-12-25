@@ -33,7 +33,10 @@ export const feedTable = pgTable(
     status: entityStatusEnum("status").notNull().default("published"),
     isFavorited: boolean("is_favorited").notNull().default(false),
     createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
   },
   (t) => [
     unique("feed_user_url_unique").on(t.userId, t.url),
