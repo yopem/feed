@@ -1,26 +1,12 @@
-import { TRPCError } from "@trpc/server"
+import { ORPCError } from "@orpc/server"
 import { eq } from "drizzle-orm"
 import z from "zod"
 
-import { handleTRPCError } from "@/lib/api/error"
-import { createTRPCRouter, protectedProcedure } from "@/lib/api/trpc"
+import { handleORPCError } from "@/lib/api/error"
+import { protectedProcedure } from "@/lib/api/orpc"
 import { tagTable, updateTagSchema, type SelectTag } from "@/lib/db/schema"
 
-/**
- * Tag management router for organizing feeds into categories
- */
-export const tagRouter = createTRPCRouter({
-  /**
-   * Create a new tag for organizing feeds
-   *
-   * Creates a new tag that can be assigned to multiple feeds for better organization
-   * and categorization. Tags help users group related feeds together.
-   *
-   * @param input.name - Tag name (required)
-   * @param input.description - Optional tag description
-   * @returns The newly created tag with ID and metadata
-   * @throws TRPCError if creation fails or duplicate tag name exists
-   */
+export const tagRouter = {
   create: protectedProcedure
     .input(
       z.object({
@@ -28,64 +14,53 @@ export const tagRouter = createTRPCRouter({
         description: z.string().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
-        const [tag] = await ctx.db
+        const [tag] = await context.db
           .insert(tagTable)
           .values({
             name: input.name,
             description: input.description,
-            userId: ctx.session.id,
+            userId: context.session.id,
           })
           .returning()
 
-        await ctx.redis.invalidatePattern(`feed:tags:user:${ctx.session.id}`)
+        await context.redis.invalidatePattern(
+          `feed:tags:user:${context.session.id}`,
+        )
 
         return tag
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Update an existing tag's name or description
-   *
-   * Allows modification of tag properties. All associated feeds will reflect
-   * the updated tag information. Invalidates relevant caches to ensure
-   * consistency across the application.
-   *
-   * @param input - Tag ID with updated name and/or description
-   * @returns Updated tag data
-   * @throws TRPCError if tag not found or user lacks permission
-   */
   update: protectedProcedure
     .input(updateTagSchema)
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
         if (!input.id) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
+          throw new ORPCError("BAD_REQUEST", {
             message: "Tag ID is required for update",
           })
         }
 
-        const existingTag = await ctx.db.query.tagTable.findFirst({
+        const existingTag = await context.db.query.tagTable.findFirst({
           where: (tag, { eq, and }) =>
             and(
               eq(tag.id, input.id!),
-              eq(tag.userId, ctx.session.id),
+              eq(tag.userId, context.session.id),
               eq(tag.status, "published"),
             ),
         })
 
         if (!existingTag) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
+          throw new ORPCError("NOT_FOUND", {
             message: "Tag not found.",
           })
         }
 
-        const [tag] = await ctx.db
+        const [tag] = await context.db
           .update(tagTable)
           .set({
             ...input,
@@ -94,171 +69,152 @@ export const tagRouter = createTRPCRouter({
           .where(eq(tagTable.id, input.id))
           .returning()
 
-        await ctx.redis.invalidatePattern(`feed:tags:user:${ctx.session.id}`)
-        await ctx.redis.invalidatePattern(`feed:tag:*:user:${ctx.session.id}`)
-        await ctx.redis.invalidatePattern(`feed:feeds:*:user:${ctx.session.id}`)
-        await ctx.redis.invalidatePattern(`feed:feed:*:user:${ctx.session.id}`)
+        await context.redis.invalidatePattern(
+          `feed:tags:user:${context.session.id}`,
+        )
+        await context.redis.invalidatePattern(
+          `feed:tag:*:user:${context.session.id}`,
+        )
+        await context.redis.invalidatePattern(
+          `feed:feeds:*:user:${context.session.id}`,
+        )
+        await context.redis.invalidatePattern(
+          `feed:feed:*:user:${context.session.id}`,
+        )
 
         return tag
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Soft-deletes a tag by updating its status to 'deleted'
-   *
-   * This operation does not permanently remove the tag from the database.
-   * Instead, it marks the tag as deleted. Deleted tags are filtered from
-   * all queries and will not appear in feed-tag associations.
-   *
-   * @param input - Tag ID to delete
-   * @returns Success status
-   * @throws TRPCError if tag not found or user lacks permission
-   */
   delete: protectedProcedure
     .input(z.string())
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
         const { eq, and } = await import("drizzle-orm")
 
-        const existingTag = await ctx.db.query.tagTable.findFirst({
+        const existingTag = await context.db.query.tagTable.findFirst({
           where: and(
             eq(tagTable.id, input),
-            eq(tagTable.userId, ctx.session.id),
+            eq(tagTable.userId, context.session.id),
             eq(tagTable.status, "published"),
           ),
         })
 
         if (!existingTag) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
+          throw new ORPCError("NOT_FOUND", {
             message: "Tag not found.",
           })
         }
 
-        await ctx.db
+        await context.db
           .update(tagTable)
           .set({ status: "deleted", updatedAt: new Date() })
           .where(eq(tagTable.id, input))
 
-        await ctx.redis.invalidatePattern(`feed:tags:user:${ctx.session.id}`)
-        await ctx.redis.invalidatePattern(`feed:tags:*:user:${ctx.session.id}`)
-        await ctx.redis.invalidatePattern(`feed:tag:*:user:${ctx.session.id}`)
-        await ctx.redis.invalidatePattern(`feed:feeds:*:user:${ctx.session.id}`)
-        await ctx.redis.invalidatePattern(`feed:feed:*:user:${ctx.session.id}`)
+        await context.redis.invalidatePattern(
+          `feed:tags:user:${context.session.id}`,
+        )
+        await context.redis.invalidatePattern(
+          `feed:tags:*:user:${context.session.id}`,
+        )
+        await context.redis.invalidatePattern(
+          `feed:tag:*:user:${context.session.id}`,
+        )
+        await context.redis.invalidatePattern(
+          `feed:feeds:*:user:${context.session.id}`,
+        )
+        await context.redis.invalidatePattern(
+          `feed:feed:*:user:${context.session.id}`,
+        )
 
         return { success: true }
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Toggles the favorited status of a tag
-   *
-   * Allows users to mark or unmark tags as favorited for quick access
-   * and better organization. Favorited status is stored in the database and
-   * persists across sessions.
-   *
-   * @param input - Tag ID and desired favorited state
-   * @returns Updated tag data
-   * @throws TRPCError if tag not found or user lacks permission
-   */
   toggleFavorited: protectedProcedure
     .input(z.object({ id: z.string(), isFavorited: z.boolean() }))
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
         const { eq, and } = await import("drizzle-orm")
 
-        const existingTag = await ctx.db.query.tagTable.findFirst({
+        const existingTag = await context.db.query.tagTable.findFirst({
           where: and(
             eq(tagTable.id, input.id),
-            eq(tagTable.userId, ctx.session.id),
+            eq(tagTable.userId, context.session.id),
             eq(tagTable.status, "published"),
           ),
         })
 
         if (!existingTag) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
+          throw new ORPCError("NOT_FOUND", {
             message: "Tag not found.",
           })
         }
 
-        const [updatedTag] = await ctx.db
+        const [updatedTag] = await context.db
           .update(tagTable)
           .set({ isFavorited: input.isFavorited, updatedAt: new Date() })
           .where(eq(tagTable.id, input.id))
           .returning()
 
-        await ctx.redis.invalidatePattern(`feed:tags:user:${ctx.session.id}`)
-        await ctx.redis.invalidatePattern(`feed:tag:*:user:${ctx.session.id}`)
+        await context.redis.invalidatePattern(
+          `feed:tags:user:${context.session.id}`,
+        )
+        await context.redis.invalidatePattern(
+          `feed:tag:*:user:${context.session.id}`,
+        )
 
         return updatedTag
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Retrieve all tags for the current user
-   *
-   * Fetches all non-deleted tags owned by the authenticated user, ordered by
-   * creation date (newest first). Results are cached for 30 minutes.
-   *
-   * @returns Array of user's tags with full metadata
-   */
-  all: protectedProcedure.query(async ({ ctx }) => {
+  all: protectedProcedure.handler(async ({ context }) => {
     try {
-      const cacheKey = `feed:tags:user:${ctx.session.id}`
-      const cached = await ctx.redis.getCache<SelectTag[]>(cacheKey)
+      const cacheKey = `feed:tags:user:${context.session.id}`
+      const cached = await context.redis.getCache<SelectTag[]>(cacheKey)
       if (cached) {
         return cached
       }
-      const tags = await ctx.db.query.tagTable.findMany({
+      const tags = await context.db.query.tagTable.findMany({
         where: (tag, { eq, and }) =>
-          and(eq(tag.userId, ctx.session.id), eq(tag.status, "published")),
+          and(eq(tag.userId, context.session.id), eq(tag.status, "published")),
         orderBy: (tag, { desc }) => desc(tag.createdAt),
       })
-      await ctx.redis.setCache(cacheKey, tags, 1800)
+      await context.redis.setCache(cacheKey, tags, 1800)
       return tags
     } catch (error) {
-      handleTRPCError(error)
+      handleORPCError(error)
     }
   }),
 
-  /**
-   * Retrieve a specific tag by ID
-   *
-   * Fetches detailed information for a single tag. Results are cached for
-   * 30 minutes. Only returns tags with published status.
-   *
-   * @param input - Tag ID to fetch
-   * @returns Tag data with full metadata
-   * @throws TRPCError if tag not found
-   */
-  byId: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
-    try {
-      const cacheKey = `feed:tag:${input}:user:${ctx.session.id}`
-      const cached = await ctx.redis.getCache<SelectTag>(cacheKey)
-      if (cached) {
-        return cached
-      }
-      const tag = await ctx.db.query.tagTable.findFirst({
-        where: (tag, { eq, and }) =>
-          and(eq(tag.id, input), eq(tag.status, "published")),
-      })
-      if (!tag) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: `Tag with ID ${input} not found`,
+  byId: protectedProcedure
+    .input(z.string())
+    .handler(async ({ context, input }) => {
+      try {
+        const cacheKey = `feed:tag:${input}:user:${context.session.id}`
+        const cached = await context.redis.getCache<SelectTag>(cacheKey)
+        if (cached) {
+          return cached
+        }
+        const tag = await context.db.query.tagTable.findFirst({
+          where: (tag, { eq, and }) =>
+            and(eq(tag.id, input), eq(tag.status, "published")),
         })
+        if (!tag) {
+          throw new ORPCError("NOT_FOUND", {
+            message: `Tag with ID ${input} not found`,
+          })
+        }
+        await context.redis.setCache(cacheKey, tag, 1800)
+        return tag
+      } catch (error) {
+        handleORPCError(error)
       }
-      await ctx.redis.setCache(cacheKey, tag, 1800)
-      return tag
-    } catch (error) {
-      handleTRPCError(error)
-    }
-  }),
-})
+    }),
+}

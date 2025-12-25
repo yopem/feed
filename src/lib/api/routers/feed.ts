@@ -1,9 +1,9 @@
-import { TRPCError, type TRPCRouterRecord } from "@trpc/server"
+import { ORPCError } from "@orpc/server"
 import { eq } from "drizzle-orm"
 import z from "zod"
 
-import { handleTRPCError } from "@/lib/api/error"
-import { protectedProcedure, publicProcedure } from "@/lib/api/trpc"
+import { handleORPCError } from "@/lib/api/error"
+import { protectedProcedure, publicProcedure } from "@/lib/api/orpc"
 import {
   articleTable,
   feedTable,
@@ -23,38 +23,16 @@ import {
 } from "@/lib/utils/scraping"
 import { slugify } from "@/lib/utils/slug"
 
-/**
- * Rate limiter for manual feed refresh operations
- * Allows 1 refresh per 5 minutes (300 seconds) per user
- */
 const refreshAllRateLimiter = createTokenBucket<string>(1, 300)
 
-/**
- * Feed management router providing operations for RSS/Atom feed subscriptions
- * including parsing, refreshing, and tag assignment
- */
 export const feedRouter = {
-  /**
-   * Create a new feed subscription from RSS/Atom or Reddit URL
-   *
-   * Parses the feed, extracts articles, and stores them in the database.
-   * Automatically generates a unique slug for the feed. Supports both RSS/Atom
-   * feeds and Reddit subreddits. Validates feed URL and checks for duplicates.
-   *
-   * @param input - Feed URL (RSS/Atom or Reddit subreddit)
-   * @returns Created feed with metadata
-   * @throws TRPCError if URL is invalid, feed already exists, or parsing fails
-   */
   create: protectedProcedure
-    .input(
-      z.string().url("Please provide a valid URL").min(1, "URL is required"),
-    )
-    .mutation(async ({ ctx, input }) => {
+    .input(z.url().min(1, "URL is required"))
+    .handler(async ({ context, input }) => {
       try {
         const trimmedInput = input.trim()
         if (!trimmedInput) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
+          throw new ORPCError("BAD_REQUEST", {
             message: "Feed URL cannot be empty.",
           })
         }
@@ -70,18 +48,17 @@ export const feedRouter = {
           ? normalizeRedditUrl(trimmedInput)
           : trimmedInput
 
-        const existingFeed = await ctx.db.query.feedTable.findFirst({
+        const existingFeed = await context.db.query.feedTable.findFirst({
           where: (feedTable, { eq, and }) =>
             and(
-              eq(feedTable.userId, ctx.session.id),
+              eq(feedTable.userId, context.session.id),
               eq(feedTable.url, normalizedUrl),
               eq(feedTable.status, "published"),
             ),
         })
 
         if (existingFeed) {
-          throw new TRPCError({
-            code: "CONFLICT",
+          throw new ORPCError("CONFLICT", {
             message: isReddit
               ? "You have already subscribed to this subreddit."
               : "You have already subscribed to this feed.",
@@ -114,10 +91,10 @@ export const feedRouter = {
         let suffix = 1
 
         while (true) {
-          const existingSlug = await ctx.db.query.feedTable.findFirst({
+          const existingSlug = await context.db.query.feedTable.findFirst({
             where: (feedTable, { eq, and }) =>
               and(
-                eq(feedTable.userId, ctx.session.id),
+                eq(feedTable.userId, context.session.id),
                 eq(feedTable.slug, slug),
                 eq(feedTable.status, "published"),
               ),
@@ -128,7 +105,7 @@ export const feedRouter = {
           suffix++
         }
 
-        const [feed] = await ctx.db
+        const [feed] = await context.db
           .insert(feedTable)
           .values({
             title: feedTitle,
@@ -136,7 +113,7 @@ export const feedRouter = {
             url: normalizedUrl,
             slug,
             imageUrl: feedData.imageUrl,
-            userId: ctx.session.id,
+            userId: context.session.id,
             feedType,
           })
           .returning()
@@ -152,7 +129,7 @@ export const feedRouter = {
               imageUrl: article.imageUrl,
               source: article.source,
               pubDate: new Date(article.pubDate),
-              userId: ctx.session.id,
+              userId: context.session.id,
               feedId: feed.id,
               isRead: false,
               isReadLater: false,
@@ -180,10 +157,12 @@ export const feedRouter = {
             }
           })
 
-          await ctx.db.insert(articleTable).values(finalArticles)
+          await context.db.insert(articleTable).values(finalArticles)
         }
 
-        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+        await context.redis.invalidatePattern(
+          `feed:*:user:${context.session.id}`,
+        )
 
         return feed
       } catch (error) {
@@ -194,29 +173,15 @@ export const feedRouter = {
             error.message.includes("timed out") ||
             error.message.includes("fetch")
           ) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
+            throw new ORPCError("BAD_REQUEST", {
               message: error.message,
             })
           }
         }
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Update feed title and/or description
-   *
-   * Allows modification of feed metadata without re-parsing the feed.
-   * Only the title and description can be updated; URL and other properties
-   * remain unchanged. Invalidates feed caches.
-   *
-   * @param input.id - Feed ID to update
-   * @param input.title - New title (optional)
-   * @param input.description - New description (optional)
-   * @returns Updated feed data
-   * @throws TRPCError if feed not found or user lacks permission
-   */
   update: protectedProcedure
     .input(
       z.object({
@@ -225,26 +190,25 @@ export const feedRouter = {
         description: z.string().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
         const { eq, and } = await import("drizzle-orm")
 
-        const existingFeed = await ctx.db.query.feedTable.findFirst({
+        const existingFeed = await context.db.query.feedTable.findFirst({
           where: and(
             eq(feedTable.id, input.id),
-            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.userId, context.session.id),
             eq(feedTable.status, "published"),
           ),
         })
 
         if (!existingFeed) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
+          throw new ORPCError("NOT_FOUND", {
             message: "Feed not found.",
           })
         }
 
-        const [updatedFeed] = await ctx.db
+        const [updatedFeed] = await context.db
           .update(feedTable)
           .set({
             title: input.title ?? existingFeed.title,
@@ -254,124 +218,108 @@ export const feedRouter = {
           .where(eq(feedTable.id, input.id))
           .returning()
 
-        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+        await context.redis.invalidatePattern(
+          `feed:*:user:${context.session.id}`,
+        )
 
         return updatedFeed
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Soft-deletes a feed by updating its status to 'deleted'
-   *
-   * This operation does not permanently remove the feed from the database.
-   * Instead, it marks the feed as deleted and cascades the deletion to all
-   * associated articles. Deleted feeds and articles are filtered from all queries.
-   *
-   * @param input - Feed ID to delete
-   * @returns Success status
-   * @throws TRPCError if feed not found or user lacks permission
-   */
   delete: protectedProcedure
     .input(z.string())
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
         const { eq, and } = await import("drizzle-orm")
 
-        const existingFeed = await ctx.db.query.feedTable.findFirst({
+        const existingFeed = await context.db.query.feedTable.findFirst({
           where: and(
             eq(feedTable.id, input),
-            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.userId, context.session.id),
             eq(feedTable.status, "published"),
           ),
         })
 
         if (!existingFeed) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
+          throw new ORPCError("NOT_FOUND", {
             message: "Feed not found.",
           })
         }
 
-        await ctx.db
+        await context.db
           .update(feedTable)
           .set({ status: "deleted", updatedAt: new Date() })
           .where(eq(feedTable.id, input))
 
-        await ctx.db
+        await context.db
           .update(articleTable)
           .set({ status: "deleted", updatedAt: new Date() })
           .where(eq(articleTable.feedId, input))
 
-        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
-        await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
+        await context.redis.invalidatePattern(
+          `feed:*:user:${context.session.id}`,
+        )
+        await context.redis.invalidatePattern(
+          `article:*:user:${context.session.id}`,
+        )
 
         return { success: true }
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Toggles the favorited status of a feed
-   *
-   * Allows users to mark or unmark feeds as favorited for quick access
-   * and better organization. Favorited status is stored in the database and
-   * persists across sessions.
-   *
-   * @param input - Feed ID and desired favorited state
-   * @returns Updated feed data
-   * @throws TRPCError if feed not found or user lacks permission
-   */
   toggleFavorited: protectedProcedure
     .input(z.object({ id: z.string(), isFavorited: z.boolean() }))
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
         const { eq, and } = await import("drizzle-orm")
 
-        const existingFeed = await ctx.db.query.feedTable.findFirst({
+        const existingFeed = await context.db.query.feedTable.findFirst({
           where: and(
             eq(feedTable.id, input.id),
-            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.userId, context.session.id),
             eq(feedTable.status, "published"),
           ),
         })
 
         if (!existingFeed) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
+          throw new ORPCError("NOT_FOUND", {
             message: "Feed not found.",
           })
         }
 
-        const [updatedFeed] = await ctx.db
+        const [updatedFeed] = await context.db
           .update(feedTable)
           .set({ isFavorited: input.isFavorited, updatedAt: new Date() })
           .where(eq(feedTable.id, input.id))
           .returning()
 
-        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+        await context.redis.invalidatePattern(
+          `feed:*:user:${context.session.id}`,
+        )
 
         return updatedFeed
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
   all: protectedProcedure
     .input(z.object({ page: z.number(), perPage: z.number() }))
-    .query(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
-        const cacheKey = `feed:feeds:page:${input.page}:per:${input.perPage}:user:${ctx.session.id}`
-        const cached = await ctx.redis.getCache<SelectFeed[]>(cacheKey)
+        const cacheKey = `feed:feeds:page:${input.page}:per:${input.perPage}:user:${context.session.id}`
+        const cached = await context.redis.getCache<SelectFeed[]>(cacheKey)
         if (cached) {
           return cached
         }
-        const data = await ctx.db.query.feedTable.findMany({
+        const data = await context.db.query.feedTable.findMany({
           where: (feedTable, { eq, and }) =>
             and(
-              eq(feedTable.userId, ctx.session.id),
+              eq(feedTable.userId, context.session.id),
               eq(feedTable.status, "published"),
             ),
           offset: (input.page - 1) * input.perPage,
@@ -390,96 +338,97 @@ export const feedRouter = {
           tags: feed.tags.filter((ft) => ft.tag.status === "published"),
         }))
         if (filteredData.length === 0) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
+          throw new ORPCError("NOT_FOUND", {
             message: "No feeds found for the user.",
           })
         }
-        await ctx.redis.setCache(cacheKey, filteredData, 1800)
+        await context.redis.setCache(cacheKey, filteredData, 1800)
         return filteredData
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  byId: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
-    try {
-      const cacheKey = `feed:feed:${input}:user:${ctx.session.id}`
-      const cached = await ctx.redis.getCache<SelectFeed>(cacheKey)
-      if (cached) {
-        return cached
-      }
-      const data = await ctx.db.query.feedTable.findFirst({
-        where: (feedTable, { eq, and }) =>
-          and(eq(feedTable.id, input), eq(feedTable.status, "published")),
-        with: {
-          tags: {
-            with: {
-              tag: true,
+  byId: protectedProcedure
+    .input(z.string())
+    .handler(async ({ context, input }) => {
+      try {
+        const cacheKey = `feed:feed:${input}:user:${context.session.id}`
+        const cached = await context.redis.getCache<SelectFeed>(cacheKey)
+        if (cached) {
+          return cached
+        }
+        const data = await context.db.query.feedTable.findFirst({
+          where: (feedTable, { eq, and }) =>
+            and(eq(feedTable.id, input), eq(feedTable.status, "published")),
+          with: {
+            tags: {
+              with: {
+                tag: true,
+              },
             },
           },
-        },
-      })
-      if (!data) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Feed not found.",
         })
+        if (!data) {
+          throw new ORPCError("NOT_FOUND", {
+            message: "Feed not found.",
+          })
+        }
+        const filteredData = {
+          ...data,
+          tags: data.tags.filter((ft) => ft.tag.status === "published"),
+        }
+        await context.redis.setCache(cacheKey, filteredData, 1800)
+        return filteredData
+      } catch (error) {
+        handleORPCError(error)
       }
-      const filteredData = {
-        ...data,
-        tags: data.tags.filter((ft) => ft.tag.status === "published"),
-      }
-      await ctx.redis.setCache(cacheKey, filteredData, 1800)
-      return filteredData
-    } catch (error) {
-      handleTRPCError(error)
-    }
-  }),
+    }),
 
-  bySlug: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
-    try {
-      const cacheKey = `feed:feed:slug:${input}:user:${ctx.session.id}`
-      const cached = await ctx.redis.getCache<SelectFeed>(cacheKey)
-      if (cached) {
-        return cached
-      }
-      const { eq, and } = await import("drizzle-orm")
-      const data = await ctx.db.query.feedTable.findFirst({
-        where: and(
-          eq(feedTable.slug, input),
-          eq(feedTable.userId, ctx.session.id),
-          eq(feedTable.status, "published"),
-        ),
-        with: {
-          tags: {
-            with: {
-              tag: true,
+  bySlug: protectedProcedure
+    .input(z.string())
+    .handler(async ({ context, input }) => {
+      try {
+        const cacheKey = `feed:feed:slug:${input}:user:${context.session.id}`
+        const cached = await context.redis.getCache<SelectFeed>(cacheKey)
+        if (cached) {
+          return cached
+        }
+        const { eq, and } = await import("drizzle-orm")
+        const data = await context.db.query.feedTable.findFirst({
+          where: and(
+            eq(feedTable.slug, input),
+            eq(feedTable.userId, context.session.id),
+            eq(feedTable.status, "published"),
+          ),
+          with: {
+            tags: {
+              with: {
+                tag: true,
+              },
             },
           },
-        },
-      })
-      if (!data) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Feed not found.",
         })
+        if (!data) {
+          throw new ORPCError("NOT_FOUND", {
+            message: "Feed not found.",
+          })
+        }
+        const filteredData = {
+          ...data,
+          tags: data.tags.filter((ft) => ft.tag.status === "published"),
+        }
+        await context.redis.setCache(cacheKey, filteredData, 1800)
+        return filteredData
+      } catch (error) {
+        handleORPCError(error)
       }
-      const filteredData = {
-        ...data,
-        tags: data.tags.filter((ft) => ft.tag.status === "published"),
-      }
-      await ctx.redis.setCache(cacheKey, filteredData, 1800)
-      return filteredData
-    } catch (error) {
-      handleTRPCError(error)
-    }
-  }),
+    }),
 
-  statistics: protectedProcedure.query(async ({ ctx }) => {
+  statistics: protectedProcedure.handler(async ({ context }) => {
     try {
-      const cacheKey = `feed:statistics:user:${ctx.session.id}`
-      const cached = await ctx.redis.getCache<
+      const cacheKey = `feed:statistics:user:${context.session.id}`
+      const cached = await context.redis.getCache<
         {
           feedId: string
           totalCount: number
@@ -510,16 +459,16 @@ export const feedRouter = {
         .from(articleTable)
         .where(
           and(
-            eq(articleTable.userId, ctx.session.id),
+            eq(articleTable.userId, context.session.id),
             eq(articleTable.status, "published"),
           ),
         )
         .groupBy(articleTable.feedId)
 
-      await ctx.redis.setCache(cacheKey, stats, 1800)
+      await context.redis.setCache(cacheKey, stats, 1800)
       return stats
     } catch (error) {
-      handleTRPCError(error)
+      handleORPCError(error)
     }
   }),
 
@@ -530,42 +479,40 @@ export const feedRouter = {
         tagIds: z.array(z.string()),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
         const { eq, and, inArray } = await import("drizzle-orm")
 
-        const existingFeed = await ctx.db.query.feedTable.findFirst({
+        const existingFeed = await context.db.query.feedTable.findFirst({
           where: and(
             eq(feedTable.id, input.feedId),
-            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.userId, context.session.id),
             eq(feedTable.status, "published"),
           ),
         })
 
         if (!existingFeed) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
+          throw new ORPCError("NOT_FOUND", {
             message: "Feed not found.",
           })
         }
 
         if (input.tagIds.length > 0) {
-          const tags = await ctx.db.query.tagTable.findMany({
+          const tags = await context.db.query.tagTable.findMany({
             where: and(
               inArray(tagTable.id, input.tagIds),
-              eq(tagTable.userId, ctx.session.id),
+              eq(tagTable.userId, context.session.id),
               eq(tagTable.status, "published"),
             ),
           })
 
           if (tags.length !== input.tagIds.length) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
+            throw new ORPCError("NOT_FOUND", {
               message: "One or more tags not found.",
             })
           }
 
-          await ctx.db
+          await context.db
             .delete(feedTagsTable)
             .where(eq(feedTagsTable.feedId, input.feedId))
 
@@ -573,18 +520,20 @@ export const feedRouter = {
             feedId: input.feedId,
             tagId,
           }))
-          await ctx.db.insert(feedTagsTable).values(tagAssignments)
+          await context.db.insert(feedTagsTable).values(tagAssignments)
         } else {
-          await ctx.db
+          await context.db
             .delete(feedTagsTable)
             .where(eq(feedTagsTable.feedId, input.feedId))
         }
 
-        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+        await context.redis.invalidatePattern(
+          `feed:*:user:${context.session.id}`,
+        )
 
         return { success: true }
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
@@ -595,26 +544,25 @@ export const feedRouter = {
         tagId: z.string(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
         const { eq, and } = await import("drizzle-orm")
 
-        const existingFeed = await ctx.db.query.feedTable.findFirst({
+        const existingFeed = await context.db.query.feedTable.findFirst({
           where: and(
             eq(feedTable.id, input.feedId),
-            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.userId, context.session.id),
             eq(feedTable.status, "published"),
           ),
         })
 
         if (!existingFeed) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
+          throw new ORPCError("NOT_FOUND", {
             message: "Feed not found.",
           })
         }
 
-        await ctx.db
+        await context.db
           .delete(feedTagsTable)
           .where(
             and(
@@ -623,31 +571,32 @@ export const feedRouter = {
             ),
           )
 
-        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+        await context.redis.invalidatePattern(
+          `feed:*:user:${context.session.id}`,
+        )
 
         return { success: true }
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
   refresh: protectedProcedure
     .input(z.string())
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
         const { eq, and } = await import("drizzle-orm")
 
-        const existingFeed = await ctx.db.query.feedTable.findFirst({
+        const existingFeed = await context.db.query.feedTable.findFirst({
           where: and(
             eq(feedTable.id, input),
-            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.userId, context.session.id),
             eq(feedTable.status, "published"),
           ),
         })
 
         if (!existingFeed) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
+          throw new ORPCError("NOT_FOUND", {
             message: "Feed not found.",
           })
         }
@@ -657,7 +606,7 @@ export const feedRouter = {
           existingFeed.feedType,
         )
 
-        await ctx.db
+        await context.db
           .update(feedTable)
           .set({
             lastRefreshedAt: new Date(),
@@ -669,7 +618,7 @@ export const feedRouter = {
           return { newArticles: 0 }
         }
 
-        const existingArticles = await ctx.db.query.articleTable.findMany({
+        const existingArticles = await context.db.query.articleTable.findMany({
           where: (articleTable, { eq, and }) =>
             and(
               eq(articleTable.feedId, input),
@@ -696,7 +645,9 @@ export const feedRouter = {
         })
 
         if (newArticles.length === 0) {
-          await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
+          await context.redis.invalidatePattern(
+            `feed:*:user:${context.session.id}`,
+          )
           return { newArticles: 0 }
         }
 
@@ -711,7 +662,7 @@ export const feedRouter = {
             imageUrl: article.imageUrl,
             source: article.source,
             pubDate: new Date(article.pubDate),
-            userId: ctx.session.id,
+            userId: context.session.id,
             feedId: input,
             isRead: false,
             isReadLater: false,
@@ -739,50 +690,43 @@ export const feedRouter = {
           }
         })
 
-        await ctx.db.insert(articleTable).values(finalArticles)
+        await context.db.insert(articleTable).values(finalArticles)
 
-        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
-        await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
-        await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
+        await context.redis.invalidatePattern(
+          `feed:*:user:${context.session.id}`,
+        )
+        await context.redis.invalidatePattern(
+          `article:*:user:${context.session.id}`,
+        )
+        await context.redis.deleteCache(
+          `feed:statistics:user:${context.session.id}`,
+        )
 
         return { newArticles: newArticles.length }
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Enable bulk sharing for all articles in a feed
-   *
-   * Sets isBulkShared flag on the feed, which makes all articles
-   * in that feed publicly accessible via their share slugs. Generates
-   * share slugs for articles that don't have them yet.
-   *
-   * @param feedId - Feed ID
-   * @param expiresAt - Optional expiration date for bulk sharing
-   * @returns Success status and count of articles enabled for sharing
-   */
-  refreshAll: protectedProcedure.mutation(async ({ ctx }) => {
+  refreshAll: protectedProcedure.handler(async ({ context }) => {
     try {
-      if (!refreshAllRateLimiter.consume(ctx.session.id, 1)) {
-        throw new TRPCError({
-          code: "TOO_MANY_REQUESTS",
+      if (!refreshAllRateLimiter.consume(context.session.id, 1)) {
+        throw new ORPCError("TOO_MANY_REQUESTS", {
           message:
             "Rate limit exceeded. Please wait 5 minutes before refreshing all feeds again.",
         })
       }
 
-      const feeds = await ctx.db.query.feedTable.findMany({
+      const feeds = await context.db.query.feedTable.findMany({
         where: (feedTable, { eq, and }) =>
           and(
-            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.userId, context.session.id),
             eq(feedTable.status, "published"),
           ),
       })
 
       if (feeds.length === 0) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
+        throw new ORPCError("NOT_FOUND", {
           message: "No feeds found to refresh.",
         })
       }
@@ -795,7 +739,7 @@ export const feedRouter = {
         try {
           const feedData = await parseFeed(feed.url, feed.feedType)
 
-          await ctx.db
+          await context.db
             .update(feedTable)
             .set({
               lastRefreshedAt: new Date(),
@@ -804,17 +748,18 @@ export const feedRouter = {
             .where(eq(feedTable.id, feed.id))
 
           if (feedData.articles.length > 0) {
-            const existingArticles = await ctx.db.query.articleTable.findMany({
-              where: (articleTable, { eq, and }) =>
-                and(
-                  eq(articleTable.feedId, feed.id),
-                  eq(articleTable.status, "published"),
-                ),
-              columns: {
-                link: true,
-                redditPostId: true,
-              },
-            })
+            const existingArticles =
+              await context.db.query.articleTable.findMany({
+                where: (articleTable, { eq, and }) =>
+                  and(
+                    eq(articleTable.feedId, feed.id),
+                    eq(articleTable.status, "published"),
+                  ),
+                columns: {
+                  link: true,
+                  redditPostId: true,
+                },
+              })
 
             const existingLinks = new Set(existingArticles.map((a) => a.link))
             const existingRedditPostIds = new Set(
@@ -842,7 +787,7 @@ export const feedRouter = {
                   imageUrl: article.imageUrl,
                   source: article.source,
                   pubDate: new Date(article.pubDate),
-                  userId: ctx.session.id,
+                  userId: context.session.id,
                   feedId: feed.id,
                   isRead: false,
                   isReadLater: false,
@@ -870,7 +815,7 @@ export const feedRouter = {
                 }
               })
 
-              await ctx.db.insert(articleTable).values(finalArticles)
+              await context.db.insert(articleTable).values(finalArticles)
               totalNewArticles += newArticles.length
             }
           }
@@ -882,9 +827,13 @@ export const feedRouter = {
         }
       }
 
-      await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
-      await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
-      await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
+      await context.redis.invalidatePattern(`feed:*:user:${context.session.id}`)
+      await context.redis.invalidatePattern(
+        `article:*:user:${context.session.id}`,
+      )
+      await context.redis.deleteCache(
+        `feed:statistics:user:${context.session.id}`,
+      )
 
       return {
         totalFeeds: feeds.length,
@@ -893,23 +842,14 @@ export const feedRouter = {
         newArticles: totalNewArticles,
       }
     } catch (error) {
-      handleTRPCError(error)
+      handleORPCError(error)
     }
   }),
 
-  /**
-   * Auto-refresh stale feeds on user login
-   *
-   * Automatically refreshes feeds that are older than the user's configured refresh interval.
-   * This procedure is designed for silent background refresh on login and bypasses rate limiting.
-   * Only refreshes feeds that actually need updating based on lastRefreshedAt timestamp.
-   *
-   * @returns Summary with totalFeeds, refreshedFeeds, failedFeeds, and newArticles counts
-   */
-  autoRefresh: protectedProcedure.mutation(async ({ ctx }) => {
+  autoRefresh: protectedProcedure.handler(async ({ context }) => {
     try {
-      const userSettings = await ctx.db.query.userSettingsTable.findFirst({
-        where: eq(userSettingsTable.userId, ctx.session.id),
+      const userSettings = await context.db.query.userSettingsTable.findFirst({
+        where: eq(userSettingsTable.userId, context.session.id),
       })
 
       if (!userSettings?.autoRefreshEnabled) {
@@ -924,10 +864,10 @@ export const feedRouter = {
       const now = new Date()
       const intervalMs = userSettings.refreshIntervalHours * 60 * 60 * 1000
 
-      const feeds = await ctx.db.query.feedTable.findMany({
+      const feeds = await context.db.query.feedTable.findMany({
         where: (feedTable, { eq, and }) =>
           and(
-            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.userId, context.session.id),
             eq(feedTable.status, "published"),
           ),
       })
@@ -965,7 +905,7 @@ export const feedRouter = {
         try {
           const feedData = await parseFeed(feed.url, feed.feedType)
 
-          await ctx.db
+          await context.db
             .update(feedTable)
             .set({
               lastRefreshedAt: new Date(),
@@ -974,17 +914,18 @@ export const feedRouter = {
             .where(eq(feedTable.id, feed.id))
 
           if (feedData.articles.length > 0) {
-            const existingArticles = await ctx.db.query.articleTable.findMany({
-              where: (articleTable, { eq, and }) =>
-                and(
-                  eq(articleTable.feedId, feed.id),
-                  eq(articleTable.status, "published"),
-                ),
-              columns: {
-                link: true,
-                redditPostId: true,
-              },
-            })
+            const existingArticles =
+              await context.db.query.articleTable.findMany({
+                where: (articleTable, { eq, and }) =>
+                  and(
+                    eq(articleTable.feedId, feed.id),
+                    eq(articleTable.status, "published"),
+                  ),
+                columns: {
+                  link: true,
+                  redditPostId: true,
+                },
+              })
 
             const existingLinks = new Set(existingArticles.map((a) => a.link))
             const existingRedditPostIds = new Set(
@@ -1012,7 +953,7 @@ export const feedRouter = {
                   imageUrl: article.imageUrl,
                   source: article.source,
                   pubDate: new Date(article.pubDate),
-                  userId: ctx.session.id,
+                  userId: context.session.id,
                   feedId: feed.id,
                   isRead: false,
                   isReadLater: false,
@@ -1040,7 +981,7 @@ export const feedRouter = {
                 }
               })
 
-              await ctx.db.insert(articleTable).values(finalArticles)
+              await context.db.insert(articleTable).values(finalArticles)
               totalNewArticles += newArticles.length
             }
           }
@@ -1053,9 +994,15 @@ export const feedRouter = {
       }
 
       if (refreshedCount > 0 || failedCount > 0) {
-        await ctx.redis.invalidatePattern(`feed:*:user:${ctx.session.id}`)
-        await ctx.redis.invalidatePattern(`article:*:user:${ctx.session.id}`)
-        await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
+        await context.redis.invalidatePattern(
+          `feed:*:user:${context.session.id}`,
+        )
+        await context.redis.invalidatePattern(
+          `article:*:user:${context.session.id}`,
+        )
+        await context.redis.deleteCache(
+          `feed:statistics:user:${context.session.id}`,
+        )
       }
 
       return {
@@ -1065,48 +1012,34 @@ export const feedRouter = {
         newArticles: totalNewArticles,
       }
     } catch (error) {
-      handleTRPCError(error)
+      handleORPCError(error)
     }
   }),
 
-  /**
-   * Cron-triggered feed refresh for all users with auto-refresh enabled
-   *
-   * This procedure is intended to be called by external cron services (e.g., GitHub Actions).
-   * It requires a CRON_SECRET to be provided for authentication. Respects user settings
-   * for auto-refresh enablement and refresh interval.
-   *
-   * @param secret - Authentication secret for cron job
-   * @returns Summary with totalUsers, refreshedUsers, totalFeeds, and newArticles counts
-   * @throws TRPCError if secret is invalid or not configured
-   */
   refreshAllCron: publicProcedure
     .input(
       z.object({
         secret: z.string(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
         if (!cronSecret) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
             message: "CRON_SECRET not configured on server.",
           })
         }
 
         if (input.secret !== cronSecret) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
+          throw new ORPCError("UNAUTHORIZED", {
             message: "Invalid CRON_SECRET.",
           })
         }
 
-        const usersWithSettings = await ctx.db.query.userSettingsTable.findMany(
-          {
+        const usersWithSettings =
+          await context.db.query.userSettingsTable.findMany({
             where: eq(userSettingsTable.autoRefreshEnabled, true),
-          },
-        )
+          })
 
         if (usersWithSettings.length === 0) {
           return {
@@ -1125,7 +1058,7 @@ export const feedRouter = {
           const now = new Date()
           const intervalMs = userSettings.refreshIntervalHours * 60 * 60 * 1000
 
-          const feeds = await ctx.db.query.feedTable.findMany({
+          const feeds = await context.db.query.feedTable.findMany({
             where: (feedTable, { eq, and }) =>
               and(
                 eq(feedTable.userId, userSettings.userId),
@@ -1154,7 +1087,7 @@ export const feedRouter = {
             try {
               const feedData = await parseFeed(feed.url, feed.feedType)
 
-              await ctx.db
+              await context.db
                 .update(feedTable)
                 .set({
                   lastRefreshedAt: new Date(),
@@ -1164,7 +1097,7 @@ export const feedRouter = {
 
               if (feedData.articles.length > 0) {
                 const existingArticles =
-                  await ctx.db.query.articleTable.findMany({
+                  await context.db.query.articleTable.findMany({
                     where: (articleTable, { eq, and }) =>
                       and(
                         eq(articleTable.feedId, feed.id),
@@ -1232,7 +1165,7 @@ export const feedRouter = {
                     }
                   })
 
-                  await ctx.db.insert(articleTable).values(finalArticles)
+                  await context.db.insert(articleTable).values(finalArticles)
                   userNewArticles += newArticles.length
                 }
               }
@@ -1244,13 +1177,13 @@ export const feedRouter = {
           }
 
           if (userNewArticles > 0) {
-            await ctx.redis.invalidatePattern(
+            await context.redis.invalidatePattern(
               `feed:*:user:${userSettings.userId}`,
             )
-            await ctx.redis.invalidatePattern(
+            await context.redis.invalidatePattern(
               `article:*:user:${userSettings.userId}`,
             )
-            await ctx.redis.deleteCache(
+            await context.redis.deleteCache(
               `feed:statistics:user:${userSettings.userId}`,
             )
           }
@@ -1266,7 +1199,7 @@ export const feedRouter = {
           newArticles: totalNewArticles,
         }
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
-} satisfies TRPCRouterRecord
+}

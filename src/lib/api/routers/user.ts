@@ -1,39 +1,39 @@
 import { and, eq, lt } from "drizzle-orm"
 import z from "zod"
 
-import { handleTRPCError } from "@/lib/api/error"
-import { createTRPCRouter, protectedProcedure } from "@/lib/api/trpc"
+import { handleORPCError } from "@/lib/api/error"
+import { protectedProcedure } from "@/lib/api/orpc"
 import { articleTable, userSettingsTable } from "@/lib/db/schema"
 
-export const userRouter = createTRPCRouter({
-  getCurrentUser: protectedProcedure.query(({ ctx }) => {
+export const userRouter = {
+  getCurrentUser: protectedProcedure.handler(({ context }) => {
     return {
-      id: ctx.session.id,
-      email: ctx.session.email,
-      name: ctx.session.name,
-      username: ctx.session.username,
-      image: ctx.session.image,
-      role: ctx.session.role,
+      id: context.session.id,
+      email: context.session.email,
+      name: context.session.name,
+      username: context.session.username,
+      image: context.session.image,
+      role: context.session.role,
     }
   }),
 
-  getSettings: protectedProcedure.query(async ({ ctx }) => {
+  getSettings: protectedProcedure.handler(async ({ context }) => {
     try {
-      const cacheKey = `user:settings:${ctx.session.id}`
-      const cached = await ctx.redis.getCache(cacheKey)
+      const cacheKey = `user:settings:${context.session.id}`
+      const cached = await context.redis.getCache(cacheKey)
       if (cached) {
         return cached
       }
 
-      let settings = await ctx.db.query.userSettingsTable.findFirst({
-        where: eq(userSettingsTable.userId, ctx.session.id),
+      let settings = await context.db.query.userSettingsTable.findFirst({
+        where: eq(userSettingsTable.userId, context.session.id),
       })
 
       if (!settings) {
-        const [newSettings] = await ctx.db
+        const [newSettings] = await context.db
           .insert(userSettingsTable)
           .values({
-            userId: ctx.session.id,
+            userId: context.session.id,
             autoRefreshEnabled: true,
             refreshIntervalHours: 24,
             articleRetentionDays: 30,
@@ -43,10 +43,10 @@ export const userRouter = createTRPCRouter({
         settings = newSettings
       }
 
-      await ctx.redis.setCache(cacheKey, settings, 3600)
+      await context.redis.setCache(cacheKey, settings, 3600)
       return settings
     } catch (error) {
-      handleTRPCError(error)
+      handleORPCError(error)
     }
   }),
 
@@ -59,19 +59,18 @@ export const userRouter = createTRPCRouter({
         showFilterCountBadges: z.boolean().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
-        const existingSettings = await ctx.db.query.userSettingsTable.findFirst(
-          {
-            where: eq(userSettingsTable.userId, ctx.session.id),
-          },
-        )
+        const existingSettings =
+          await context.db.query.userSettingsTable.findFirst({
+            where: eq(userSettingsTable.userId, context.session.id),
+          })
 
         if (!existingSettings) {
-          const [newSettings] = await ctx.db
+          const [newSettings] = await context.db
             .insert(userSettingsTable)
             .values({
-              userId: ctx.session.id,
+              userId: context.session.id,
               autoRefreshEnabled: input.autoRefreshEnabled ?? true,
               refreshIntervalHours: input.refreshIntervalHours ?? 24,
               articleRetentionDays: input.articleRetentionDays ?? 30,
@@ -79,11 +78,11 @@ export const userRouter = createTRPCRouter({
             })
             .returning()
 
-          await ctx.redis.deleteCache(`user:settings:${ctx.session.id}`)
+          await context.redis.deleteCache(`user:settings:${context.session.id}`)
           return newSettings
         }
 
-        const [updatedSettings] = await ctx.db
+        const [updatedSettings] = await context.db
           .update(userSettingsTable)
           .set({
             autoRefreshEnabled:
@@ -99,20 +98,20 @@ export const userRouter = createTRPCRouter({
               existingSettings.showFilterCountBadges,
             updatedAt: new Date(),
           })
-          .where(eq(userSettingsTable.userId, ctx.session.id))
+          .where(eq(userSettingsTable.userId, context.session.id))
           .returning()
 
-        await ctx.redis.deleteCache(`user:settings:${ctx.session.id}`)
+        await context.redis.deleteCache(`user:settings:${context.session.id}`)
         return updatedSettings
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  expireMyArticles: protectedProcedure.mutation(async ({ ctx }) => {
+  expireMyArticles: protectedProcedure.handler(async ({ context }) => {
     try {
-      const settings = await ctx.db.query.userSettingsTable.findFirst({
-        where: eq(userSettingsTable.userId, ctx.session.id),
+      const settings = await context.db.query.userSettingsTable.findFirst({
+        where: eq(userSettingsTable.userId, context.session.id),
       })
 
       if (!settings) {
@@ -128,7 +127,7 @@ export const userRouter = createTRPCRouter({
       const expirationDate = new Date(now)
       expirationDate.setDate(expirationDate.getDate() - retentionDays)
 
-      const expiredArticles = await ctx.db
+      const expiredArticles = await context.db
         .update(articleTable)
         .set({
           status: "expired",
@@ -136,7 +135,7 @@ export const userRouter = createTRPCRouter({
         })
         .where(
           and(
-            eq(articleTable.userId, ctx.session.id),
+            eq(articleTable.userId, context.session.id),
             eq(articleTable.status, "published"),
             lt(articleTable.createdAt, expirationDate),
           ),
@@ -149,7 +148,7 @@ export const userRouter = createTRPCRouter({
         retentionDays,
       }
     } catch (error) {
-      handleTRPCError(error)
+      handleORPCError(error)
     }
   }),
-})
+}
