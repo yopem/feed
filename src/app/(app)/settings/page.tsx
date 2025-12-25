@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/toast"
 import { updateUserSettingsSchema } from "@/lib/db/schema"
 import type { SelectUserSettings } from "@/lib/db/schema/user-settings"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 
 /**
  * Settings Page - User preferences organized by category
@@ -43,12 +43,11 @@ const formSchema = updateUserSettingsSchema.pick({
 type FormData = z.infer<typeof formSchema>
 
 function SettingsContent() {
-  const trpc = useTRPC()
   const queryClient = useQueryClient()
   const [section] = useQueryState("section", parseAsString.withDefault("feed"))
 
   const { data: settings, isLoading } = useQuery(
-    trpc.user.getSettings.queryOptions(),
+    queryApi.user.getSettings.queryOptions(),
   ) as { data: SelectUserSettings | undefined; isLoading: boolean }
 
   const form = useForm({
@@ -72,9 +71,11 @@ function SettingsContent() {
   })
 
   const updateSettings = useMutation(
-    trpc.user.updateSettings.mutationOptions({
+    queryApi.user.updateSettings.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.user.pathFilter())
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.user.key(),
+        })
         toast.success("Settings saved successfully")
       },
       onError: (err: { message: string }) => {
@@ -84,9 +85,20 @@ function SettingsContent() {
   )
 
   const expireArticles = useMutation(
-    trpc.user.expireMyArticles.mutationOptions({
-      onSuccess: async (data) => {
-        await queryClient.invalidateQueries(trpc.article.pathFilter())
+    queryApi.user.expireMyArticles.mutationOptions({
+      onSuccess: async (
+        data:
+          | {
+              success: boolean
+              articlesExpired: number
+              retentionDays?: number
+              message?: string
+            }
+          | undefined,
+      ) => {
+        await queryClient.invalidateQueries({
+          queryKey: queryApi.article.key(),
+        })
         if (data?.articlesExpired === 0) {
           toast.info("No old articles to delete")
         } else {
@@ -331,7 +343,7 @@ function SettingsContent() {
                               type="button"
                               variant="secondary"
                               size="sm"
-                              onClick={() => expireArticles.mutate()}
+                              onClick={() => expireArticles.mutate(undefined)}
                               disabled={expireArticles.isPending}
                             >
                               {expireArticles.isPending

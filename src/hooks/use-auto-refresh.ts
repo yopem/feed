@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 
 import type { SelectUserSettings } from "@/lib/db/schema/user-settings"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 
 /**
  * Automatically refreshes stale feeds on component mount
@@ -17,13 +17,13 @@ import { useTRPC } from "@/lib/trpc/client"
  * - Bypasses rate limiting (uses autoRefresh instead of refreshAll)
  */
 export function useAutoRefresh() {
-  const trpc = useTRPC()
-
-  const { data: settings } = useQuery(trpc.user.getSettings.queryOptions()) as {
+  const { data: settings } = useQuery(
+    queryApi.user.getSettings.queryOptions(),
+  ) as {
     data: SelectUserSettings | undefined
   }
 
-  const autoRefresh = useMutation(trpc.feed.autoRefresh.mutationOptions())
+  const autoRefresh = useMutation(queryApi.feed.autoRefresh.mutationOptions())
 
   useEffect(() => {
     if (!settings?.autoRefreshEnabled) return

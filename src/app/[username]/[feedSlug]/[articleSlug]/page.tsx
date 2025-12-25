@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
 import { unstable_noStore as noStore } from "next/cache"
-import { cookies } from "next/headers"
 import Image from "next/image"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import dayjs from "dayjs"
+import { and, eq } from "drizzle-orm"
 import { ChevronLeftIcon } from "lucide-react"
 
 import { ArticleActions } from "@/components/article/article-actions"
@@ -18,9 +18,9 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { appRouter } from "@/lib/api/root"
-import { createTRPCContext } from "@/lib/api/trpc"
 import { auth } from "@/lib/auth/session"
+import { db } from "@/lib/db"
+import { articleTable, feedTable } from "@/lib/db/schema"
 import { sanitizeHtml, stripHtml } from "@/lib/utils/html"
 
 interface PageProps {
@@ -51,16 +51,37 @@ export async function generateMetadata({
   }
 
   try {
-    const cookieStore = await cookies()
-    const ctx = await createTRPCContext({
-      headers: new Headers(),
-      cookies: cookieStore,
+    // Find the feed first
+    const feed = await db.query.feedTable.findFirst({
+      where: and(
+        eq(feedTable.slug, feedSlug),
+        eq(feedTable.userId, session.id),
+        eq(feedTable.status, "published"),
+      ),
     })
-    const caller = appRouter.createCaller(ctx)
 
-    const article = await caller.article.byFeedAndArticleSlug({
-      feedSlug,
-      articleSlug,
+    if (!feed) {
+      return {
+        title: "Article Not Found",
+      }
+    }
+
+    // Find the article
+    const article = await db.query.articleTable.findFirst({
+      where: and(
+        eq(articleTable.slug, articleSlug),
+        eq(articleTable.feedId, feed.id),
+        eq(articleTable.status, "published"),
+      ),
+      with: {
+        feed: {
+          columns: {
+            title: true,
+            slug: true,
+            imageUrl: true,
+          },
+        },
+      },
     })
 
     if (!article) {
@@ -118,23 +139,40 @@ export default async function ArticlePage({ params }: PageProps) {
     redirect("/")
   }
 
-  const cookieStore = await cookies()
-  const ctx = await createTRPCContext({
-    headers: new Headers(),
-    cookies: cookieStore,
+  // Find the feed first
+  const feed = await db.query.feedTable.findFirst({
+    where: and(
+      eq(feedTable.slug, feedSlug),
+      eq(feedTable.userId, session.id),
+      eq(feedTable.status, "published"),
+    ),
   })
-  const caller = appRouter.createCaller(ctx)
 
-  const article = await caller.article.byFeedAndArticleSlug({
-    feedSlug,
-    articleSlug,
+  if (!feed) {
+    redirect("/")
+  }
+
+  // Find the article
+  const article = await db.query.articleTable.findFirst({
+    where: and(
+      eq(articleTable.slug, articleSlug),
+      eq(articleTable.feedId, feed.id),
+      eq(articleTable.status, "published"),
+    ),
+    with: {
+      feed: {
+        columns: {
+          title: true,
+          slug: true,
+          imageUrl: true,
+        },
+      },
+    },
   })
 
   if (!article) {
     redirect("/")
   }
-
-  const feed = article.feed
 
   return (
     <div className="flex min-h-screen flex-col">

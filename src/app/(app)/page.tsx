@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/sidebar"
 import { useAutoRefresh } from "@/hooks/use-auto-refresh"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { useTRPC } from "@/lib/trpc/client"
+import { queryApi } from "@/lib/orpc/query"
 
 function DashboardContent() {
   useAutoRefresh()
@@ -44,7 +44,6 @@ function DashboardContent() {
     parseAsString,
   )
 
-  const trpc = useTRPC()
   const isMobile = useIsMobile()
   const isReaderOpen = useMemo(
     () => Boolean(selectedArticleId),
@@ -52,13 +51,15 @@ function DashboardContent() {
   )
 
   const { data: feeds } = useQuery(
-    trpc.feed.all.queryOptions({
-      page: 1,
-      perPage: 100,
+    queryApi.feed.all.queryOptions({
+      input: {
+        page: 1,
+        perPage: 100,
+      },
     }),
   )
 
-  const { data: tags } = useQuery(trpc.tag.all.queryOptions())
+  const { data: tags } = useQuery(queryApi.tag.all.queryOptions())
 
   const selectedFeed = feedSlug ? feeds?.find((f) => f.slug === feedSlug) : null
 
