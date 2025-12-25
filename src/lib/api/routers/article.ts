@@ -1,9 +1,9 @@
-import { TRPCError } from "@trpc/server"
+import { ORPCError } from "@orpc/server"
 import { and, count, desc, eq, gte, ilike, lt, or } from "drizzle-orm"
 import z from "zod"
 
-import { handleTRPCError } from "@/lib/api/error"
-import { createTRPCRouter, protectedProcedure } from "@/lib/api/trpc"
+import { handleORPCError } from "@/lib/api/error"
+import { protectedProcedure } from "@/lib/api/orpc"
 import {
   articleTable,
   feedTable,
@@ -15,35 +15,20 @@ type ArticleWithFeed = SelectArticle & {
   feed: Pick<SelectFeed, "title" | "slug" | "imageUrl">
 }
 
-/**
- * Article management router providing CRUD operations and filtering
- * for articles with caching support via Redis
- */
-export const articleRouter = createTRPCRouter({
-  /**
-   * Retrieve paginated list of all published articles for the current user
-   *
-   * Fetches articles ordered by creation date with Redis caching (30 minutes).
-   * Only returns articles with published status.
-   *
-   * @param input.page - Page number (1-indexed)
-   * @param input.perPage - Number of articles per page
-   * @returns Array of articles with feed information
-   * @throws TRPCError if no articles found
-   */
+export const articleRouter = {
   all: protectedProcedure
     .input(z.object({ page: z.number(), perPage: z.number() }))
-    .query(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
-        const cacheKey = `feed:articles:page:${input.page}:per:${input.perPage}:user:${ctx.session.id}`
-        const cached = await ctx.redis.getCache<SelectArticle[]>(cacheKey)
+        const cacheKey = `feed:articles:page:${input.page}:per:${input.perPage}:user:${context.session.id}`
+        const cached = await context.redis.getCache<SelectArticle[]>(cacheKey)
         if (cached) {
           return cached
         }
-        const data = await ctx.db.query.articleTable.findMany({
+        const data = await context.db.query.articleTable.findMany({
           where: (articleTable, { eq, and }) =>
             and(
-              eq(articleTable.userId, ctx.session.id),
+              eq(articleTable.userId, context.session.id),
               eq(articleTable.status, "published"),
             ),
           offset: (input.page - 1) * input.perPage,
@@ -60,72 +45,54 @@ export const articleRouter = createTRPCRouter({
           },
         })
         if (data.length === 0) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
+          throw new ORPCError("NOT_FOUND", {
             message: "No articles found for the user.",
           })
         }
-        await ctx.redis.setCache(cacheKey, data, 1800)
+        await context.redis.setCache(cacheKey, data, 1800)
         return data
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Retrieve a specific article by ID
-   *
-   * Fetches detailed article information including associated feed data.
-   * Results are cached for 30 minutes. Only returns published articles.
-   *
-   * @param input - Article ID to fetch
-   * @returns Article data with feed information
-   * @throws TRPCError if article not found
-   */
-  byId: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
-    try {
-      const cacheKey = `feed:article:${input}:user:${ctx.session.id}`
-      const cached = await ctx.redis.getCache<ArticleWithFeed>(cacheKey)
-      if (cached) {
-        return cached
-      }
-      const data = await ctx.db.query.articleTable.findFirst({
-        where: (articleTable, { eq, and }) =>
-          and(eq(articleTable.id, input), eq(articleTable.status, "published")),
-        with: {
-          feed: {
-            columns: {
-              title: true,
-              slug: true,
-              imageUrl: true,
+  byId: protectedProcedure
+    .input(z.string())
+    .handler(async ({ context, input }) => {
+      try {
+        const cacheKey = `feed:article:${input}:user:${context.session.id}`
+        const cached = await context.redis.getCache<ArticleWithFeed>(cacheKey)
+        if (cached) {
+          return cached
+        }
+        const data = await context.db.query.articleTable.findFirst({
+          where: (articleTable, { eq, and }) =>
+            and(
+              eq(articleTable.id, input),
+              eq(articleTable.status, "published"),
+            ),
+          with: {
+            feed: {
+              columns: {
+                title: true,
+                slug: true,
+                imageUrl: true,
+              },
             },
           },
-        },
-      })
-      if (!data) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Article not found.",
         })
+        if (!data) {
+          throw new ORPCError("NOT_FOUND", {
+            message: "Article not found.",
+          })
+        }
+        await context.redis.setCache(cacheKey, data, 1800)
+        return data
+      } catch (error) {
+        handleORPCError(error)
       }
-      await ctx.redis.setCache(cacheKey, data, 1800)
-      return data
-    } catch (error) {
-      handleTRPCError(error)
-    }
-  }),
+    }),
 
-  /**
-   * Retrieve an article by feed slug and article slug
-   *
-   * Finds an article using human-readable slugs for both feed and article.
-   * Useful for URL-based article access. Results are cached for 30 minutes.
-   *
-   * @param input.feedSlug - Feed's URL-friendly identifier
-   * @param input.articleSlug - Article's URL-friendly identifier
-   * @returns Article data with feed information
-   * @throws TRPCError if feed or article not found
-   */
   byFeedAndArticleSlug: protectedProcedure
     .input(
       z.object({
@@ -133,30 +100,29 @@ export const articleRouter = createTRPCRouter({
         articleSlug: z.string(),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
-        const cacheKey = `feed:article:feed:${input.feedSlug}:article:${input.articleSlug}:user:${ctx.session.id}`
-        const cached = await ctx.redis.getCache<ArticleWithFeed>(cacheKey)
+        const cacheKey = `feed:article:feed:${input.feedSlug}:article:${input.articleSlug}:user:${context.session.id}`
+        const cached = await context.redis.getCache<ArticleWithFeed>(cacheKey)
         if (cached) {
           return cached
         }
 
-        const feed = await ctx.db.query.feedTable.findFirst({
+        const feed = await context.db.query.feedTable.findFirst({
           where: and(
             eq(feedTable.slug, input.feedSlug),
-            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.userId, context.session.id),
             eq(feedTable.status, "published"),
           ),
         })
 
         if (!feed) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
+          throw new ORPCError("NOT_FOUND", {
             message: "Feed not found.",
           })
         }
 
-        const data = await ctx.db.query.articleTable.findFirst({
+        const data = await context.db.query.articleTable.findFirst({
           where: and(
             eq(articleTable.slug, input.articleSlug),
             eq(articleTable.feedId, feed.id),
@@ -174,67 +140,44 @@ export const articleRouter = createTRPCRouter({
         })
 
         if (!data) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
+          throw new ORPCError("NOT_FOUND", {
             message: "Article not found.",
           })
         }
 
-        await ctx.redis.setCache(cacheKey, data, 1800)
+        await context.redis.setCache(cacheKey, data, 1800)
         return data
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Count total articles for a specific feed
-   *
-   * Returns the number of published articles belonging to a feed.
-   * Results are cached for 30 minutes.
-   *
-   * @param input - Feed ID to count articles for
-   * @returns Number of articles in the feed
-   */
   countByFeedId: protectedProcedure
     .input(z.string())
-    .query(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
-        const cacheKey = `feed:article:count:feed:${input}:user:${ctx.session.id}`
-        const cached = await ctx.redis.getCache<number>(cacheKey)
+        const cacheKey = `feed:article:count:feed:${input}:user:${context.session.id}`
+        const cached = await context.redis.getCache<number>(cacheKey)
         if (cached) {
           return cached
         }
-        await ctx.db
+        await context.db
           .select({ count: count() })
           .from(articleTable)
           .where(
             and(
               eq(articleTable.feedId, input),
-              eq(articleTable.userId, ctx.session.id),
+              eq(articleTable.userId, context.session.id),
               eq(articleTable.status, "published"),
             ),
           )
-        await ctx.redis.setCache(cacheKey, count, 1800)
+        await context.redis.setCache(cacheKey, count, 1800)
         return count
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Retrieve articles filtered by status, optionally scoped to a specific feed
-   *
-   * Supports multiple filter types: all, unread, starred (favorited), readLater,
-   * today (last 24h), and recentlyRead (read in last 7 days). Results are paginated
-   * and cached for 30 minutes.
-   *
-   * @param input.filter - Filter type to apply
-   * @param input.feedId - Optional feed ID to scope results
-   * @param input.page - Page number (default: 1)
-   * @param input.perPage - Articles per page (default: 50)
-   * @returns Paginated array of filtered articles with feed information
-   */
   byFilter: protectedProcedure
     .input(
       z.object({
@@ -251,16 +194,16 @@ export const articleRouter = createTRPCRouter({
         perPage: z.number().default(50),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
-        const cacheKey = `feed:articles:filter:${input.filter}:feed:${input.feedId ?? "all"}:page:${input.page}:per:${input.perPage}:user:${ctx.session.id}`
-        const cached = await ctx.redis.getCache<SelectArticle[]>(cacheKey)
+        const cacheKey = `feed:articles:filter:${input.filter}:feed:${input.feedId ?? "all"}:page:${input.page}:per:${input.perPage}:user:${context.session.id}`
+        const cached = await context.redis.getCache<SelectArticle[]>(cacheKey)
         if (cached) {
           return cached
         }
 
         const conditions = [
-          eq(articleTable.userId, ctx.session.id),
+          eq(articleTable.userId, context.session.id),
           eq(articleTable.status, "published"),
         ]
 
@@ -283,7 +226,7 @@ export const articleRouter = createTRPCRouter({
           conditions.push(gte(articleTable.updatedAt, sevenDaysAgo))
         }
 
-        const data = await ctx.db.query.articleTable.findMany({
+        const data = await context.db.query.articleTable.findMany({
           where: and(...conditions),
           offset: (input.page - 1) * input.perPage,
           limit: input.perPage,
@@ -302,149 +245,115 @@ export const articleRouter = createTRPCRouter({
           },
         })
 
-        await ctx.redis.setCache(cacheKey, data, 1800)
+        await context.redis.setCache(cacheKey, data, 1800)
         return data
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Update the read status of an article
-   *
-   * Marks an article as read or unread. Invalidates article and statistics caches
-   * to keep the UI in sync.
-   *
-   * @param input.id - Article ID
-   * @param input.isRead - Desired read status
-   * @returns Updated article data
-   */
   updateReadStatus: protectedProcedure
     .input(z.object({ id: z.string(), isRead: z.boolean() }))
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
-        const updatedArray = await ctx.db
+        const updatedArray = await context.db
           .update(articleTable)
           .set({ isRead: input.isRead, updatedAt: new Date() })
           .where(
             and(
               eq(articleTable.id, input.id),
-              eq(articleTable.userId, ctx.session.id),
+              eq(articleTable.userId, context.session.id),
             ),
           )
           .returning()
         const updated = updatedArray[0]
 
-        await ctx.redis.invalidatePattern(
-          `feed:article:*:user:${ctx.session.id}`,
+        await context.redis.invalidatePattern(
+          `feed:article:*:user:${context.session.id}`,
         )
-        await ctx.redis.invalidatePattern(
-          `feed:articles:*:user:${ctx.session.id}`,
+        await context.redis.invalidatePattern(
+          `feed:articles:*:user:${context.session.id}`,
         )
-        await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
+        await context.redis.deleteCache(
+          `feed:statistics:user:${context.session.id}`,
+        )
 
         return updated
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Updates the favorited status of an article
-   *
-   * Allows users to mark or unmark articles as favorited for quick access
-   * and filtering. Favorited articles can be filtered in the article list view.
-   * This operation invalidates relevant caches to keep the UI in sync.
-   *
-   * @param input - Article ID and desired favorited state
-   * @returns Updated article data
-   * @throws TRPCError if article update fails
-   */
   updateFavorited: protectedProcedure
     .input(z.object({ id: z.string(), isFavorited: z.boolean() }))
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
-        const updatedArray = await ctx.db
+        const updatedArray = await context.db
           .update(articleTable)
           .set({ isFavorited: input.isFavorited, updatedAt: new Date() })
           .where(
             and(
               eq(articleTable.id, input.id),
-              eq(articleTable.userId, ctx.session.id),
+              eq(articleTable.userId, context.session.id),
             ),
           )
           .returning()
         const updated = updatedArray[0]
 
-        await ctx.redis.invalidatePattern(
-          `feed:article:*:user:${ctx.session.id}`,
+        await context.redis.invalidatePattern(
+          `feed:article:*:user:${context.session.id}`,
         )
-        await ctx.redis.invalidatePattern(
-          `feed:articles:*:user:${ctx.session.id}`,
+        await context.redis.invalidatePattern(
+          `feed:articles:*:user:${context.session.id}`,
         )
-        await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
+        await context.redis.deleteCache(
+          `feed:statistics:user:${context.session.id}`,
+        )
 
         return updated
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Update the read-later status of an article
-   *
-   * Marks an article for reading later or removes it from the read-later list.
-   * Invalidates relevant caches to keep the UI in sync.
-   *
-   * @param input.id - Article ID
-   * @param input.isReadLater - Desired read-later status
-   * @returns Updated article data
-   */
   updateReadLater: protectedProcedure
     .input(z.object({ id: z.string(), isReadLater: z.boolean() }))
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
-        const updatedArray = await ctx.db
+        const updatedArray = await context.db
           .update(articleTable)
           .set({ isReadLater: input.isReadLater, updatedAt: new Date() })
           .where(
             and(
               eq(articleTable.id, input.id),
-              eq(articleTable.userId, ctx.session.id),
+              eq(articleTable.userId, context.session.id),
             ),
           )
           .returning()
         const updated = updatedArray[0]
 
-        await ctx.redis.invalidatePattern(
-          `feed:article:*:user:${ctx.session.id}`,
+        await context.redis.invalidatePattern(
+          `feed:article:*:user:${context.session.id}`,
         )
-        await ctx.redis.invalidatePattern(
-          `feed:articles:*:user:${ctx.session.id}`,
+        await context.redis.invalidatePattern(
+          `feed:articles:*:user:${context.session.id}`,
         )
-        await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
+        await context.redis.deleteCache(
+          `feed:statistics:user:${context.session.id}`,
+        )
 
         return updated
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Mark all articles as read, optionally scoped to a specific feed
-   *
-   * Bulk operation to mark multiple articles as read. Can be applied to all
-   * articles or limited to a specific feed. Invalidates relevant caches.
-   *
-   * @param input.feedId - Optional feed ID to scope operation
-   * @returns Success status
-   */
   markAllRead: protectedProcedure
     .input(z.object({ feedId: z.string().optional() }))
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
         const conditions = [
-          eq(articleTable.userId, ctx.session.id),
+          eq(articleTable.userId, context.session.id),
           eq(articleTable.status, "published"),
         ]
 
@@ -452,38 +361,27 @@ export const articleRouter = createTRPCRouter({
           conditions.push(eq(articleTable.feedId, input.feedId))
         }
 
-        await ctx.db
+        await context.db
           .update(articleTable)
           .set({ isRead: true, updatedAt: new Date() })
           .where(and(...conditions))
 
-        await ctx.redis.invalidatePattern(
-          `feed:articles:*:user:${ctx.session.id}`,
+        await context.redis.invalidatePattern(
+          `feed:articles:*:user:${context.session.id}`,
         )
-        await ctx.redis.invalidatePattern(
-          `feed:article:*:user:${ctx.session.id}`,
+        await context.redis.invalidatePattern(
+          `feed:article:*:user:${context.session.id}`,
         )
-        await ctx.redis.deleteCache(`feed:statistics:user:${ctx.session.id}`)
+        await context.redis.deleteCache(
+          `feed:statistics:user:${context.session.id}`,
+        )
 
         return { success: true }
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Retrieve articles with cursor-based pagination for infinite scroll
-   *
-   * Similar to byFilter but uses cursor-based pagination (publication date)
-   * instead of page numbers. Ideal for infinite scroll UI patterns.
-   *
-   * @param input.filter - Filter type (default: "all")
-   * @param input.feedId - Optional feed ID to scope results
-   * @param input.limit - Number of articles to fetch (default: 50)
-   * @param input.cursor - ISO date string cursor for pagination
-   * @returns Articles array with nextCursor for pagination
-   * @throws TRPCError if cursor date format is invalid
-   */
   byFilterInfinite: protectedProcedure
     .input(
       z.object({
@@ -502,22 +400,21 @@ export const articleRouter = createTRPCRouter({
         cursor: z.string().nullable().optional(), // ISO date string
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
         let cursorDate: Date | undefined
         if (input.cursor) {
           cursorDate = new Date(input.cursor)
 
           if (isNaN(cursorDate.getTime())) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
+            throw new ORPCError("BAD_REQUEST", {
               message: "Invalid cursor date format",
             })
           }
         }
 
         const conditions = [
-          eq(articleTable.userId, ctx.session.id),
+          eq(articleTable.userId, context.session.id),
           eq(articleTable.status, "published"),
         ]
 
@@ -544,7 +441,7 @@ export const articleRouter = createTRPCRouter({
           conditions.push(lt(articleTable.pubDate, cursorDate))
         }
 
-        const articles = await ctx.db.query.articleTable.findMany({
+        const articles = await context.db.query.articleTable.findMany({
           where: and(...conditions),
           limit: input.limit + 1,
           orderBy: (articles, { desc }) => [
@@ -573,21 +470,10 @@ export const articleRouter = createTRPCRouter({
           nextCursor,
         }
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
 
-  /**
-   * Global search across articles and feeds
-   *
-   * Searches article titles, descriptions, and feed names for matching content.
-   * Returns combined results sorted by relevance (exact matches first).
-   * Results are cached for 5 minutes.
-   *
-   * @param input.query - Search query string (minimum 2 characters)
-   * @param input.limit - Maximum number of results (default 20, max 50)
-   * @returns Combined search results with articles and feeds
-   */
   search: protectedProcedure
     .input(
       z.object({
@@ -595,10 +481,10 @@ export const articleRouter = createTRPCRouter({
         limit: z.number().min(1).max(50).default(20),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
-        const cacheKey = `search:query:${input.query}:limit:${input.limit}:user:${ctx.session.id}`
-        const cached = await ctx.redis.getCache<{
+        const cacheKey = `search:query:${input.query}:limit:${input.limit}:user:${context.session.id}`
+        const cached = await context.redis.getCache<{
           articles: ArticleWithFeed[]
           feeds: SelectFeed[]
         }>(cacheKey)
@@ -608,9 +494,9 @@ export const articleRouter = createTRPCRouter({
 
         const searchPattern = `%${input.query}%`
 
-        const articles = await ctx.db.query.articleTable.findMany({
+        const articles = await context.db.query.articleTable.findMany({
           where: and(
-            eq(articleTable.userId, ctx.session.id),
+            eq(articleTable.userId, context.session.id),
             eq(articleTable.status, "published"),
             or(
               ilike(articleTable.title, searchPattern),
@@ -630,9 +516,9 @@ export const articleRouter = createTRPCRouter({
           },
         })
 
-        const feeds = await ctx.db.query.feedTable.findMany({
+        const feeds = await context.db.query.feedTable.findMany({
           where: and(
-            eq(feedTable.userId, ctx.session.id),
+            eq(feedTable.userId, context.session.id),
             eq(feedTable.status, "published"),
             ilike(feedTable.title, searchPattern),
           ),
@@ -645,10 +531,10 @@ export const articleRouter = createTRPCRouter({
           feeds,
         }
 
-        await ctx.redis.setCache(cacheKey, result, 300)
+        await context.redis.setCache(cacheKey, result, 300)
         return result
       } catch (error) {
-        handleTRPCError(error)
+        handleORPCError(error)
       }
     }),
-})
+}

@@ -1,12 +1,10 @@
-import { TRPCError } from "@trpc/server"
+import { ORPCError } from "@orpc/server"
 
-export const handleTRPCError = (error: unknown): never => {
-  if (error instanceof TRPCError) {
+export const handleORPCError = (error: unknown): never => {
+  if (error instanceof ORPCError) {
     throw error
   } else {
-    // Error is handled by mutation's onError callback with toast notification
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
+    throw new ORPCError("INTERNAL_SERVER_ERROR", {
       message: "An internal error occurred",
       cause: error,
     })
