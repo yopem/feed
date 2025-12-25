@@ -2,71 +2,20 @@ import { XMLParser } from "fast-xml-parser"
 
 import { sanitizeHtml, stripHtml } from "@/lib/utils/html"
 
-/**
- * Detects if a URL is a Reddit subreddit URL
- *
- * Supports various formats:
- * - https://www.reddit.com/r/programming
- * - http://reddit.com/r/programming
- * - reddit.com/r/programming
- *
- * @param url - The URL to check
- * @returns True if the URL is a Reddit subreddit URL
- */
 export function isRedditUrl(url: string): boolean {
   const redditPattern = /^(https?:\/\/)?(www\.)?reddit\.com\/r\/([a-zA-Z0-9_]+)/
   return redditPattern.test(url)
 }
 
-/**
- * Detects if a URL is a Google News RSS feed URL
- *
- * Supports Google News RSS formats:
- * - https://news.google.com/rss (top stories)
- * - https://news.google.com/rss/topics/... (topic feeds)
- * - https://news.google.com/rss/search?q=... (search feeds)
- *
- * @param url - The URL to check
- * @returns True if the URL is a Google News RSS feed URL
- */
 export function isGoogleNewsUrl(url: string): boolean {
   return url.includes("news.google.com/rss")
 }
 
-/**
- * Constructs a Google News RSS search feed URL from a query string
- *
- * Builds a properly formatted Google News RSS feed URL for the given search query.
- * The URL includes language (en), region (US), and edition (US:en) parameters.
- *
- * @param query - The search query string
- * @returns Google News RSS search URL
- * @example
- * buildGoogleNewsSearchUrl("artificial intelligence")
- * // Returns: "https://news.google.com/rss/search?q=artificial%20intelligence&hl=en&gl=US&ceid=US:en"
- */
 export function buildGoogleNewsSearchUrl(query: string): string {
   const encodedQuery = encodeURIComponent(query.trim())
   return `https://news.google.com/rss/search?q=${encodedQuery}&hl=en&gl=US&ceid=US:en`
 }
 
-/**
- * Extracts a clean, human-readable title from a Google News RSS feed URL
- *
- * Converts Google News RSS URLs into readable titles:
- * - Topic feeds: Maps known topic IDs to their names
- * - Search feeds: Extracts and decodes the search query
- * - Publisher feeds: Extracts the domain name from allinurl: queries
- *
- * @param url - The Google News RSS feed URL
- * @returns A clean, human-readable title
- * @example
- * generateGoogleNewsTitle("https://news.google.com/rss/search?q=when:24h+allinurl:bbc.com&...")
- * // Returns: "Google News - BBC"
- * @example
- * generateGoogleNewsTitle("https://news.google.com/rss/search?q=artificial+intelligence&...")
- * // Returns: "Google News - artificial intelligence"
- */
 export function generateGoogleNewsTitle(url: string): string {
   try {
     const urlObj = new URL(url)
@@ -127,28 +76,11 @@ export function generateGoogleNewsTitle(url: string): string {
   }
 }
 
-/**
- * Normalizes a Reddit subreddit URL to standard format
- *
- * Converts various Reddit URL formats to:
- * https://www.reddit.com/r/{subreddit}
- *
- * @param url - The Reddit URL to normalize
- * @returns Normalized Reddit URL
- * @throws Error if URL is not a valid Reddit subreddit URL
- */
 export function normalizeRedditUrl(url: string): string {
   const subreddit = extractSubredditName(url)
   return `https://www.reddit.com/r/${subreddit}`
 }
 
-/**
- * Extracts the subreddit name from a Reddit URL
- *
- * @param url - The Reddit URL to parse
- * @returns The subreddit name (without /r/ prefix)
- * @throws Error if URL is not a valid Reddit subreddit URL
- */
 export function extractSubredditName(url: string): string {
   const redditPattern = /^(https?:\/\/)?(www\.)?reddit\.com\/r\/([a-zA-Z0-9_]+)/
   const match = redditPattern.exec(url)
@@ -178,9 +110,6 @@ interface ScrapedArticleFeed {
   redditSubreddit?: string
 }
 
-/**
- * Reddit API response types
- */
 interface RedditPost {
   data: {
     id: string
@@ -258,16 +187,6 @@ function extractImageUrl(item: AtomEntry | RSSItem): string | undefined {
   return undefined
 }
 
-/**
- * Fetches Reddit posts from a subreddit using the public JSON API
- *
- * Retrieves the latest posts from a subreddit without authentication.
- * Reddit's public API returns up to 25 posts by default.
- *
- * @param subredditName - The name of the subreddit (without /r/ prefix)
- * @returns Reddit API response containing post data
- * @throws Error if fetch fails, rate limited, or subreddit is invalid
- */
 async function fetchRedditPosts(
   subredditName: string,
 ): Promise<RedditApiResponse> {
@@ -315,17 +234,6 @@ async function fetchRedditPosts(
   }
 }
 
-/**
- * Parses a Reddit subreddit feed and extracts posts as articles
- *
- * Fetches posts from Reddit's public JSON API and converts them to
- * the standard article format. Includes Reddit-specific metadata like
- * post ID, permalink, and subreddit for comment linking.
- *
- * @param url - The Reddit subreddit URL
- * @returns Object containing feed metadata and array of parsed articles
- * @throws Error if subreddit cannot be fetched or parsed
- */
 async function parseRedditFeed(url: string) {
   try {
     const subredditName = extractSubredditName(url)
@@ -374,8 +282,6 @@ async function parseRedditFeed(url: string) {
             ? "Discussion post on Reddit"
             : `External link: ${link}`
 
-        // For self posts, convert markdown-like text to HTML with proper formatting
-        // For link posts, provide a formatted message
         const content = postData.selftext
           ? postData.selftext
               .split("\n\n")
@@ -441,16 +347,6 @@ async function parseRedditFeed(url: string) {
   }
 }
 
-/**
- * Fetches RSS/Atom feed XML content with automatic proxy fallback
- *
- * Attempts direct fetch first, then falls back to a proxy service
- * if the direct request fails due to CORS or network issues.
- *
- * @param feedUrl - The URL of the RSS/Atom feed to fetch
- * @returns The raw XML content of the feed
- * @throws Error if both direct and proxy fetch attempts fail
- */
 export async function fetchFeedXML(feedUrl: string): Promise<string> {
   const headers = {
     "User-Agent":
@@ -481,18 +377,6 @@ export async function fetchFeedXML(feedUrl: string): Promise<string> {
   }
 }
 
-/**
- * Parses an RSS, Atom, Reddit, or Google News feed and extracts feed metadata and articles
- *
- * Supports RSS 2.0, Atom feed formats, Reddit subreddits, and Google News RSS feeds.
- * Automatically detects feed type and routes to appropriate parser. Extracts feed title,
- * description, image, and article data.
- *
- * @param url - The URL of the feed to parse (RSS/Atom, Reddit subreddit, or Google News)
- * @param feedType - Optional feed type override ('rss', 'reddit', or 'google_news')
- * @returns Object containing feed metadata and array of parsed articles
- * @throws Error if feed cannot be fetched, parsed, or contains invalid data
- */
 export async function parseFeed(
   url: string,
   feedType?: "rss" | "reddit" | "google_news",
@@ -513,15 +397,6 @@ export async function parseFeed(
   return parseRSSFeed(url)
 }
 
-/**
- * Parses an RSS or Atom feed and extracts feed metadata and articles
- *
- * Internal function for RSS/Atom parsing. Use parseFeed() for public API.
- *
- * @param url - The URL of the RSS/Atom feed to parse
- * @returns Object containing feed metadata and array of parsed articles
- * @throws Error if feed cannot be fetched, parsed, or contains invalid data
- */
 async function parseRSSFeed(url: string) {
   try {
     const xmlString = await fetchFeedXML(url)

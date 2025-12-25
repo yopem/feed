@@ -6,16 +6,6 @@ import Link from "next/link"
 import Logo from "@/components/logo"
 import ThemeSwitcher from "@/components/theme/theme-switcher"
 
-/**
- * Landing page header with scroll-responsive behavior
- *
- * Features:
- * - Logo-based branding linking to yopem.com
- * - "Read" text linking to app home page
- * - Scroll detection that triggers compact mode at 50px threshold
- * - Smooth transitions between default and scrolled states
- * - Cal.com-inspired modern aesthetic with subtle borders and backdrop blur
- */
 export default function LandingHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
 

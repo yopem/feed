@@ -4,12 +4,6 @@ import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
 import { siteDescription, siteTagline, siteTitle } from "@/lib/env/client"
 
-/**
- * Hero section for the landing page
- *
- * Displays the main site title, tagline, description, and primary CTA.
- * Content is sourced from environment variables to allow easy customization.
- */
 export default function HeroSection() {
   return (
     <section className="border-border bg-background relative overflow-hidden border-b">

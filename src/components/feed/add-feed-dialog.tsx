@@ -390,9 +390,6 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
     } catch {}
   }
 
-  /**
-   * Handles submission of a popular Google News topic
-   */
   const handleGoogleNewsTopicSubmit = async (topic: {
     name: string
     url: string
@@ -414,9 +411,6 @@ export function AddFeedDialog({ isOpen, onClose }: AddFeedDialogProps) {
     } catch {}
   }
 
-  /**
-   * Handles submission of a custom Google News search query
-   */
   const handleGoogleNewsSearchSubmit = async (query: string) => {
     if (!query.trim()) {
       toast.error("Please enter a search query")

@@ -15,13 +15,6 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetPopup, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 
-/**
- * Settings sidebar navigation component
- *
- * Provides navigation between settings categories with mobile-responsive behavior.
- * Uses URL state management via nuqs for persistent category selection.
- */
-
 interface SettingsSidebarProps {
   className?: string
 }

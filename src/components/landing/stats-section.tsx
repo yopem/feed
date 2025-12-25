@@ -1,11 +1,5 @@
 import { InfinityIcon, LockIcon, PaletteIcon, ZapIcon } from "lucide-react"
 
-/**
- * Benefits section highlighting core platform advantages
- *
- * Showcases key benefits and features that make the platform valuable,
- * focusing on genuine product qualities rather than user metrics.
- */
 export default function StatsSection() {
   const benefits = [
     {

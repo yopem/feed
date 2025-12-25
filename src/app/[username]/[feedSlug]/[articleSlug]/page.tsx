@@ -51,7 +51,6 @@ export async function generateMetadata({
   }
 
   try {
-    // Find the feed first
     const feed = await db.query.feedTable.findFirst({
       where: and(
         eq(feedTable.slug, feedSlug),
@@ -66,7 +65,6 @@ export async function generateMetadata({
       }
     }
 
-    // Find the article
     const article = await db.query.articleTable.findFirst({
       where: and(
         eq(articleTable.slug, articleSlug),
@@ -139,7 +137,6 @@ export default async function ArticlePage({ params }: PageProps) {
     redirect("/")
   }
 
-  // Find the feed first
   const feed = await db.query.feedTable.findFirst({
     where: and(
       eq(feedTable.slug, feedSlug),
@@ -152,7 +149,6 @@ export default async function ArticlePage({ params }: PageProps) {
     redirect("/")
   }
 
-  // Find the article
   const article = await db.query.articleTable.findFirst({
     where: and(
       eq(articleTable.slug, articleSlug),

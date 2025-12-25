@@ -1,12 +1,5 @@
 import { BookmarkPlusIcon, RssIcon, SparklesIcon } from "lucide-react"
 
-/**
- * How It Works section for the landing page
- *
- * Shows a step-by-step guide of how users can get started with the platform.
- * Uses numbered steps with icons and descriptions to guide users through
- * the onboarding process.
- */
 export default function HowItWorksSection() {
   const steps = [
     {

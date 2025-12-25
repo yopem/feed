@@ -7,15 +7,6 @@ import { AlertCircleIcon, HomeIcon, RefreshCwIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { appEnv } from "@/lib/env/client"
 
-/**
- * Error boundary for route segment errors
- *
- * This component catches errors within a specific route segment
- * and provides recovery options to the user.
- *
- * @param error - The error that was thrown
- * @param reset - Function to attempt to recover by re-rendering the segment
- */
 export default function Error({
   error,
   reset,
@@ -24,7 +15,6 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
-    // Log error to monitoring service
     console.error("Route error:", error)
   }, [error])
 

@@ -5,9 +5,6 @@ import { auth } from "@/lib/auth/session"
 import { siteDescription, siteTagline, siteTitle } from "@/lib/env/client"
 import DashboardPage from "./(app)/page"
 
-/**
- * SEO metadata for the landing page
- */
 export const metadata: Metadata = {
   title: `${siteTitle} - ${siteTagline}`,
   description: siteDescription,
@@ -24,11 +21,6 @@ export const metadata: Metadata = {
   },
 }
 
-/**
- * Root page that conditionally renders landing page or dashboard based on authentication
- *
- * @returns Landing page for non-authenticated users, dashboard for authenticated users
- */
 export default async function RootPage() {
   const session = await auth()
 

@@ -3,9 +3,6 @@ import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 
 import { createCustomId } from "@/lib/utils/custom-id"
 
-/**
- * User settings table for storing user preferences
- */
 export const userSettingsTable = pgTable("user_settings", {
   id: text()
     .primaryKey()

@@ -23,17 +23,6 @@ import { updateUserSettingsSchema } from "@/lib/db/schema"
 import type { SelectUserSettings } from "@/lib/db/schema/user-settings"
 import { queryApi } from "@/lib/orpc/query"
 
-/**
- * Settings Page - User preferences organized by category
- *
- * Categories:
- * - Feed Management: Auto-refresh settings
- * - Article Management: Article retention settings
- * - Appearance: Display preferences
- *
- * Uses sidebar navigation for category switching via URL state
- */
-
 const formSchema = updateUserSettingsSchema.pick({
   autoRefreshEnabled: true,
   refreshIntervalHours: true,

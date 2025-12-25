@@ -1,12 +1,5 @@
 import { useEffect } from "react"
 
-/**
- * Custom hook for handling keyboard shortcuts
- *
- * @param key - The key to listen for (e.g., 'k', 'Escape')
- * @param callback - Function to execute when shortcut is triggered
- * @param modifiers - Optional modifier keys (ctrl, meta, shift, alt)
- */
 export function useKeyboardShortcut(
   key: string,
   callback: () => void,

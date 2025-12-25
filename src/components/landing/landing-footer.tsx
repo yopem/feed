@@ -1,8 +1,5 @@
 import { siteTitle } from "@/lib/env/client"
 
-/**
- * Landing page footer with copyright notice
- */
 export default function LandingFooter() {
   const currentYear = new Date().getFullYear()
 

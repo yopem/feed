@@ -29,11 +29,8 @@ export const feedTable = pgTable(
     lastUpdated: timestamp("last_updated").defaultNow(),
     lastRefreshedAt: timestamp("last_refreshed_at"),
     userId: text("user_id").notNull(),
-    /** Feed type: rss (RSS/Atom feed) or reddit (Reddit subreddit) */
     feedType: feedTypeEnum("feed_type").notNull().default("rss"),
-    /** Entity status for soft-delete: published (visible), draft (hidden), deleted (soft-deleted) */
     status: entityStatusEnum("status").notNull().default("published"),
-    /** Whether the feed is marked as favorited by the user */
     isFavorited: boolean("is_favorited").notNull().default(false),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),

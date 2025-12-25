@@ -1,14 +1,5 @@
 import "server-only"
 
-/**
- * Resolves an IP address to geographic location data
- *
- * Uses the GEOLOCATION_API_URL environment variable to specify the API endpoint.
- * Falls back to ip-api.com if not configured.
- *
- * @param ipAddress - The IP address to resolve
- * @returns Geographic data with country (ISO 3166-1 alpha-2) and city
- */
 export async function lookupGeoLocation(ipAddress: string): Promise<{
   country: string | null
   city: string | null

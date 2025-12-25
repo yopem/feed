@@ -2,16 +2,6 @@ import type { Redis } from "ioredis"
 
 import { redisKeyPrefix, redisUrl } from "@/lib/env/server"
 
-/**
- * Creates a Redis cache utility with automatic key prefixing support
- *
- * All cache operations automatically prepend the configured REDIS_KEY_PREFIX
- * to keys, providing namespace isolation in shared Redis instances.
- * When REDIS_KEY_PREFIX is empty (default), keys remain unchanged for
- * backward compatibility.
- *
- * @returns Cache utility with setCache, getCache, deleteCache, and invalidatePattern methods
- */
 export function createRedisCache() {
   let redis: Redis | null = null
   const prefix = redisKeyPrefix
@@ -63,13 +53,6 @@ export function createRedisCache() {
     return obj
   }
 
-  /**
-   * Stores a value in Redis cache with automatic key prefixing
-   *
-   * @param key - Cache key (prefix will be automatically applied)
-   * @param value - Value to cache (supports Date objects via serialization)
-   * @param ttlSeconds - Time to live in seconds (default: 3601)
-   */
   async function setCache<T>(
     key: string,
     value: T,
@@ -88,12 +71,6 @@ export function createRedisCache() {
     }
   }
 
-  /**
-   * Retrieves a value from Redis cache with automatic key prefixing
-   *
-   * @param key - Cache key (prefix will be automatically applied)
-   * @returns Cached value or null if not found
-   */
   async function getCache<T>(key: string): Promise<T | null> {
     const client = await getRedisClient()
     if (!client) return null
@@ -115,11 +92,6 @@ export function createRedisCache() {
     }
   }
 
-  /**
-   * Deletes a cache entry with automatic key prefixing
-   *
-   * @param key - Cache key to delete (prefix will be automatically applied)
-   */
   async function deleteCache(key: string): Promise<void> {
     const client = await getRedisClient()
     if (!client) return
@@ -132,11 +104,6 @@ export function createRedisCache() {
     }
   }
 
-  /**
-   * Invalidates all cache entries matching a pattern with automatic key prefixing
-   *
-   * @param pattern - Redis key pattern (e.g., "feed:*:user:123", prefix will be automatically applied)
-   */
   async function invalidatePattern(pattern: string): Promise<void> {
     const client = await getRedisClient()
     if (!client) return

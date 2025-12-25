@@ -397,7 +397,7 @@ export const articleRouter = {
           .default("all"),
         feedId: z.string().optional(),
         limit: z.number().default(50),
-        cursor: z.string().nullable().optional(), // ISO date string
+        cursor: z.string().nullable().optional(),
       }),
     )
     .handler(async ({ context, input }) => {

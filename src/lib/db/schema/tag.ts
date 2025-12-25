@@ -15,9 +15,7 @@ export const tagTable = pgTable(
     name: text("name").notNull(),
     description: text("description"),
     userId: text("user_id").notNull(),
-    /** Entity status for soft-delete: published (visible), draft (hidden), deleted (soft-deleted) */
     status: entityStatusEnum("status").notNull().default("published"),
-    /** Whether the tag is marked as favorited by the user */
     isFavorited: boolean("is_favorited").notNull().default(false),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),

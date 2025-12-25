@@ -34,17 +34,6 @@ interface SocialShareButtonsProps {
   onQRCodeClick?: () => void
 }
 
-/**
- * Social sharing buttons component
- *
- * Provides buttons for sharing content to various social platforms
- * including Facebook, X/Twitter, LinkedIn, email, and copy link.
- *
- * @param url - The URL to share
- * @param title - The title of the content being shared
- * @param description - Optional description for the share
- * @param onQRCodeClick - Optional callback when QR code button is clicked
- */
 export function SocialShareButtons({
   url,
   title,

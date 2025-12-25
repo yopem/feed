@@ -265,12 +265,6 @@ export {
   anchoredToastManager,
 }
 
-/**
- * Toast helper utility for displaying notifications
- *
- * Wraps Base UI Toast manager with a simplified API similar to sonner.
- * Use this to show success, error, info, warning, and loading toasts.
- */
 export const toast = {
   success: (title: string, description?: string) => {
     toastManager.add({ title, description, type: "success" })

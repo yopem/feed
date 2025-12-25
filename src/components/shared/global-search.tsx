@@ -34,9 +34,6 @@ interface GlobalSearchContextType {
 
 const GlobalSearchContext = createContext<GlobalSearchContextType | null>(null)
 
-/**
- * Hook to access global search context
- */
 export function useGlobalSearch() {
   const context = useContext(GlobalSearchContext)
   if (!context) {
@@ -45,19 +42,6 @@ export function useGlobalSearch() {
   return context
 }
 
-/**
- * Global search provider component
- *
- * Provides a search dialog accessible via Cmd+K (Mac) or Ctrl+K (Windows/Linux).
- * Searches across article titles, descriptions, and feed names with debounced input.
- *
- * Features:
- * - Real-time search with 200ms debounce
- * - Keyboard navigation (arrow keys, Enter, Escape)
- * - Error handling with retry mechanism
- * - Development mode logging for debugging
- * - Authentication and rate limit error detection
- */
 export function GlobalSearchProvider({
   children,
 }: {
@@ -87,15 +71,6 @@ export function GlobalSearchProvider({
 
     return () => clearTimeout(timer)
   }, [query])
-
-  /**
-   * Execute search query with error handling and retry logic
-   *
-   * - Debounced to 200ms to avoid excessive queries
-   * - Retries once on failure
-   * - Caches results for 1 minute (staleTime)
-   * - Only executes when query is 2+ characters and dialog is open
-   */
 
   const { data, isFetching, error, refetch } = useQuery(
     queryApi.article.search.queryOptions({

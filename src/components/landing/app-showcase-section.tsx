@@ -1,11 +1,5 @@
 import { CheckIcon } from "lucide-react"
 
-/**
- * App Showcase section for the landing page
- *
- * Displays a visual representation of the app interface with key features highlighted.
- * Uses a minimal design with feature callouts to showcase the platform's capabilities.
- */
 export default function AppShowcaseSection() {
   const highlights = [
     "Beautiful, distraction-free reading interface",

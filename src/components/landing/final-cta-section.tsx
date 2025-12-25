@@ -3,12 +3,6 @@ import { ArrowRightIcon } from "lucide-react"
 import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
 
-/**
- * Final CTA section for the landing page
- *
- * A compelling call-to-action section that encourages users to sign up.
- * Positioned before the footer as the final conversion opportunity.
- */
 export default function FinalCTASection() {
   return (
     <section className="bg-muted/30 py-16 sm:py-20 md:py-28">

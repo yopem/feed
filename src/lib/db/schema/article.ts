@@ -34,13 +34,9 @@ export const articleTable = pgTable(
     feedId: text("feed_id")
       .notNull()
       .references(() => feedTable.id, { onDelete: "cascade" }),
-    /** Reddit post ID for articles from Reddit feeds */
     redditPostId: text("reddit_post_id"),
-    /** Reddit permalink for linking to comments */
     redditPermalink: text("reddit_permalink"),
-    /** Reddit subreddit name */
     redditSubreddit: text("reddit_subreddit"),
-    /** Entity status for soft-delete: published (visible), draft (hidden), deleted (soft-deleted) */
     status: entityStatusEnum("status").notNull().default("published"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),

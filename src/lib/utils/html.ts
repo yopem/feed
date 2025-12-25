@@ -1,14 +1,3 @@
-/**
- * Strips HTML tags from a string and returns plain text
- *
- * Handles both raw HTML and HTML entity-encoded markup by first
- * decoding entities (e.g., &lt;a&gt; to <a>), then stripping tags.
- * This ensures content from feeds like Google News that may contain
- * escaped HTML is properly cleaned.
- *
- * @param html - HTML string to strip
- * @returns Plain text without HTML tags
- */
 export function stripHtml(html: string | null | undefined): string {
   if (!html) return ""
 
@@ -28,12 +17,6 @@ export function stripHtml(html: string | null | undefined): string {
   return text
 }
 
-/**
- * Sanitizes HTML content for safe rendering
- * Allows only safe tags and removes potentially dangerous content
- * @param html - HTML string to sanitize
- * @returns Sanitized HTML string
- */
 export function sanitizeHtml(html: string | null | undefined): string {
   if (!html) return ""
 

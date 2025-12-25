@@ -14,12 +14,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-/**
- * Features section for the landing page
- *
- * Showcases the main features of the application in a responsive grid.
- * Each feature includes an icon, title, and description.
- */
 export default function FeaturesSection() {
   const features = [
     {
