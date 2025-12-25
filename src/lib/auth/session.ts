@@ -32,6 +32,13 @@ export const auth = cache(async () => {
     const accessToken = cookies.get("access_token")
     const refreshToken = cookies.get("refresh_token")
 
+    const allCookies = cookies
+      .getAll()
+      .map((c) => c.name)
+      .join(", ")
+    console.error("[AUTH] All cookies:", allCookies)
+    console.error("[AUTH] Access token:", accessToken ? "present" : "missing")
+
     if (!accessToken) {
       return false
     }
@@ -45,6 +52,7 @@ export const auth = cache(async () => {
       return false
     }
 
+    console.error("[AUTH] Verification successful")
     return verified.subject.properties
   } catch (error) {
     console.error("[AUTH] Exception:", error)

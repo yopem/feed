@@ -3,7 +3,9 @@ import { initTRPC, TRPCError } from "@trpc/server"
 import SuperJSON from "superjson"
 import z, { ZodError } from "zod"
 
+import { authClient } from "@/lib/auth/client"
 import { auth } from "@/lib/auth/session"
+import { subjects } from "@/lib/auth/subjects"
 import { db } from "@/lib/db"
 import { createRedisCache } from "@/lib/db/redis"
 import { appEnv } from "@/lib/env/server"
@@ -15,7 +17,27 @@ export const createTRPCContext = async (opts: {
   headers: Headers
   cookies: ReadonlyRequestCookies
 }) => {
-  const session = await auth()
+  const accessToken = opts.cookies.get("access_token")
+  const refreshToken = opts.cookies.get("refresh_token")
+
+  let session: Awaited<ReturnType<typeof auth>> = false
+
+  if (accessToken) {
+    try {
+      const verified = await authClient.verify(subjects, accessToken.value, {
+        refresh: refreshToken?.value,
+      })
+
+      if (!verified.err) {
+        session = verified.subject.properties
+      } else {
+        console.error("[TRPC] Token verification failed:", verified.err)
+      }
+    } catch (error) {
+      console.error("[TRPC] Auth error:", error)
+    }
+  }
+
   const redis = createRedisCache()
 
   let clientIP =
