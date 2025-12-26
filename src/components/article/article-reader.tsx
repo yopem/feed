@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
@@ -41,6 +41,8 @@ interface ArticleReaderProps {
 export function ArticleReader({ articleId }: ArticleReaderProps) {
   const queryClient = useQueryClient()
   const hasMarkedAsRead = useRef<Set<string>>(new Set())
+  const [feedImageError, setFeedImageError] = useState(false)
+  const [articleImageError, setArticleImageError] = useState(false)
 
   const { data: article, isLoading } = useQuery(
     queryApi.article.byId.queryOptions({
@@ -88,6 +90,11 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [article?.id, article?.isRead])
+
+  useEffect(() => {
+    setFeedImageError(false)
+    setArticleImageError(false)
+  }, [articleId])
 
   if (!articleId) {
     return (
@@ -141,13 +148,14 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
             </h1>
 
             <div className="text-muted-foreground flex items-center gap-3 text-sm">
-              {feed.imageUrl && (
+              {feed.imageUrl && !feedImageError && (
                 <Image
                   src={feed.imageUrl}
                   alt={feed.title}
                   width={20}
                   height={20}
                   className="h-5 w-5 rounded"
+                  onError={() => setFeedImageError(true)}
                 />
               )}
               <span className="font-medium">{feed.title}</span>
@@ -181,7 +189,7 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
             <Separator />
           </header>
 
-          {article.imageUrl && (
+          {article.imageUrl && !articleImageError && (
             <figure className="mb-6 overflow-hidden rounded-xl md:mb-8">
               <Image
                 src={article.imageUrl}
@@ -190,6 +198,7 @@ export function ArticleReader({ articleId }: ArticleReaderProps) {
                 height={450}
                 className="h-auto w-full object-cover"
                 priority
+                onError={() => setArticleImageError(true)}
               />
             </figure>
           )}

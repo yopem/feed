@@ -58,6 +58,8 @@ export function ArticleCard({
   redditPermalink,
 }: ArticleCardProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const [feedImageError, setFeedImageError] = useState(false)
+  const [articleImageError, setArticleImageError] = useState(false)
   const queryClient = useQueryClient()
 
   const updateReadStatus = useMutation(
@@ -133,11 +135,12 @@ export function ArticleCard({
     >
       <CardHeader className="space-y-0 pb-2">
         <div className="flex items-center gap-2">
-          {feedImageUrl && (
+          {feedImageUrl && !feedImageError && (
             <img
               src={feedImageUrl}
               alt={feedTitle}
               className="h-4 w-4 rounded"
+              onError={() => setFeedImageError(true)}
             />
           )}
           <span className="text-muted-foreground truncate text-xs">
@@ -152,12 +155,13 @@ export function ArticleCard({
 
       <CardPanel className="pb-2">
         <div className="flex gap-3">
-          {imageUrl && (
+          {imageUrl && !articleImageError && (
             <div className="bg-muted h-16 w-20 shrink-0 overflow-hidden rounded-md">
               <img
                 src={imageUrl}
                 alt={title}
                 className="h-full w-full object-cover"
+                onError={() => setArticleImageError(true)}
               />
             </div>
           )}

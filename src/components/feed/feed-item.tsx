@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
 import { EditIcon, RefreshCwIcon, TrashIcon } from "lucide-react"
 
@@ -35,6 +36,8 @@ export function FeedItem({
   isRefreshing = false,
   tags = [],
 }: FeedItemProps) {
+  const [imageError, setImageError] = useState(false)
+
   return (
     <Card
       onClick={() => onSelect(id)}
@@ -45,13 +48,14 @@ export function FeedItem({
     >
       <div className="flex items-center gap-3">
         <div className="bg-muted relative h-10 w-10 shrink-0 overflow-hidden rounded-md">
-          {imageUrl ? (
+          {imageUrl && !imageError ? (
             <Image
               src={imageUrl}
               alt={title}
               fill
               className="object-cover"
               sizes="40px"
+              onError={() => setImageError(true)}
             />
           ) : (
             <div className="text-muted-foreground flex h-full items-center justify-center text-xs font-semibold">

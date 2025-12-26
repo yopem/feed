@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { unstable_noStore as noStore } from "next/cache"
-import Image from "next/image"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import dayjs from "dayjs"
@@ -8,6 +7,7 @@ import { and, eq } from "drizzle-orm"
 import { ChevronLeftIcon } from "lucide-react"
 
 import { ArticleActions } from "@/components/article/article-actions"
+import { SafeImage } from "@/components/shared/safe-image"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -230,7 +230,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
             <div className="text-muted-foreground flex items-center gap-3 text-sm">
               {feed.imageUrl && (
-                <Image
+                <SafeImage
                   src={feed.imageUrl}
                   alt={feed.title}
                   width={20}
@@ -250,7 +250,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
           {article.imageUrl && (
             <figure className="mb-8 overflow-hidden rounded-xl">
-              <Image
+              <SafeImage
                 src={article.imageUrl}
                 alt={article.title}
                 width={800}
