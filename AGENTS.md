@@ -5,7 +5,7 @@
 - Read the closest project-specific `AGENTS.md` before changing code.
 - If a user asks to update `AGENTS.md` only, edit only `AGENTS.md`. Do not
   change source files, dependencies, lockfiles, or generated files.
-- Before coding, query available codebase memory for prior decisions, plans,
+- Before coding, query available codebase memory mcp for prior decisions, plans,
   blockers, and relevant implementation context.
 - Inspect existing callers, types, tests, and configuration before editing.
 - Make smallest complete change. Reuse existing code before adding helpers,

@@ -1,0 +1,90 @@
+{
+  "$schema": "https://oxc.rs/schemas/oxfmt.json",
+  "bracketSpacing": true,
+  "jsxSingleQuote": false,
+  "printWidth": 80,
+  "proseWrap": "always",
+  "semi": false,
+  "singleQuote": false,
+  "tabWidth": 2,
+  "trailingComma": "all",
+  "experimentalTailwindcss": {
+    "functions": ["cn", "cva", "clsx"]
+  },
+  "experimentalSortPackageJson": true,
+  "ignorePatterns": ["**/bun.lock", "**/migrations/", "**/AGENTS.md"],
+  "sortImports": {
+    "newlinesBetween": true,
+    "customGroups": [
+      {
+        "groupName": "value-workspace",
+        "elementNamePattern": [
+          "ui",
+          "ui/**",
+          "auth",
+          "auth/**",
+          "db",
+          "db/**",
+          "env",
+          "env/**",
+          "editor",
+          "editor/**",
+          "logger",
+          "logger/**",
+          "rpc",
+          "rpc/**",
+          "utils",
+          "utils/**",
+          "cache",
+          "cache/**",
+          "llm",
+          "llm/**",
+          "payments",
+          "payments/**",
+          "storage",
+          "storage/**"
+        ]
+      },
+      {
+        "groupName": "type-workspace",
+        "elementNamePattern": [
+          "ui",
+          "ui/**",
+          "auth",
+          "auth/**",
+          "db",
+          "db/**",
+          "env",
+          "env/**",
+          "editor",
+          "editor/**",
+          "logger",
+          "logger/**",
+          "rpc",
+          "rpc/**",
+          "utils",
+          "utils/**",
+          "cache",
+          "cache/**",
+          "llm",
+          "llm/**",
+          "payments",
+          "payments/**",
+          "storage",
+          "storage/**"
+        ]
+      }
+    ],
+    "groups": [
+      "type-import",
+      ["value-builtin", "value-external"],
+      "type-workspace",
+      "value-workspace",
+      "type-internal",
+      "value-internal",
+      ["type-parent", "type-sibling", "type-index"],
+      ["value-parent", "value-sibling", "value-index"],
+      "unknown"
+    ]
+  }
+}
