@@ -1,0 +1,37 @@
+{
+  "name": "web",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "dev": "bun --env-file=../../.env --bun vite",
+    "build": "NODE_ENV=production bun --env-file=../../.env --bun vite build",
+    "start": "bun --env-file=../../.env --bun srvx --prod --port ${WEB_PORT:-3000} --static ../client dist/server/server.js",
+    "routes:generate": "bun --bun tsr generate"
+  },
+  "dependencies": {
+    "@tanstack/react-form": "catalog:",
+    "@tanstack/react-query": "catalog:",
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-router-ssr-query": "catalog:",
+    "@tanstack/react-start": "catalog:",
+    "env": "workspace:*",
+    "lucide-react": "catalog:",
+    "next-themes": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "rpc": "workspace:*",
+    "srvx": "catalog:",
+    "ui": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "catalog:",
+    "@tanstack/router-cli": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "vite": "catalog:"
+  }
+}

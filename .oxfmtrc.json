@@ -12,7 +12,16 @@
     "functions": ["cn", "cva", "clsx"]
   },
   "experimentalSortPackageJson": true,
-  "ignorePatterns": ["**/bun.lock", "**/migrations/", "**/AGENTS.md"],
+  "ignorePatterns": [
+    "**/bun.lock",
+    "**/migrations/**",
+    "**/AGENTS.md",
+    "**/LICENSE.md",
+    "**/routeTree.gen.ts",
+    "**/dist/**",
+    "**/.tanstack/**",
+    "docs/**"
+  ],
   "sortImports": {
     "newlinesBetween": true,
     "customGroups": [
@@ -27,22 +36,12 @@
           "db/**",
           "env",
           "env/**",
-          "editor",
-          "editor/**",
-          "logger",
-          "logger/**",
           "rpc",
           "rpc/**",
           "utils",
           "utils/**",
           "cache",
-          "cache/**",
-          "llm",
-          "llm/**",
-          "payments",
-          "payments/**",
-          "storage",
-          "storage/**"
+          "cache/**"
         ]
       },
       {
@@ -56,22 +55,12 @@
           "db/**",
           "env",
           "env/**",
-          "editor",
-          "editor/**",
-          "logger",
-          "logger/**",
           "rpc",
           "rpc/**",
           "utils",
           "utils/**",
           "cache",
-          "cache/**",
-          "llm",
-          "llm/**",
-          "payments",
-          "payments/**",
-          "storage",
-          "storage/**"
+          "cache/**"
         ]
       }
     ],

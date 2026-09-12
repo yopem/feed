@@ -1,0 +1,26 @@
+{
+  "name": "server",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "dev": "bun --env-file=../../.env --watch src/index.ts",
+    "build": "bun build src/index.ts --target bun --outdir dist --packages external",
+    "start": "bun run dist/index.js"
+  },
+  "dependencies": {
+    "@hono/swagger-ui": "catalog:",
+    "@hono/zod-openapi": "catalog:",
+    "auth": "workspace:*",
+    "cache": "workspace:*",
+    "db": "workspace:*",
+    "env": "workspace:*",
+    "fast-xml-parser": "catalog:",
+    "hono": "catalog:",
+    "utils": "workspace:*",
+    "zod": "catalog:"
+  }
+}

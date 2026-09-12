@@ -11,18 +11,6 @@
     "tailwindcss": {
       "entryPoint": [
         {
-          "files": "apps/admin/**",
-          "use": "./apps/admin/src/styles.css"
-        },
-        {
-          "files": "packages/editor/**",
-          "use": "./packages/editor/src/style.css"
-        },
-        {
-          "files": "packages/ui/**",
-          "use": "./packages/ui/src/style.css"
-        },
-        {
           "files": "**",
           "use": "./packages/ui/src/style.css"
         }
@@ -150,22 +138,30 @@
     "typescript/restrict-plus-operands": "error",
     "typescript/triple-slash-reference": "error"
   },
-  "ignorePatterns": ["**/bun.lock", "**/migrations/", "**/AGENTS.md"],
+  "ignorePatterns": [
+    "**/bun.lock",
+    "**/migrations/**",
+    "**/AGENTS.md",
+    "**/routeTree.gen.ts",
+    "**/dist/**",
+    "**/.tanstack/**",
+    "docs/**"
+  ],
   "options": {
     "typeAware": true,
     "typeCheck": true
   },
   "overrides": [
     {
-      "files": ["apps/web/**", "apps/admin/**"],
+      "files": ["apps/**", "packages/{auth,cache,env,rpc,ui,utils}/**"],
       "rules": {
         "eslint/no-restricted-imports": [
           "error",
           {
-            "paths": [
+            "patterns": [
               {
-                "name": "drizzle-orm",
-                "message": "drizzle-orm is packages/db-only; go through db services (db/services/*)"
+                "group": ["drizzle-orm", "drizzle-orm/*"],
+                "message": "Database access belongs in packages/db services."
               }
             ]
           }
@@ -173,15 +169,23 @@
       }
     },
     {
-      "files": ["packages/{auth,cache,editor,env,rpc,ui,utils}/**"],
+      "files": ["apps/web/**", "packages/ui/**"],
       "rules": {
         "eslint/no-restricted-imports": [
           "error",
           {
-            "paths": [
+            "patterns": [
               {
-                "name": "drizzle-orm",
-                "message": "drizzle-orm is packages/db-only; go through db services (db/services/*)"
+                "group": [
+                  "drizzle-orm",
+                  "drizzle-orm/*",
+                  "db",
+                  "db/*",
+                  "server",
+                  "server/*",
+                  "@hono/zod-openapi"
+                ],
+                "message": "Use packages/rpc; database and server modules are server-only."
               }
             ]
           }
@@ -189,12 +193,43 @@
       }
     },
     {
-      "files": [
-        "apps/admin/**",
-        "apps/web/**",
-        "packages/editor/**",
-        "packages/ui/**"
-      ],
+      "files": ["packages/{auth,cache,env,rpc,utils}/**"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@hono/zod-openapi"],
+                "message": "OpenAPI belongs in apps/server routes."
+              },
+              {
+                "group": ["drizzle-orm", "drizzle-orm/*"],
+                "message": "Database access belongs in packages/db services."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/db/**"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@hono/zod-openapi"],
+                "message": "OpenAPI belongs in apps/server routes."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/web/**", "packages/ui/**"],
       "plugins": [
         "eslint",
         "import",
@@ -206,9 +241,9 @@
         "typescript",
         "unicorn"
       ],
-      "jsPlugins": ["oxlint-tailwindcss"],
+      "jsPlugins": ["oxlint-tailwindcss", "eslint-plugin-react-compiler"],
       "rules": {
-        "react/react-compiler": "error",
+        "react-compiler/react-compiler": "error",
         "react/rules-of-hooks": "error",
         "tailwindcss/enforce-canonical": "error",
         "tailwindcss/enforce-consistent-important-position": "error",
@@ -220,15 +255,7 @@
         "tailwindcss/no-unknown-classes": [
           "error",
           {
-            "allowlist": [
-              "group/container",
-              "group/editor",
-              "group/media",
-              "group/menu-item",
-              "group/menu-sub-item",
-              "group/sidebar-wrapper",
-              "peer/menu-button"
-            ]
+            "allowlist": ["reader-shell", "reader-sidebar", "article-body"]
           }
         ],
         "tailwindcss/no-unnecessary-arbitrary-value": "error",

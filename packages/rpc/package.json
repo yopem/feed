@@ -1,0 +1,17 @@
+{
+  "name": "rpc",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "catalog:",
+    "env": "workspace:*",
+    "hono": "catalog:"
+  },
+  "devDependencies": {
+    "server": "workspace:*"
+  }
+}

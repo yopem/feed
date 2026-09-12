@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "types": ["bun"],
+    "paths": {
+      "web/*": ["./apps/web/src/*"],
+      "server/*": ["./apps/server/src/*"],
+      "db/*": ["./packages/db/src/*"],
+      "auth/*": ["./packages/auth/src/*"],
+      "rpc/*": ["./packages/rpc/src/*"],
+      "ui/*": ["./packages/ui/src/*"],
+      "utils/*": ["./packages/utils/src/*"],
+      "env/*": ["./packages/env/src/*"],
+      "cache/*": ["./packages/cache/src/*"]
+    }
+  },
+  "include": [
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
+    "packages/**/*.ts",
+    "packages/**/*.tsx"
+  ],
+  "exclude": ["node_modules", "**/dist", "**/.tanstack"]
+}

@@ -11,6 +11,36 @@
 - Make smallest complete change. Reuse existing code before adding helpers,
   abstractions, dependencies, or configuration.
 - Preserve unrelated user changes. Never reset, delete, or overwrite them.
+- Only `AGENTS.md`, `README.md`, and `LICENSE.md` may be committed as Markdown
+  files. Put detailed plans and working documentation in gitignored `docs/`.
+  Keep `README.md` focused on project overview, setup, usage, and license.
+- License this project under GNU AGPL version 3 (`AGPL-3.0-only`).
+
+## Product scope
+
+- Build an open-source RSS reader with classic Feedly-style reading and
+  organization, not the current Feedly threat intelligence product.
+- Exclude threat intelligence, security dashboards, and intelligence workflows.
+- Initial release supports RSS feeds. Google News and Reddit support come later.
+- AI features are deferred. Do not install AI dependencies or build AI modules
+  until that phase is requested. AI stack guidance below applies to that phase.
+- Include feed subscriptions, folders, tags, workspaces, and sharing.
+- Reading features include search, read/unread state, starred articles, and
+  read later. Plan OPML import/export and keyboard shortcuts.
+- Support hosted and self-hosted deployments. Hosted signup is public;
+  self-hosted signup is configurable. No billing initially.
+- Use Google-only sign-in through the existing OpenAuth service at
+  `https://auth.yopem.com`, matching Yopem's client and subject contract.
+- This app is an auth client, not an issuer. Use `AUTH_CLIENT_ID=yopem` and a
+  separate `AUTH_CALLBACK_URL` pointing to this app's API `/auth/callback`.
+- Map verified issuer/subject identities to local users. Shared issuer roles
+  never grant workspace roles; keep workspace authorization local.
+- Workspaces support invitations and owner/editor/viewer roles, shared feeds,
+  and shared boards.
+- Initial sharing includes public board links, native article sharing,
+  comments, and mentions. Email is for invitations only.
+- Defer email digests and third-party integrations beyond initial release.
+- No admin panel. Keep `apps/web`, `apps/server`, and the listed shared packages.
 
 ## Standard stack
 
@@ -24,6 +54,7 @@
 - **AI:** TanStack AI through `@tanstack/ai`, with OpenAI or OpenRouter
   providers. Use `Bun.Image` for media processing when needed.
 - **Database:** PostgreSQL and Drizzle ORM through the native Bun SQL driver.
+  Use `drizzle-zod` to derive insert, select, and update validation schemas.
 - **Authentication:** OpenAuth with cookie-based sessions.
 - **Cache:** Redis through Bun's native Redis client.
 - **Storage:** Cloudflare R2 through Bun's native S3 client.
@@ -44,7 +75,6 @@ When this monorepo layout exists, use these boundaries:
 ```text
 apps/
   web/       public TanStack Start app (port 3000)
-  admin/     admin TanStack Start app (port 3001)
   server/    Hono API server (port 4000)
 packages/
   db/        Drizzle schema, migrations, and data-access services
@@ -56,7 +86,7 @@ packages/
   cache/     Redis client and cache helpers
 ```
 
-Web and admin code uses feature-first organization:
+Web code uses feature-first organization:
 
 - Domain code belongs in `src/features/<domain>/`.
 - Shared application code belongs in `src/components/`.
@@ -67,12 +97,18 @@ Web and admin code uses feature-first organization:
 Use this dependency direction:
 
 ```text
-apps/web|admin → packages/rpc → apps/server routes → packages/db services → schema
+apps/web → packages/rpc → apps/server routes → packages/db services → schema
 ```
 
 - Apps call the typed API client. Apps never import SQL, Drizzle, or database
   services directly.
 - All database access lives in `packages/db/src/services/`.
+- Follow `/home/karyana/Codes/projects/yopem/packages/db` layout: domain table
+  files in `src/schema/`, services in `src/services/`, generated migrations in
+  `src/migrations/`, database assembly in `src/index.ts`, and mirrored `test/`.
+  Keep `drizzle.config.ts` at the package root.
+- Export table-derived insert/select/update schemas and inferred table types
+  from each domain schema module using `drizzle-zod`, not `drizzle-valibot`.
 - Generate IDs with the existing helper in `packages/utils`.
 - Keep server routers thin: authentication, validation, authorization, and
   orchestration only.
@@ -101,8 +137,8 @@ apps/web|admin → packages/rpc → apps/server routes → packages/db services 
   `/rpc/category/list`.
 - Serve the OpenAPI specification at `/rpc/spec.json`.
 - Expose interactive documentation at `/rpc/doc` when configured.
-- Put authentication and role checks in Hono middleware, such as
-  `requireAuth` and `requireAdmin`.
+- Put authentication and workspace role checks in Hono middleware, such as
+  `requireAuth`.
 - Export the Hono app as a named export. Do not add a default fetch-handler
   export when it would cause Bun to start an unintended extra server.
 - Keep CORS, auth middleware, error handling, and route mounting in the server
@@ -137,8 +173,9 @@ For a server organized under `apps/server/src`, use:
   same typed environment package.
 - `.env` at repository root is not committed and supplies build/runtime values.
 - Use native environment metadata when a mode or build state is needed.
-- Server runs on `4000` (`SERVER_PORT`), web on `3000` (`WEB_PORT`), and admin
-  on `3001` (`ADMIN_PORT`).
+- Server runs on `4000` (`SERVER_PORT`) and web on `3000` (`WEB_PORT`).
+- Run PostgreSQL and Redis in local containers through Docker Compose.
+  Podman may run equivalent development containers when Docker is unavailable.
 - OpenAuth uses `AUTH_ISSUER`. Session cookies are `access_token` (1 day) and
   `refresh_token` (7 days), `httpOnly`, `sameSite: none` in production and
   `lax` in development, and secure when `COOKIE_DOMAIN` is set or the app runs
@@ -152,7 +189,7 @@ For a server organized under `apps/server/src`, use:
 - **TanStack React Form:** use `useForm` from `@tanstack/react-form` with Zod
   validators. Required fields validate on blur and submit, never on change or
   mount, so untouched fields show no error.
-- **Server-only web/admin logic:** use `createServerFn`. Mark client
+- **Server-only web logic:** use `createServerFn`. Mark client
   components with `"use client"` when required by the framework.
 - **TanStack AI:** keep model calls, tools, prompts, and provider setup in
   server-side AI modules. Do not add another AI SDK.
@@ -181,6 +218,8 @@ For a server organized under `apps/server/src`, use:
 - Do not add comments or JSDoc to explain code that can be made clear through
   naming and structure.
 - Fix lint violations at their root. Do not disable rules to silence errors.
+- Keep React Compiler lint enforcement enabled. Use the React Compiler plugin
+  through Oxlint when the installed native React plugin lacks the rule.
 - Components and functions must be reusable, focused, and easy to understand.
 
 ## Tooling and commands
@@ -226,8 +265,8 @@ are applied.
   `apps/server/dist/index.js`.
 - Run the built server with `bun run dist/index.js`.
 - Use `oven/bun` for server Docker build and runtime images.
-- Web and admin builds output `dist/client` and `dist/server`.
-- Serve built web/admin apps with `srvx` and the configured app port.
+- Web builds output `dist/client` and `dist/server`.
+- Serve the built web app with `srvx` and the configured app port.
 - Docker builds use `CI=true` and pass required public environment arguments.
 
 ## Testing rules

@@ -1,0 +1,24 @@
+{
+  "name": "db",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "db:generate": "bun --env-file=../../.env --bun run drizzle-kit generate",
+    "db:migrate": "bun --env-file=../../.env src/migrate.ts",
+    "db:studio": "bun --env-file=../../.env --bun run drizzle-kit studio"
+  },
+  "dependencies": {
+    "drizzle-orm": "catalog:",
+    "drizzle-zod": "catalog:",
+    "env": "workspace:*",
+    "utils": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "drizzle-kit": "catalog:"
+  }
+}

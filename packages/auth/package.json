@@ -1,0 +1,14 @@
+{
+  "name": "auth",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "@openauthjs/openauth": "catalog:",
+    "env": "workspace:*",
+    "zod": "catalog:"
+  }
+}
