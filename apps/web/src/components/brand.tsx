@@ -7,6 +7,7 @@ export function ThemeButton() {
   const { resolvedTheme, setTheme } = useTheme()
   return (
     <Button
+      variant="ghost"
       className="icon-button"
       aria-label="Toggle light or dark theme"
       title="Toggle theme"
@@ -23,7 +24,7 @@ export function Brand() {
       <span className="brand-symbol">
         <RssIcon aria-hidden="true" />
       </span>
-      feed<span className="brand-period">.</span>
+      feed<span>.</span>
     </span>
   )
 }

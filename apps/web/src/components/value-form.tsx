@@ -4,6 +4,7 @@ import { useForm } from "@tanstack/react-form"
 import { useId, useState } from "react"
 
 import { Button } from "ui/button"
+import { Input } from "ui/input"
 
 export function ValueForm({
   label,
@@ -54,7 +55,7 @@ export function ValueForm({
         {(field) => (
           <div className="field">
             <label htmlFor={id}>{label}</label>
-            <input
+            <Input
               id={id}
               type={type}
               placeholder={placeholder}
@@ -77,7 +78,7 @@ export function ValueForm({
       ) : null}
       <form.Subscribe selector={(state) => state.isSubmitting}>
         {(pending) => (
-          <Button type="submit" className="primary" disabled={pending}>
+          <Button type="submit" variant="default" disabled={pending}>
             {pending ? "Saving…" : submitLabel}
           </Button>
         )}

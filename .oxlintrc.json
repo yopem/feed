@@ -181,8 +181,8 @@
                   "drizzle-orm/*",
                   "db",
                   "db/*",
-                  "server",
-                  "server/*",
+                  "/server",
+                  "/server/*",
                   "@hono/zod-openapi"
                 ],
                 "message": "Use packages/rpc; database and server modules are server-only."

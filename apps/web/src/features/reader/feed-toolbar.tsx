@@ -38,6 +38,7 @@ export function FeedToolbar({
               {refresh.isPending ? "Refreshing…" : "Refresh"}
             </Button>
             <Button
+              variant="ghost"
               className="icon-button"
               aria-label={`Remove ${feed.title}`}
               onClick={() => {
@@ -69,7 +70,7 @@ export function FeedToolbar({
         <div className="dialog-actions">
           <Button onClick={() => setRemoving(false)}>Keep feed</Button>
           <Button
-            className="danger"
+            variant="destructive-outline"
             disabled={remove.isPending}
             onClick={() => {
               remove.mutate(feed.id, {

@@ -1,15 +1,20 @@
-import { PlusIcon, RssIcon } from "lucide-react"
+import { LibraryIcon, PlusIcon, RssIcon } from "lucide-react"
 import { useId } from "react"
-import { views } from "web/features/reader/views"
 
 import type { ArticleFilter, Workspace } from "rpc/reader"
 import { useFeeds } from "rpc/reader"
 import { Button } from "ui/button"
+import {
+  Select,
+  SelectItem,
+  SelectPopup,
+  SelectTrigger,
+  SelectValue,
+} from "ui/select"
 
 export function ReaderNavigation({
   workspace,
   workspaces,
-  view,
   feedId,
   onSwitch,
   onCreate,
@@ -20,7 +25,6 @@ export function ReaderNavigation({
 }: {
   workspace: Workspace
   workspaces: Workspace[]
-  view: ArticleFilter["view"]
   feedId?: string
   onSwitch: (id: string) => void
   onCreate: () => void
@@ -36,18 +40,30 @@ export function ReaderNavigation({
     <>
       <div className="workspace-picker">
         <label htmlFor={id}>Workspace</label>
-        <select
-          id={id}
+        <Select
           value={workspace.id}
-          onChange={(event) => onSwitch(event.target.value)}
+          items={workspaces.map((item) => ({
+            value: item.id,
+            label: item.name,
+          }))}
+          onValueChange={(value) => {
+            if (value) onSwitch(value)
+          }}
         >
-          {workspaces.map((item) => (
-            <option value={item.id} key={item.id}>
-              {item.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger id={id} className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectPopup alignItemWithTrigger={false}>
+            {workspaces.map((item) => (
+              <SelectItem value={item.id} key={item.id}>
+                {item.name}
+              </SelectItem>
+            ))}
+          </SelectPopup>
+        </Select>
         <Button
+          variant="ghost"
+          size="sm"
           className="new-workspace"
           onClick={() => {
             onNavigate()
@@ -58,22 +74,21 @@ export function ReaderNavigation({
         </Button>
       </div>
       <nav aria-label="Reading views" className="reading-nav">
-        {views.map((item) => (
-          <Button
-            key={item.value}
-            className={`nav-item ${view === item.value && !feedId ? "active" : ""}`}
-            aria-current={view === item.value && !feedId ? "page" : undefined}
-            onClick={() => onView(item.value)}
-          >
-            <item.icon aria-hidden="true" />
-            <span>{item.label}</span>
-          </Button>
-        ))}
+        <Button
+          variant="ghost"
+          className={`nav-item justify-start ${!feedId ? "active" : ""}`}
+          aria-current={!feedId ? "page" : undefined}
+          onClick={() => onView("all")}
+        >
+          <LibraryIcon aria-hidden="true" />
+          <span>Your reading</span>
+        </Button>
       </nav>
       <div className="feed-heading">
-        <span>YOUR FEEDS</span>
+        <span>Feeds</span>
         {canEdit ? (
           <Button
+            variant="ghost"
             className="icon-button"
             aria-label="Add feed"
             title="Add feed"
@@ -99,7 +114,8 @@ export function ReaderNavigation({
         ) : null}
         {feeds.data?.map((feed) => (
           <Button
-            className={`nav-item ${feedId === feed.id ? "active" : ""}`}
+            variant="ghost"
+            className={`nav-item justify-start ${feedId === feed.id ? "active" : ""}`}
             aria-current={feedId === feed.id ? "page" : undefined}
             key={feed.id}
             onClick={() => {
@@ -122,18 +138,7 @@ export function ReaderNavigation({
           <p className="sidebar-note">Your favorite sources belong here.</p>
         ) : null}
       </nav>
-      {canEdit ? (
-        <Button
-          className="add-feed-button"
-          onClick={() => {
-            onAdd()
-          }}
-        >
-          <PlusIcon aria-hidden="true" /> Follow a feed
-        </Button>
-      ) : (
-        <p className="sidebar-note">View-only workspace</p>
-      )}
+      {!canEdit ? <p className="sidebar-note">View-only workspace</p> : null}
     </>
   )
 }

@@ -8,6 +8,7 @@ export function SignOutButton({ compact = false }: { compact?: boolean }) {
   return (
     <div>
       <Button
+        variant={compact ? "ghost" : "outline"}
         className={compact ? "icon-button" : ""}
         disabled={logout.isPending}
         aria-label="Sign out"

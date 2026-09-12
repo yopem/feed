@@ -1,4 +1,4 @@
-import { ArrowUpRightIcon } from "lucide-react"
+import { ArrowRightIcon } from "lucide-react"
 import { useState } from "react"
 import { Brand, ThemeButton } from "web/components/brand"
 import { SignOutButton } from "web/components/sign-out-button"
@@ -9,6 +9,14 @@ import { z } from "zod"
 import { clientEnv } from "env/client"
 import { useCreateWorkspace, useSession, useWorkspaces } from "rpc/reader"
 import { Button } from "ui/button"
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardPanel,
+  CardFooter,
+} from "ui/card"
 import { Modal } from "ui/dialog"
 
 const workspaceName = z
@@ -50,23 +58,65 @@ function SignIn() {
         <ThemeButton />
       </header>
       <main className="signin-main">
-        <div className="eyebrow">YOUR OWN CORNER OF THE WEB</div>
-        <h1>
-          Good reading.
-          <br />
-          <span>On your terms.</span>
-        </h1>
-        <p>
-          Follow the sources you trust. Keep the stories that matter. A quiet
-          home for your RSS feeds, without the noise.
-        </p>
-        <a
-          className="button primary signin-button"
-          href={`${clientEnv.VITE_SERVER_URL}/auth/login`}
-        >
-          Continue with Google <ArrowUpRightIcon aria-hidden="true" />
-        </a>
-        <span className="signin-note">Your feeds, in one place.</span>
+        <section className="signin-intro" aria-labelledby="signin-heading">
+          <span className="intro-label">RSS, without the distractions</span>
+          <h1 id="signin-heading">
+            A home for
+            <br />
+            your reading.
+          </h1>
+          <p>
+            Follow independent voices, save a good story, and pick up where you
+            left off.
+          </p>
+          <div className="signin-features">
+            <div>
+              <span>01</span>
+              <p>
+                <strong>Choose your sources</strong>Follow RSS and Atom feeds in
+                one place.
+              </p>
+            </div>
+            <div>
+              <span>02</span>
+              <p>
+                <strong>Read at your pace</strong>Keep unread stories, stars,
+                and a read-later list.
+              </p>
+            </div>
+          </div>
+        </section>
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle>
+              <h2>Welcome to Feed</h2>
+            </CardTitle>
+            <CardDescription>
+              Sign in to your reading workspace.
+            </CardDescription>
+          </CardHeader>
+          <CardPanel>
+            <Button
+              variant="default"
+              className="w-full"
+              render={
+                <a
+                  href={`${clientEnv.VITE_SERVER_URL}/auth/login`}
+                  aria-label="Continue with Google"
+                />
+              }
+            >
+              Continue with Google <ArrowRightIcon aria-hidden="true" />
+            </Button>
+            <p className="text-muted-foreground mt-4 text-xs leading-relaxed">
+              You'll continue through Yopem's secure Google sign-in, then return
+              here.
+            </p>
+          </CardPanel>
+          <CardFooter className="text-muted-foreground border-t text-xs">
+            New here? Your account is created when signup is enabled.
+          </CardFooter>
+        </Card>
       </main>
       <footer className="signin-footer">
         <span>Independent reading. Open-source software.</span>
@@ -119,22 +169,40 @@ function SignedInReader({ name }: { name: string }) {
           onCreate={() => setCreating(true)}
         />
       ) : (
-        <main className="welcome onboarding">
-          <Brand />
-          <div className="eyebrow">WELCOME TO FEED</div>
-          <h1>A place for your curiosity.</h1>
-          <p>
-            Create your first workspace, then add the RSS feeds you want to
-            follow.
-          </p>
-          <ValueForm
-            label="Workspace name"
-            placeholder="My reading space"
-            submitLabel="Create workspace"
-            schema={workspaceName}
-            onSubmit={createWorkspace}
-          />
-          <SignOutButton />
+        <main className="onboarding">
+          <header className="signin-header">
+            <Brand />
+            <SignOutButton />
+          </header>
+          <div className="onboarding-content">
+            <div className="setup-steps" aria-label="Getting started">
+              <span aria-current="step">1. Create workspace</span>
+              <span>2. Follow your first feed</span>
+            </div>
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle>
+                  <h1>Create your reading space</h1>
+                </CardTitle>
+                <CardDescription>
+                  A workspace keeps your feeds and reading list together. Give
+                  yours a name.
+                </CardDescription>
+              </CardHeader>
+              <CardPanel>
+                <ValueForm
+                  label="Workspace name"
+                  placeholder="My reading space"
+                  submitLabel="Create workspace"
+                  schema={workspaceName}
+                  onSubmit={createWorkspace}
+                />
+              </CardPanel>
+              <CardFooter className="text-muted-foreground border-t text-xs">
+                You can create separate workspaces for other interests later.
+              </CardFooter>
+            </Card>
+          </div>
         </main>
       )}
       <Modal

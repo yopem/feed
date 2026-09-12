@@ -14,6 +14,8 @@ import type { Article, ArticleFilter, Workspace } from "rpc/reader"
 import { useAddFeed, useArticles, useFeeds } from "rpc/reader"
 import { Button } from "ui/button"
 import { Modal } from "ui/dialog"
+import { Input } from "ui/input"
+import { Tabs, TabsList, TabsPanel, TabsTab } from "ui/tabs"
 
 const feedUrl = z.url({
   protocol: /^https?$/,
@@ -61,7 +63,6 @@ export function WorkspaceReader({
     <ReaderNavigation
       workspace={workspace}
       workspaces={workspaces}
-      view={view}
       feedId={feedId}
       onSwitch={onSwitch}
       onCreate={onCreate}
@@ -96,69 +97,42 @@ export function WorkspaceReader({
             <ThemeButton />
             <SignOutButton compact />
           </div>
-          <div className="license">
-            Made for readers <span>AGPL-3.0</span>
-          </div>
         </div>
       </aside>
       <main className="reading-main" id="reading-list" tabIndex={-1}>
-        <header className="topbar">
+        <div className="panel-context">
           <Button
-            className="icon-button mobile-menu"
+            variant="ghost"
+            size="icon"
+            className="min-[701px]:hidden"
             onClick={() => setMobileNav(true)}
             aria-label="Open navigation"
           >
             <MenuIcon aria-hidden="true" />
           </Button>
-          <span className="breadcrumb">
-            {workspace.name}
-            <span>/</span>
-            {activeFeed ? activeFeed.title : "Your reading"}
+          <span>{workspace.name}</span>
+          <span aria-hidden="true">/</span>
+          <span className="text-foreground">Reading</span>
+          <span className="ml-auto rounded-md border px-2 py-0.5 text-xs capitalize">
+            {workspace.role}
           </span>
-          <form
-            className="search"
-            role="search"
-            onSubmit={(event) => {
-              event.preventDefault()
-              setSearch(searchInput.trim())
-            }}
-          >
-            <SearchIcon aria-hidden="true" />
-            <input
-              type="search"
-              aria-label="Search articles"
-              placeholder="Search articles…"
-              value={searchInput}
-              onChange={(event) => {
-                setSearchInput(event.target.value)
-                if (!event.target.value) setSearch("")
-              }}
-            />
-            <Button type="submit" className="search-submit">
-              Search
-            </Button>
-          </form>
-        </header>
+        </div>
         <section className="reading-content" aria-labelledby="list-title">
-          <div className="list-heading">
-            <div>
-              <div className="eyebrow">YOUR DAILY READING</div>
-              <h1 id="list-title">{activeFeed?.title ?? currentView.label}</h1>
+          <header className="page-header">
+            <div className="min-w-0">
+              <h1 id="list-title">{activeFeed?.title ?? "Your reading"}</h1>
               <p>
                 {activeFeed
-                  ? "Stories from this source, all in one place."
-                  : currentView.description}
+                  ? "Every story from this source."
+                  : "Catch up on your feeds. Keep what matters."}
               </p>
             </div>
             {canEdit ? (
-              <Button
-                className="primary follow-header"
-                onClick={() => setAdding(true)}
-              >
+              <Button variant="default" onClick={() => setAdding(true)}>
                 <PlusIcon aria-hidden="true" /> Follow a feed
               </Button>
             ) : null}
-          </div>
+          </header>
           {activeFeed ? (
             <FeedToolbar
               key={activeFeed.id}
@@ -167,37 +141,93 @@ export function WorkspaceReader({
               onRemoved={() => setFeedId(undefined)}
             />
           ) : null}
-          <div className="list-meta">
-            <span>
-              {search ? `Results for “${search}”` : "Latest articles"}
-            </span>
-            <span aria-live="polite">
-              {articles.isFetching
-                ? "Updating…"
-                : `${articles.data?.length ?? 0} articles`}
-            </span>
-            {search ? (
-              <Button
-                className="icon-button"
-                aria-label="Clear search"
-                onClick={() => {
-                  setSearch("")
-                  setSearchInput("")
+          <Tabs
+            value={view}
+            onValueChange={(value) => {
+              const selected = views.find((item) => item.value === value)
+              if (selected) setView(selected.value)
+            }}
+          >
+            <div className="reading-controls">
+              <TabsList aria-label="Article filters" className="max-w-full">
+                {views.map((item) => (
+                  <TabsTab
+                    key={item.value}
+                    value={item.value}
+                    className="max-sm:text-xs"
+                  >
+                    <item.icon aria-hidden="true" className="max-sm:hidden" />
+                    {item.label}
+                  </TabsTab>
+                ))}
+              </TabsList>
+              <form
+                className="search-form"
+                role="search"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  setSearch(searchInput.trim())
                 }}
               >
-                <XIcon aria-hidden="true" />
-              </Button>
-            ) : null}
-          </div>
-          <ArticleResults
-            articles={articles}
-            noFeeds={feeds.data?.length === 0}
-            search={search}
-            view={view}
-            canEdit={canEdit}
-            onAdd={() => setAdding(true)}
-            onSelect={setArticle}
-          />
+                <Input
+                  type="search"
+                  aria-label="Search articles"
+                  placeholder="Search articles…"
+                  value={searchInput}
+                  onChange={(event) => {
+                    setSearchInput(event.target.value)
+                    if (!event.target.value) setSearch("")
+                  }}
+                />
+                <Button type="submit" size="icon" aria-label="Search articles">
+                  <SearchIcon aria-hidden="true" />
+                </Button>
+              </form>
+            </div>
+            <div className="list-meta">
+              <span>
+                {search ? `Results for “${search}”` : currentView.description}
+              </span>
+              {search ? (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Clear search"
+                  onClick={() => {
+                    setSearch("")
+                    setSearchInput("")
+                  }}
+                >
+                  <XIcon aria-hidden="true" />
+                </Button>
+              ) : null}
+              <span
+                className="ml-auto shrink-0 tabular-nums"
+                aria-live="polite"
+              >
+                {articles.isFetching
+                  ? "Updating…"
+                  : `${articles.data?.length ?? 0} articles`}
+              </span>
+            </div>
+            {views.map((item) => (
+              <TabsPanel key={item.value} value={item.value}>
+                {view === item.value ? (
+                  <div className="article-list">
+                    <ArticleResults
+                      articles={articles}
+                      noFeeds={feeds.data?.length === 0}
+                      search={search}
+                      view={view}
+                      canEdit={canEdit}
+                      onAdd={() => setAdding(true)}
+                      onSelect={setArticle}
+                    />
+                  </div>
+                ) : null}
+              </TabsPanel>
+            ))}
+          </Tabs>
         </section>
       </main>
       <Modal
