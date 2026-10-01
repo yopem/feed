@@ -21,6 +21,7 @@ const feedUrl = z.url({
   protocol: /^https?$/,
   error: "Enter a valid http:// or https:// RSS feed URL.",
 })
+
 export function WorkspaceReader({
   name,
   workspace,
