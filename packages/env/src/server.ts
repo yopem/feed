@@ -45,7 +45,11 @@ const serverSchema = z
     }
   })
 
-export function parseServerEnv(values: Record<string, unknown>) {
+export function parseServerEnv(
+  values: Omit<Partial<z.input<typeof serverSchema>>, "NODE_ENV"> & {
+    NODE_ENV?: string
+  },
+) {
   return serverSchema.parse(values)
 }
 
