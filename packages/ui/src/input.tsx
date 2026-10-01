@@ -7,18 +7,20 @@ import { cn } from "ui/utils"
 
 export type InputProps = Omit<
   InputPrimitive.Props & React.RefAttributes<HTMLInputElement>,
-  "size"
+  "size" | "style"
 > & {
   size?: "sm" | "default" | "lg" | number
   unstyled?: boolean
-  nativeInput?: boolean
-}
+} & (
+    | { nativeInput?: false; style?: InputPrimitive.Props["style"] }
+    | { nativeInput: true; style?: React.CSSProperties }
+  )
 
 export function Input({
   className,
   size = "default",
   unstyled = false,
-  nativeInput = false,
+  nativeInput,
   style,
   ...props
 }: InputProps) {
@@ -49,15 +51,23 @@ export function Input({
         <input
           className={inputClassName}
           data-slot="input"
-          size={typeof size === "number" ? size : undefined}
-          style={typeof style === "function" ? undefined : style}
+          size={
+            size === "sm" || size === "default" || size === "lg"
+              ? undefined
+              : size
+          }
+          style={style}
           {...props}
         />
       ) : (
         <InputPrimitive
           className={inputClassName}
           data-slot="input"
-          size={typeof size === "number" ? size : undefined}
+          size={
+            size === "sm" || size === "default" || size === "lg"
+              ? undefined
+              : size
+          }
           style={style}
           {...props}
         />
