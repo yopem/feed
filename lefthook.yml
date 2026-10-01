@@ -18,7 +18,7 @@ pre-push:
     lint:
       glob: "*.{js,mjs,ts,tsx}"
       run: bun --bun oxlint {push_files}
-    format-check:
+    formatcheck:
       glob: "*.{css,html,js,json,md,mjs,toml,ts,tsx,yml}"
       run: bun --bun oxfmt --check {push_files}
     typecheck:
