@@ -45,7 +45,7 @@ describe.skipIf(!testEnv.RUN_DB_TESTS)("PostgreSQL core services", () => {
   ) {
     const result = await promise.then(
       () => null,
-      (error: unknown) => error,
+      (error: Error) => error,
     )
 
     expect(result).toBeInstanceOf(Error)
