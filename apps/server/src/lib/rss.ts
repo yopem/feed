@@ -6,6 +6,7 @@ import { lookup } from "node:dns"
 import { request as httpRequest } from "node:http"
 import { request as httpsRequest } from "node:https"
 import { BlockList, isIP } from "node:net"
+import { z } from "zod"
 
 const maxBytes = 2 * 1024 * 1024
 
@@ -116,21 +117,34 @@ export function createPinnedLookup(
   return pinnedLookup
 }
 
-function record(value: unknown): Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? Object.fromEntries(Object.entries(value))
-    : {}
+const xmlValueSchema = z.json()
+
+const xmlRecordSchema = z.record(z.string(), xmlValueSchema)
+
+const xmlStringSchema = z.string()
+
+type XmlValue = z.infer<typeof xmlValueSchema>
+
+type XmlRecord = z.infer<typeof xmlRecordSchema>
+
+function record(value: XmlValue | undefined): XmlRecord {
+  const parsed = xmlRecordSchema.safeParse(value)
+
+  return parsed.success ? parsed.data : {}
 }
 
-function list(value: unknown) {
+function list(value: XmlValue | undefined) {
   return Array.isArray(value) ? value : value === undefined ? [] : [value]
 }
 
-function text(value: unknown) {
-  if (typeof value === "string") return value
-  const content = record(value)["#text"]
+function text(value: XmlValue | undefined) {
+  const directText = xmlStringSchema.safeParse(value)
 
-  return typeof content === "string" ? content : ""
+  if (directText.success) return directText.data
+
+  const content = xmlStringSchema.safeParse(record(value)["#text"])
+
+  return content.success ? content.data : ""
 }
 
 const fragmentParser = new XMLParser({
@@ -142,10 +156,12 @@ const fragmentParser = new XMLParser({
   unpairedTags: ["br", "hr", "img", "input", "meta", "link", "wbr"],
 })
 
-function extractText(value: unknown, depth = 0): string {
+function extractText(value: XmlValue | undefined, depth = 0): string {
   if (depth > 64) throw new Error("Feed markup too deeply nested")
 
-  if (typeof value === "string") return value
+  const directText = xmlStringSchema.safeParse(value)
+
+  if (directText.success) return directText.data
 
   if (Array.isArray(value)) {
     return value.map((item) => extractText(item, depth + 1)).join(" ")
@@ -161,15 +177,18 @@ function extractText(value: unknown, depth = 0): string {
     .join(" ")
 }
 
-function plainText(value: unknown) {
-  const source = typeof value === "string" ? value : extractText(value)
+function plainText(value: XmlValue | undefined) {
+  const directText = xmlStringSchema.safeParse(value)
+  const source = directText.success ? directText.data : extractText(value)
 
   if (/<!\s*(DOCTYPE|ENTITY)/i.test(source)) {
     throw new Error("Feed DTDs and entities are forbidden")
   }
 
   // Never return markup, including markup produced by entity decoding.
-  const parsed: unknown = fragmentParser.parse(`<root>${source}</root>`)
+  const parsed = xmlValueSchema.parse(
+    fragmentParser.parse(`<root>${source}</root>`),
+  )
 
   return extractText(parsed)
     .replace(/<[^>]*>/g, " ")
@@ -226,8 +245,7 @@ export function parseFeed(xml: string, url: string) {
     stopNodes: ["*.div"],
   })
 
-  const parsed: unknown = parser.parse(xml)
-  const root = record(parsed)
+  const root = xmlRecordSchema.parse(parser.parse(xml))
   const atom = root.feed !== undefined
   const channel = record(atom ? root.feed : record(root.rss).channel)
 
