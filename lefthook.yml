@@ -11,7 +11,7 @@ pre-commit:
       run: bun run typecheck
     test:
       glob: "**/*.test.{ts,tsx}"
-      run: bun run test
+      run: bun run test {staged_files}
 
 pre-push:
   commands:
