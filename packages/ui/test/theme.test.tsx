@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test"
 import { renderToStaticMarkup } from "react-dom/server"
 
-import { getRootThemeProps, ThemeScript } from "ui/theme/theme"
+import { getRootThemeProps } from "ui/theme/theme"
 import { ThemeProvider, useTheme } from "ui/theme/theme-provider"
+import { ThemeScript } from "ui/theme/theme-script"
 
 function Preference() {
   const { theme, resolvedTheme } = useTheme()

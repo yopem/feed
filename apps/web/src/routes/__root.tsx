@@ -13,8 +13,9 @@ import "web/styles.css"
 
 import { Button } from "ui/button"
 import { rootStyles, tokens } from "ui/styles/tokens.stylex"
-import { getRootThemeProps, ThemeScript } from "ui/theme/theme"
+import { getRootThemeProps } from "ui/theme/theme"
 import { ThemeProvider } from "ui/theme/theme-provider"
+import { ThemeScript } from "ui/theme/theme-script"
 
 const styles = stylex.create({
   body: {
