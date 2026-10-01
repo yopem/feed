@@ -36,15 +36,14 @@ export const oauth = new Hono()
   .get("/callback", async (c) => {
     const cookie = getCookie(c, "oauth_challenge")
     deleteCookie(c, "oauth_challenge", loginCookieOptions)
-    let value: unknown
+    let challenge: ReturnType<typeof challengeSchema.safeParse>
 
     try {
-      value = JSON.parse(cookie ?? "null")
+      challenge = challengeSchema.safeParse(JSON.parse(cookie ?? "null"))
     } catch {
-      value = null
+      challenge = challengeSchema.safeParse(null)
     }
 
-    const challenge = challengeSchema.safeParse(value)
     const code = c.req.query("code")
 
     if (
