@@ -32,7 +32,7 @@ export function Reader() {
     return (
       <main className="welcome">
         <Brand />
-        <p role="status">Opening your reading space…</p>
+        <output>Opening your reading space…</output>
       </main>
     )
 
@@ -150,7 +150,7 @@ function SignedInReader({ name }: { name: string }) {
     return (
       <main className="welcome">
         <Brand />
-        <p role="status">Loading workspaces…</p>
+        <output>Loading workspaces…</output>
       </main>
     )
 

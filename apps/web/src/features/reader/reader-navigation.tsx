@@ -103,9 +103,7 @@ export function ReaderNavigation({
       </div>
       <nav aria-label="Feeds" className="feed-nav">
         {feeds.isPending ? (
-          <p className="sidebar-note" role="status">
-            Loading feeds…
-          </p>
+          <output className="sidebar-note">Loading feeds…</output>
         ) : null}
         {feeds.isError ? (
           <div className="sidebar-note">

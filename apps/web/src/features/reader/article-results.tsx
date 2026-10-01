@@ -31,16 +31,12 @@ export function ArticleResults({
   return (
     <>
       {articles.isPending ? (
-        <div
-          className="loading-list"
-          role="status"
-          aria-label="Loading articles"
-        >
-          <div />
-          <div />
-          <div />
+        <output className="loading-list" aria-label="Loading articles">
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
           <span>Loading your articles…</span>
-        </div>
+        </output>
       ) : null}
       {articles.isError ? (
         <div className="empty-state">

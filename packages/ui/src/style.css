@@ -444,11 +444,13 @@
     line-height: 1.7;
   }
   .loading-list {
+    display: block;
     padding: 24px;
     color: var(--muted);
     font-size: 12px;
   }
-  .loading-list > div {
+  .loading-list > span[aria-hidden="true"] {
+    display: block;
     height: 66px;
     margin-bottom: 16px;
     background: var(--sidebar);

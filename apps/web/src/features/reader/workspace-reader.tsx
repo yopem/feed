@@ -165,29 +165,34 @@ export function WorkspaceReader({
                   </TabsTab>
                 ))}
               </TabsList>
-              <form
-                className="search-form"
-                role="search"
-                onSubmit={(event) => {
-                  event.preventDefault()
-                  setSearch(searchInput.trim())
-                }}
-              >
-                <Input
-                  type="search"
-                  aria-label="Search articles"
-                  placeholder="Search articles…"
-                  value={searchInput}
-                  onChange={(event) => {
-                    setSearchInput(event.target.value)
-
-                    if (!event.target.value) setSearch("")
+              <search>
+                <form
+                  className="search-form"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    setSearch(searchInput.trim())
                   }}
-                />
-                <Button type="submit" size="icon" aria-label="Search articles">
-                  <SearchIcon aria-hidden="true" />
-                </Button>
-              </form>
+                >
+                  <Input
+                    type="search"
+                    aria-label="Search articles"
+                    placeholder="Search articles…"
+                    value={searchInput}
+                    onChange={(event) => {
+                      setSearchInput(event.target.value)
+
+                      if (!event.target.value) setSearch("")
+                    }}
+                  />
+                  <Button
+                    type="submit"
+                    size="icon"
+                    aria-label="Search articles"
+                  >
+                    <SearchIcon aria-hidden="true" />
+                  </Button>
+                </form>
+              </search>
             </div>
             <div className="list-meta">
               <span>

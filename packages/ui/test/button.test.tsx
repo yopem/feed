@@ -16,12 +16,14 @@ test("loading buttons disable submission and expose status", () => {
   const html = renderToStaticMarkup(<Button loading>Save</Button>)
   expect(html).toContain('disabled=""')
   expect(html).toContain('aria-disabled="true"')
-  expect(html).toContain('role="status"')
+  expect(html).toContain('<output aria-label="Loading"')
 })
 
 test("render composition preserves native link semantics", () => {
   const html = renderToStaticMarkup(
-    <Button render={<a href="/auth/login" />}>Continue with Google</Button>,
+    <Button render={<a href="/auth/login" aria-label="Continue with Google" />}>
+      Continue with Google
+    </Button>,
   )
 
   expect(html).toStartWith("<a ")

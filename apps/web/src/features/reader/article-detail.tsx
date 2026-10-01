@@ -117,9 +117,7 @@ export function ArticleDetail({
             {mutation.error.message}
           </p>
         ) : null}
-        <p className="share-message" role="status">
-          {shareMessage}
-        </p>
+        <output className="share-message">{shareMessage}</output>
         <div className="reader-document">
           <DialogTitle className="reader-title">
             {article.title || "Untitled article"}
