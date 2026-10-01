@@ -1,18 +1,17 @@
-{
-  "$schema": "https://oxc.rs/schemas/oxfmt.json",
-  "bracketSpacing": true,
-  "jsxSingleQuote": false,
-  "printWidth": 80,
-  "proseWrap": "always",
-  "semi": false,
-  "singleQuote": false,
-  "tabWidth": 2,
-  "trailingComma": "all",
-  "experimentalTailwindcss": {
-    "functions": ["cn", "cva", "clsx"]
+export default {
+  bracketSpacing: true,
+  jsxSingleQuote: false,
+  printWidth: 80,
+  proseWrap: "always",
+  semi: false,
+  singleQuote: false,
+  tabWidth: 2,
+  trailingComma: "all",
+  experimentalTailwindcss: {
+    functions: ["cn", "cva", "clsx"],
   },
-  "experimentalSortPackageJson": true,
-  "ignorePatterns": [
+  experimentalSortPackageJson: true,
+  ignorePatterns: [
     "**/bun.lock",
     "**/migrations/**",
     "**/AGENTS.md",
@@ -20,14 +19,14 @@
     "**/routeTree.gen.ts",
     "**/dist/**",
     "**/.tanstack/**",
-    "docs/**"
+    "docs/**",
   ],
-  "sortImports": {
-    "newlinesBetween": true,
-    "customGroups": [
+  sortImports: {
+    newlinesBetween: true,
+    customGroups: [
       {
-        "groupName": "value-workspace",
-        "elementNamePattern": [
+        groupName: "value-workspace",
+        elementNamePattern: [
           "ui",
           "ui/**",
           "auth",
@@ -41,12 +40,12 @@
           "utils",
           "utils/**",
           "cache",
-          "cache/**"
-        ]
+          "cache/**",
+        ],
       },
       {
-        "groupName": "type-workspace",
-        "elementNamePattern": [
+        groupName: "type-workspace",
+        elementNamePattern: [
           "ui",
           "ui/**",
           "auth",
@@ -60,11 +59,11 @@
           "utils",
           "utils/**",
           "cache",
-          "cache/**"
-        ]
-      }
+          "cache/**",
+        ],
+      },
     ],
-    "groups": [
+    groups: [
       "type-import",
       ["value-builtin", "value-external"],
       "type-workspace",
@@ -73,7 +72,7 @@
       "value-internal",
       ["type-parent", "type-sibling", "type-index"],
       ["value-parent", "value-sibling", "value-index"],
-      "unknown"
-    ]
-  }
+      "unknown",
+    ],
+  },
 }
