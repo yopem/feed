@@ -1,0 +1,114 @@
+@layer yopem-reset, theme, base, components, utilities, yopem-base, priority1, priority2, priority3, priority4, priority5, priority6, priority7, priority8, priority9, priority10;
+
+@stylex;
+
+@layer yopem-reset {
+  *,
+  *::before,
+  *::after {
+    border: 0 solid;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    text-size-adjust: 100%;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+
+  button,
+  input,
+  optgroup,
+  select,
+  textarea {
+    background-color: transparent;
+    border-radius: 0;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    opacity: 1;
+  }
+
+  button,
+  select {
+    text-transform: none;
+  }
+
+  button,
+  input:where([type="button"], [type="reset"], [type="submit"]) {
+    appearance: button;
+  }
+
+  ol,
+  ul,
+  menu {
+    list-style: none;
+  }
+
+  img,
+  svg,
+  video,
+  canvas,
+  audio,
+  iframe,
+  embed,
+  object {
+    display: block;
+    vertical-align: middle;
+  }
+
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+}
+
+@layer yopem-base {
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot] {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Base UI owns these measured transition containers. Viewport's render prop
+     targets the outer viewport, not its current/previous content wrappers. */
+  :where([data-slot="popover-viewport"], [data-slot="tooltip-viewport"])
+    :where([data-current], [data-previous]) {
+    inline-size: calc(
+      var(--popup-width) - 2 * var(--viewport-inline-padding) - 2px
+    );
+    opacity: 1;
+    transition-property: opacity;
+  }
+
+  :where([data-slot="popover-viewport"], [data-slot="tooltip-viewport"])
+    :where([data-current], [data-previous])[data-ending-style],
+  :where([data-slot="popover-viewport"], [data-slot="tooltip-viewport"])
+    :where([data-current], [data-previous])[data-starting-style] {
+    opacity: 0;
+  }
+
+  [data-slot="tooltip-viewport"] [data-previous] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

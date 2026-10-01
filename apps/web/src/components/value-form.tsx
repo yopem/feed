@@ -1,10 +1,40 @@
 import type { ZodType } from "zod"
 
+import * as stylex from "@stylexjs/stylex"
 import { useForm } from "@tanstack/react-form"
 import { useId, useState } from "react"
 
 import { Button } from "ui/button"
 import { Input } from "ui/input"
+import { tokens } from "ui/styles/tokens.stylex"
+
+const styles = stylex.create({
+  label: {
+    display: "block",
+    marginBottom: 8,
+    fontSize: 13,
+    fontWeight: 500,
+  },
+  fieldError: {
+    minHeight: 24,
+    marginBlock: 6,
+    fontSize: 12,
+  },
+  error: {
+    padding: 12,
+    marginBlock: 12,
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderColor: tokens["--input"],
+    borderRadius: 8,
+    backgroundColor: tokens["--sidebar"],
+    fontSize: 13,
+    overflowWrap: "anywhere",
+  },
+  submit: {
+    width: "100%",
+  },
+})
 
 export function ValueForm({
   label,
@@ -42,7 +72,6 @@ export function ValueForm({
 
   return (
     <form
-      className="value-form"
       noValidate
       onSubmit={(event) => {
         event.preventDefault()
@@ -55,8 +84,10 @@ export function ValueForm({
         validators={{ onBlur: schema, onSubmit: schema }}
       >
         {(field) => (
-          <div className="field">
-            <label htmlFor={id}>{label}</label>
+          <div>
+            <label {...stylex.props(styles.label)} htmlFor={id}>
+              {label}
+            </label>
             <Input
               id={id}
               type={type}
@@ -67,20 +98,31 @@ export function ValueForm({
               aria-invalid={field.state.meta.errors.length > 0}
               aria-describedby={`${id}-error`}
             />
-            <p id={`${id}-error`} className="field-error" aria-live="polite">
-              {field.state.meta.errors.map((issue) => issue?.message).join(" ")}
+            <p
+              {...stylex.props(styles.fieldError)}
+              id={`${id}-error`}
+              aria-live="polite"
+            >
+              {Array.from(
+                new Set(field.state.meta.errors.map((issue) => issue?.message)),
+              ).join(" ")}
             </p>
           </div>
         )}
       </form.Field>
       {error ? (
-        <p role="alert" className="error-message">
+        <p {...stylex.props(styles.error)} role="alert">
           {error}
         </p>
       ) : null}
       <form.Subscribe selector={(state) => state.isSubmitting}>
         {(pending) => (
-          <Button type="submit" variant="default" disabled={pending}>
+          <Button
+            type="submit"
+            variant="default"
+            xstyle={styles.submit}
+            disabled={pending}
+          >
             {pending ? "Saving…" : submitLabel}
           </Button>
         )}

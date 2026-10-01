@@ -1,1 +1,79 @@
-@import "ui/style.css";
+@import "ui/styles/styles.css";
+
+@layer base {
+  html {
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  a {
+    text-underline-offset: 4px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--foreground);
+    outline-offset: 3px;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (pointer: coarse) {
+  [data-slot="button"],
+  [data-slot="tabs-tab"],
+  [data-slot="select-trigger"],
+  [data-slot="select-item"] {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-slot="dialog-backdrop"] {
+    background: #000b;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  html[data-theme="light"] {
+    --muted-foreground: #404040;
+    --border: #767676;
+    --input: #767676;
+    --sidebar-border: #767676;
+  }
+
+  html[data-theme="dark"] {
+    --muted-foreground: #d0d0d0;
+    --border: #949494;
+    --input: #949494;
+    --sidebar-border: #949494;
+  }
+}

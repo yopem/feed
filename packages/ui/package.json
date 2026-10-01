@@ -4,18 +4,18 @@
   "license": "AGPL-3.0-only",
   "type": "module",
   "exports": {
-    "./*": "./src/*"
+    "./*": "./src/*.tsx",
+    "./lib/*": "./src/lib/*.ts",
+    "./styles/styles.css": "./src/styles/styles.css",
+    "./styles/tokens.stylex": "./src/styles/tokens.stylex.ts",
+    "./theme/*": "./src/theme/*.tsx"
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
-    "class-variance-authority": "catalog:",
+    "@stylexjs/stylex": "catalog:",
     "clsx": "catalog:",
     "lucide-react": "catalog:",
-    "next-themes": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:",
-    "tailwind-merge": "catalog:",
-    "tailwindcss": "catalog:",
-    "tw-animate-css": "catalog:"
+    "react-dom": "catalog:"
   }
 }

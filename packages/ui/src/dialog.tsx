@@ -1,124 +1,439 @@
+"use client"
+
 import type { ReactNode } from "react"
 
-// Adapted from https://coss.com/ui/r/dialog.json (MIT).
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
+import { mergeProps } from "@base-ui/react/merge-props"
+import { useRender } from "@base-ui/react/use-render"
+import * as stylex from "@stylexjs/stylex"
 import { XIcon } from "lucide-react"
 
 import { Button } from "ui/button"
-import { cn } from "ui/utils"
+import type { StyleXComponentProps, StyleXProps } from "ui/lib/stylex"
+import { mergeStylexProps, stylexProps } from "ui/lib/stylex"
+import { ScrollArea } from "ui/scroll-area"
+import { themeMarker, tokens } from "ui/styles/tokens.stylex"
 
-export const Dialog = DialogPrimitive.Root
+const styles = stylex.create({
+  closeIcon: {
+    blockSize: { default: "1.125rem", "@media (min-width: 640px)": "1rem" },
+    inlineSize: { default: "1.125rem", "@media (min-width: 640px)": "1rem" },
+    flexShrink: 0,
+    pointerEvents: "none",
+    opacity: 0.8,
+  },
+  backdrop: {
+    backdropFilter: "blur(4px)",
+    backgroundColor: "rgb(0 0 0 / 0.32)",
+    inset: 0,
+    position: "fixed",
+    transitionDuration: "200ms",
+    transitionProperty: "all",
+    zIndex: 50,
+    "[data-ending-style]": { opacity: 0 },
+    "[data-starting-style]": { opacity: 0 },
+  },
+  viewport: {
+    display: "grid",
+    gridTemplateRows: "1fr auto 3fr",
+    inset: 0,
+    justifyItems: "center",
+    padding: "1rem",
+    position: "fixed",
+    zIndex: 50,
+  },
+  viewportBottomMobile: {
+    "@media (max-width: 639px)": {
+      gridTemplateRows: "1fr auto",
+      padding: 0,
+      paddingBlockStart: "3rem",
+    },
+  },
+  popup: {
+    backgroundClip: "padding-box",
+    backgroundColor: tokens["--popover"],
+    borderColor: tokens["--border"],
+    borderRadius: "0.875rem",
+    borderStyle: "solid",
+    borderWidth: 1,
+    boxShadow: "0 10px 15px -3px color-mix(in oklab, #000 5%, transparent)",
+    color: tokens["--popover-foreground"],
+    display: "flex",
+    flexDirection: "column",
+    gridRowStart: 2,
+    inlineSize: "100%",
+    maxBlockSize: "100%",
+    maxInlineSize: "32rem",
+    minBlockSize: 0,
+    minInlineSize: 0,
+    opacity: "calc(1 - var(--nested-dialogs))",
+    outline: "none",
+    overflowY: "auto",
+    overscrollBehavior: "contain",
+    position: "relative",
+    transformOrigin: "center",
+    transitionDuration: "200ms",
+    transitionProperty: "scale, opacity, translate",
+    transitionTimingFunction: "ease-in-out",
+    willChange: "transform",
+    "::before": {
+      borderRadius: "calc(0.875rem - 1px)",
+      boxShadow: {
+        default: "0 1px rgb(0 0 0 / 0.04)",
+        [stylex.when.ancestor('[data-theme="dark"]', themeMarker)]:
+          "0 -1px rgb(255 255 255 / 0.06)",
+      },
+      content: '""',
+      inset: 0,
+      pointerEvents: "none",
+      position: "absolute",
+    },
+    "[data-ending-style]": { opacity: 0 },
+    "[data-starting-style]": { opacity: 0 },
+    "@media (min-width: 640px)": {
+      scale: "calc(1 - 0.1 * var(--nested-dialogs))",
+      "[data-ending-style]": { scale: 0.98 },
+      "[data-starting-style]": { scale: 0.98 },
+    },
+  },
+  popupBottomMobile: {
+    "@media (max-width: 639px)": {
+      borderBlockEndWidth: 0,
+      borderInlineWidth: 0,
+      borderRadius: 0,
+      maxInlineSize: "none",
+      transformOrigin: "bottom",
+      "::before": { display: "none" },
+      "[data-ending-style]": { translate: "0 1rem" },
+      "[data-starting-style]": { translate: "0 1rem" },
+    },
+  },
+  close: {
+    insetBlockStart: "0.5rem",
+    insetInlineEnd: "0.5rem",
+    position: "absolute",
+  },
+  header: {
+    paddingBlockEnd: {
+      default: null,
+      ':is(:is([data-slot="dialog-popup"], [data-slot="sheet-popup"], [data-slot="drawer-popup"]):has([data-slot$="panel"]) > [data-slot="dialog-header"])':
+        "0.75rem",
+      "@media (max-width: 639px)": "1rem",
+    },
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.5rem",
+    padding: "1.5rem",
+  },
+  footer: {
+    display: "flex",
+    flexDirection: "column-reverse",
+    gap: "0.5rem",
+    paddingInline: "1.5rem",
+    "@media (min-width: 640px)": {
+      borderEndEndRadius: "calc(0.875rem - 1px)",
+      borderEndStartRadius: "calc(0.875rem - 1px)",
+      flexDirection: "row",
+      justifyContent: "flex-end",
+    },
+  },
+  footerDefault: {
+    backgroundColor:
+      "color-mix(in oklab, var(--muted, transparent) 72%, transparent)",
+    borderBlockStartColor: tokens["--border"],
+    borderBlockStartStyle: "solid",
+    borderBlockStartWidth: 1,
+    paddingBlock: "1rem",
+  },
+  footerBare: {
+    paddingBlockStart: {
+      default: "1rem",
+      ':is(:is([data-slot="dialog-popup"], [data-slot="sheet-popup"], [data-slot="drawer-popup"]):has([data-slot$="panel"]) > [data-slot="dialog-footer"])':
+        "0.75rem",
+    },
+    paddingBlockEnd: "1.5rem",
+  },
+  title: {
+    fontFamily: tokens["--font-heading"],
+    fontSize: "1.25rem",
+    fontWeight: 600,
+    lineHeight: 1,
+  },
+  description: { color: tokens["--muted-foreground"], fontSize: "0.875rem" },
+  modal: { padding: "1.5rem" },
+  modalTitle: {
+    lineHeight: 1.4,
+    marginBlockEnd: "0.625rem",
+    paddingInlineEnd: "1.75rem",
+  },
+  modalDescription: { lineHeight: 1.6, marginBlockEnd: "1.5rem" },
+  panel: {
+    paddingBlockStart: {
+      default: null,
+      ':is(:is([data-slot="dialog-popup"], [data-slot="sheet-popup"], [data-slot="drawer-popup"]):has([data-slot$="header"]) [data-slot="dialog-panel"])':
+        "0.25rem",
+    },
+    paddingBlockEnd: {
+      default: null,
+      ':is(:is([data-slot="dialog-popup"], [data-slot="sheet-popup"], [data-slot="drawer-popup"]):has([data-slot$="footer"][data-variant="bare"]) [data-slot="dialog-panel"])':
+        "0.25rem",
+    },
+    padding: "1.5rem",
+  },
+})
 
-const DialogPortal = DialogPrimitive.Portal
+export const DialogCreateHandle: typeof DialogPrimitive.createHandle =
+  DialogPrimitive.createHandle
+
+export const Dialog: typeof DialogPrimitive.Root = DialogPrimitive.Root
+
+export const DialogPortal: typeof DialogPrimitive.Portal =
+  DialogPrimitive.Portal
+
+export function DialogTrigger({
+  xstyle: consumerXstyle,
+  className,
+  ...restProps
+}: StyleXComponentProps<DialogPrimitive.Trigger.Props>) {
+  const props = restProps
+  const xstyle = consumerXstyle
+
+  return (
+    <DialogPrimitive.Trigger
+      data-slot="dialog-trigger"
+      {...mergeStylexProps(stylexProps(className, xstyle), props)}
+    />
+  )
+}
+
+export function DialogClose({
+  xstyle: consumerXstyle,
+  className,
+  ...restProps
+}: StyleXComponentProps<DialogPrimitive.Close.Props>) {
+  const props = restProps
+  const xstyle = consumerXstyle
+
+  return (
+    <DialogPrimitive.Close
+      data-slot="dialog-close"
+      {...mergeStylexProps(stylexProps(className, xstyle), props)}
+    />
+  )
+}
 
 export function DialogBackdrop({
+  xstyle: consumerXstyle,
   className,
-  ...props
-}: DialogPrimitive.Backdrop.Props) {
+  ...restProps
+}: StyleXComponentProps<DialogPrimitive.Backdrop.Props>) {
+  const props = restProps
+  const xstyle = consumerXstyle
+
   return (
     <DialogPrimitive.Backdrop
-      className={cn(
-        "dialog-backdrop fixed inset-0 z-50 bg-black/32 backdrop-blur-sm transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0",
-        className,
-      )}
       data-slot="dialog-backdrop"
-      {...props}
+      {...mergeStylexProps(
+        stylexProps(className, styles.backdrop, xstyle),
+        props,
+      )}
     />
   )
 }
 
 export function DialogViewport({
+  xstyle: consumerXstyle,
   className,
-  ...props
-}: DialogPrimitive.Viewport.Props) {
+  ...restProps
+}: StyleXComponentProps<DialogPrimitive.Viewport.Props>) {
+  const props = restProps
+  const xstyle = consumerXstyle
+
   return (
     <DialogPrimitive.Viewport
-      className={cn(
-        "fixed inset-0 z-50 grid grid-rows-[1fr_auto_3fr] justify-items-center p-4",
-        className,
-      )}
       data-slot="dialog-viewport"
-      {...props}
+      {...mergeStylexProps(
+        stylexProps(className, styles.viewport, xstyle),
+        props,
+      )}
     />
   )
 }
 
 export function DialogPopup({
+  xstyle: consumerXstyle,
   className,
   children,
   showCloseButton = true,
   bottomStickOnMobile = true,
   closeProps,
   portalProps,
-  ...props
-}: DialogPrimitive.Popup.Props & {
-  showCloseButton?: boolean
-  bottomStickOnMobile?: boolean
-  closeProps?: DialogPrimitive.Close.Props
-  portalProps?: DialogPrimitive.Portal.Props
-}) {
+  ...restProps
+}: StyleXComponentProps<
+  DialogPrimitive.Popup.Props,
+  {
+    showCloseButton?: boolean
+    bottomStickOnMobile?: boolean
+    closeProps?: StyleXComponentProps<DialogPrimitive.Close.Props>
+    portalProps?: DialogPrimitive.Portal.Props
+  }
+>) {
+  const props = restProps
+  const xstyle = consumerXstyle
+
   return (
     <DialogPortal {...portalProps}>
       <DialogBackdrop />
       <DialogViewport
-        className={cn(
-          bottomStickOnMobile &&
-            "max-sm:grid-rows-[1fr_auto] max-sm:p-0 max-sm:pt-12",
-        )}
+        xstyle={bottomStickOnMobile && styles.viewportBottomMobile}
       >
         <DialogPrimitive.Popup
-          className={cn(
-            "dialog-popup bg-popover text-popover-foreground relative row-start-2 flex max-h-full min-h-0 w-full max-w-lg min-w-0 origin-center flex-col rounded-2xl border opacity-[calc(1-var(--nested-dialogs))] shadow-lg/5 transition-[scale,opacity,translate] duration-200 ease-out will-change-transform outline-none not-dark:bg-clip-padding before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-2xl)-1px)] before:shadow-[0_1px_--theme(--color-black/4%)] data-ending-style:opacity-0 data-starting-style:opacity-0 sm:scale-[calc(1-0.1*var(--nested-dialogs))] sm:data-ending-style:scale-98 sm:data-starting-style:scale-98 dark:before:shadow-[0_-1px_--theme(--color-white/6%)]",
-            bottomStickOnMobile &&
-              "max-sm:max-w-none max-sm:origin-bottom max-sm:rounded-none max-sm:border-x-0 max-sm:border-t max-sm:border-b-0 max-sm:before:hidden max-sm:before:rounded-none max-sm:data-ending-style:translate-y-4 max-sm:data-starting-style:translate-y-4",
-            className,
-          )}
           data-slot="dialog-popup"
-          {...props}
+          {...mergeStylexProps(
+            stylexProps(
+              className,
+              styles.popup,
+              bottomStickOnMobile && styles.popupBottomMobile,
+              xstyle,
+            ),
+            props,
+          )}
         >
           {children}
-          {showCloseButton && (
-            <DialogPrimitive.Close
+          {showCloseButton ? (
+            <DialogClose
               aria-label="Close"
-              className="absolute inset-e-2 top-2"
-              render={<Button size="icon" variant="ghost" />}
+              render={
+                <Button size="icon" variant="ghost" xstyle={styles.close} />
+              }
               {...closeProps}
             >
-              <XIcon />
-            </DialogPrimitive.Close>
-          )}
+              <XIcon {...stylex.props(styles.closeIcon)} />
+            </DialogClose>
+          ) : null}
         </DialogPrimitive.Popup>
       </DialogViewport>
     </DialogPortal>
   )
 }
 
-export function DialogTitle({
+export function DialogHeader({
+  xstyle: consumerXstyle,
   className,
-  ...props
-}: DialogPrimitive.Title.Props) {
+  render,
+  ...restProps
+}: StyleXComponentProps<useRender.ComponentProps<"div">>) {
+  const props = restProps
+  const xstyle = consumerXstyle
+
+  const defaultProps = {
+    ...stylexProps(className, styles.header, xstyle),
+    "data-slot": "dialog-header",
+  }
+
+  return useRender({
+    defaultTagName: "div",
+    props: mergeProps<"div">(defaultProps, props),
+    render,
+  })
+}
+
+export function DialogFooter({
+  xstyle: consumerXstyle,
+  className,
+  variant = "default",
+  render,
+  ...restProps
+}: StyleXComponentProps<
+  useRender.ComponentProps<"div">,
+  {
+    variant?: "default" | "bare"
+  }
+>) {
+  const props = restProps
+  const xstyle = consumerXstyle
+
+  const defaultProps = {
+    ...stylexProps(
+      className,
+      styles.footer,
+      variant === "default" ? styles.footerDefault : styles.footerBare,
+      xstyle,
+    ),
+    "data-slot": "dialog-footer",
+    "data-variant": variant,
+  }
+
+  return useRender({
+    defaultTagName: "div",
+    props: mergeProps<"div">(defaultProps, props),
+    render,
+  })
+}
+
+export function DialogTitle({
+  xstyle: consumerXstyle,
+  className,
+  ...restProps
+}: StyleXComponentProps<DialogPrimitive.Title.Props>) {
+  const props = restProps
+  const xstyle = consumerXstyle
+
   return (
     <DialogPrimitive.Title
-      className={cn(
-        "font-heading text-xl leading-none font-semibold",
-        className,
-      )}
       data-slot="dialog-title"
-      {...props}
+      {...mergeStylexProps(stylexProps(className, styles.title, xstyle), props)}
     />
   )
 }
 
 export function DialogDescription({
+  xstyle: consumerXstyle,
   className,
-  ...props
-}: DialogPrimitive.Description.Props) {
+  ...restProps
+}: StyleXComponentProps<DialogPrimitive.Description.Props>) {
+  const props = restProps
+  const xstyle = consumerXstyle
+
   return (
     <DialogPrimitive.Description
-      className={cn("text-muted-foreground text-sm", className)}
       data-slot="dialog-description"
-      {...props}
+      {...mergeStylexProps(
+        stylexProps(className, styles.description, xstyle),
+        props,
+      )}
     />
+  )
+}
+
+export function DialogPanel({
+  xstyle: consumerXstyle,
+  className,
+  scrollFade = true,
+  render,
+  ...restProps
+}: StyleXComponentProps<
+  useRender.ComponentProps<"div">,
+  { scrollFade?: boolean }
+>) {
+  const props = restProps
+  const xstyle = consumerXstyle
+
+  const defaultProps = {
+    ...stylexProps(className, styles.panel, xstyle),
+    "data-slot": "dialog-panel",
+  }
+
+  const content = useRender({
+    defaultTagName: "div",
+    props: mergeProps<"div">(defaultProps, props),
+    render,
+  })
+
+  return (
+    <ScrollArea overscrollContain scrollFade={scrollFade}>
+      {content}
+    </ScrollArea>
   )
 }
 
@@ -129,7 +444,7 @@ export function Modal({
   open,
   onOpenChange,
   onOpenChangeComplete,
-  className,
+  xstyle,
 }: {
   title: string
   description?: string
@@ -137,8 +452,7 @@ export function Modal({
   open: boolean
   onOpenChange: (open: boolean) => void
   onOpenChangeComplete?: (open: boolean) => void
-  className?: string
-}) {
+} & StyleXProps) {
   return (
     <Dialog
       open={open}
@@ -146,13 +460,13 @@ export function Modal({
       onOpenChangeComplete={onOpenChangeComplete}
     >
       <DialogPopup
-        className={className}
+        xstyle={[styles.modal, xstyle]}
         bottomStickOnMobile={false}
         closeProps={{ "aria-label": "Close dialog" }}
       >
-        <DialogTitle className="dialog-title">{title}</DialogTitle>
+        <DialogTitle xstyle={styles.modalTitle}>{title}</DialogTitle>
         {description ? (
-          <DialogDescription className="dialog-description">
+          <DialogDescription xstyle={styles.modalDescription}>
             {description}
           </DialogDescription>
         ) : null}
@@ -160,4 +474,10 @@ export function Modal({
       </DialogPopup>
     </Dialog>
   )
+}
+
+export {
+  DialogPrimitive,
+  DialogBackdrop as DialogOverlay,
+  DialogPopup as DialogContent,
 }

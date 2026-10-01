@@ -13,6 +13,7 @@
     "routes:generate": "bun --bun tsr generate"
   },
   "dependencies": {
+    "@stylexjs/stylex": "catalog:",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
@@ -20,7 +21,6 @@
     "@tanstack/react-start": "catalog:",
     "env": "workspace:*",
     "lucide-react": "catalog:",
-    "next-themes": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "rpc": "workspace:*",
@@ -29,9 +29,13 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "catalog:",
+    "@babel/core": "^8.0.6",
+    "@rolldown/plugin-babel": "^0.2.4",
+    "@stylexjs/babel-plugin": "^0.19.1",
+    "@stylexjs/postcss-plugin": "^0.19.1",
     "@tanstack/router-cli": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "postcss": "^8.5.6",
     "vite": "catalog:"
   }
 }

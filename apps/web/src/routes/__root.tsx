@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query"
 import type { ReactNode } from "react"
 
+import * as stylex from "@stylexjs/stylex"
 import {
   createRootRouteWithContext,
   HeadContent,
@@ -8,10 +9,28 @@ import {
   Outlet,
   Scripts,
 } from "@tanstack/react-router"
-import { ThemeProvider } from "next-themes"
-import styles from "web/styles.css?url"
+import "web/styles.css"
 
 import { Button } from "ui/button"
+import { rootStyles, tokens } from "ui/styles/tokens.stylex"
+import { getRootThemeProps, ThemeScript } from "ui/theme/theme"
+import { ThemeProvider } from "ui/theme/theme-provider"
+
+const styles = stylex.create({
+  body: {
+    backgroundColor: tokens["--sidebar"],
+  },
+  welcome: {
+    minHeight: "100dvh",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 20,
+    padding: 24,
+    textAlign: "center",
+  },
+})
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   {
@@ -25,7 +44,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           content: "An open-source home for your RSS feeds.",
         },
       ],
-      links: [{ rel: "stylesheet", href: styles }],
     }),
     shellComponent: RootDocument,
     component: Outlet,
@@ -34,34 +52,38 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   },
 )
 
-function RootDocument({ children }: { children: ReactNode }) {
+export function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      {...getRootThemeProps("light")}
+      data-theme="light"
+      lang="en"
+      suppressHydrationWarning
+    >
       <head>
+        <ThemeScript storageKey="theme" />
         <HeadContent />
       </head>
-      <body>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-        </ThemeProvider>
+      <body {...stylex.props(rootStyles.body, styles.body)}>
+        <ThemeProvider storageKey="theme">{children}</ThemeProvider>
         <Scripts />
       </body>
     </html>
   )
 }
 
-function NotFound() {
+export function NotFound() {
   return (
-    <main className="welcome">
+    <main {...stylex.props(styles.welcome)}>
       <h1>Page not found</h1>
       <Link to="/">Back to your feeds</Link>
     </main>
   )
 }
 
-function PageError() {
+export function PageError() {
   return (
-    <main className="welcome">
+    <main {...stylex.props(styles.welcome)}>
       <h1>Something went wrong</h1>
       <p>Reload to try again.</p>
       <Button onClick={() => window.location.reload()}>Reload Feed</Button>
