@@ -178,8 +178,8 @@ export type InputProps = StyleXComponentProps<
     size?: "sm" | "default" | "lg" | number
     unstyled?: boolean
     nativeInput?: boolean
+    /** StyleX styles for the decorative wrapper, including Group item geometry. */
     controlXstyle?: StyleXProps["xstyle"]
-    inputXstyle?: StyleXProps["xstyle"]
   }
 >
 
@@ -203,7 +203,6 @@ function mergeInputClassName(
 export function Input({
   xstyle: consumerXstyle,
   controlXstyle,
-  inputXstyle,
   className,
   size = "default",
   unstyled = false,
@@ -222,7 +221,7 @@ export function Input({
     props.type === "search" && styles.search,
     props.type === "file" && styles.file,
     stylex.defaultMarker(),
-    inputXstyle,
+    xstyle,
   )
 
   const wrapperClassName = isString(className) ? className : undefined
@@ -234,7 +233,6 @@ export function Input({
         !unstyled && styles.control,
         unstyled && styles.groupControl,
         controlXstyle,
-        xstyle,
       )}
       data-size={size}
       data-slot="input-control"

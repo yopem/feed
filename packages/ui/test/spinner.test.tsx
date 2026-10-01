@@ -11,3 +11,11 @@ test("spinner retains native status semantics and hides its decorative icon", ()
   expect(html).toMatch(/<svg[^>]*aria-hidden="true"/)
   expect(html).not.toContain('role="status"')
 })
+
+test("spinner places custom accessible label on the status element", () => {
+  const html = renderToStaticMarkup(<Spinner aria-label="Refreshing feeds" />)
+
+  expect(html).toStartWith('<output aria-label="Refreshing feeds"')
+  expect(html).not.toMatch(/<svg[^>]*aria-label=/)
+  expect(html).toMatch(/<svg[^>]*aria-hidden="true"/)
+})

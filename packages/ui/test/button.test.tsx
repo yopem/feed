@@ -38,7 +38,7 @@ test("render composition preserves native link semantics", () => {
   expect(html).not.toContain("disabled=")
 })
 
-test("button variants retain outline default and allow StyleX overrides", () => {
+test("button variants retain solid default and allow StyleX overrides", () => {
   const implicit = renderToStaticMarkup(<Button>Save</Button>)
   const outline = renderToStaticMarkup(<Button variant="outline">Save</Button>)
   const solid = renderToStaticMarkup(<Button variant="default">Save</Button>)
@@ -49,8 +49,8 @@ test("button variants retain outline default and allow StyleX overrides", () => 
     </Button>,
   )
 
-  expect(implicit).toBe(outline)
-  expect(implicit).not.toBe(solid)
+  expect(implicit).toBe(solid)
+  expect(implicit).not.toBe(outline)
   const overrideClassName = stylex.props(styles.override).className
 
   if (!overrideClassName) throw new Error("StyleX override was not compiled")

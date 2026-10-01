@@ -6,7 +6,15 @@ import { formatArticleDate } from "web/features/reader/format-date"
 import type { Workspace, useFeeds } from "rpc/reader"
 import { useFeedAction } from "rpc/reader"
 import { Button } from "ui/button"
-import { Modal } from "ui/dialog"
+import {
+  Dialog,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPanel,
+  DialogPopup,
+  DialogTitle,
+} from "ui/dialog"
 import { tokens } from "ui/styles/tokens.stylex"
 
 const styles = stylex.create({
@@ -42,12 +50,6 @@ const styles = stylex.create({
     backgroundColor: tokens["--muted"],
     fontSize: 13,
     overflowWrap: "anywhere",
-  },
-  dialogActions: {
-    display: "flex",
-    justifyContent: "flex-end",
-    gap: 8,
-    marginTop: 20,
   },
 })
 
@@ -109,35 +111,40 @@ export function FeedToolbar({
           {refresh.error.message}
         </p>
       ) : null}
-      <Modal
-        open={removing}
-        onOpenChange={setRemoving}
-        title="Remove this feed?"
-        description={`Remove ${feed.title} from ${workspace.name}. This affects everyone in the workspace.`}
-      >
-        <div {...stylex.props(styles.dialogActions)}>
-          <Button onClick={() => setRemoving(false)}>Keep feed</Button>
-          <Button
-            variant="destructive-outline"
-            disabled={remove.isPending}
-            onClick={() => {
-              remove.mutate(feed.id, {
-                onSuccess: () => {
-                  setRemoving(false)
-                  onRemoved()
-                },
-              })
-            }}
-          >
-            {remove.isPending ? "Removing…" : "Remove feed"}
-          </Button>
-        </div>
-        {remove.isError ? (
-          <p role="alert" {...stylex.props(styles.error)}>
-            {remove.error.message}
-          </p>
-        ) : null}
-      </Modal>
+      <Dialog open={removing} onOpenChange={setRemoving}>
+        <DialogPopup>
+          <DialogHeader>
+            <DialogTitle>Remove this feed?</DialogTitle>
+            <DialogDescription>
+              {`Remove ${feed.title} from ${workspace.name}. This affects everyone in the workspace.`}
+            </DialogDescription>
+          </DialogHeader>
+          {remove.isError ? (
+            <DialogPanel>
+              <p role="alert" {...stylex.props(styles.error)}>
+                {remove.error.message}
+              </p>
+            </DialogPanel>
+          ) : null}
+          <DialogFooter>
+            <Button onClick={() => setRemoving(false)}>Keep feed</Button>
+            <Button
+              variant="destructive-outline"
+              disabled={remove.isPending}
+              onClick={() => {
+                remove.mutate(feed.id, {
+                  onSuccess: () => {
+                    setRemoving(false)
+                    onRemoved()
+                  },
+                })
+              }}
+            >
+              {remove.isPending ? "Removing…" : "Remove feed"}
+            </Button>
+          </DialogFooter>
+        </DialogPopup>
+      </Dialog>
     </>
   )
 }

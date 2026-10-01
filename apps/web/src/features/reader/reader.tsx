@@ -18,7 +18,14 @@ import {
   CardPanel,
   CardFooter,
 } from "ui/card"
-import { Modal } from "ui/dialog"
+import {
+  Dialog,
+  DialogDescription,
+  DialogHeader,
+  DialogPanel,
+  DialogPopup,
+  DialogTitle,
+} from "ui/dialog"
 import { tokens } from "ui/styles/tokens.stylex"
 
 const styles = stylex.create({
@@ -382,20 +389,26 @@ function SignedInReader({ name }: { name: string }) {
           </div>
         </main>
       )}
-      <Modal
-        open={creating}
-        onOpenChange={setCreating}
-        title="Create a workspace"
-        description="Keep a separate collection of feeds for a project, a team, or yourself."
-      >
-        <ValueForm
-          label="Workspace name"
-          placeholder="My reading space"
-          submitLabel="Create workspace"
-          schema={workspaceName}
-          onSubmit={createWorkspace}
-        />
-      </Modal>
+      <Dialog open={creating} onOpenChange={setCreating}>
+        <DialogPopup>
+          <DialogHeader>
+            <DialogTitle>Create a workspace</DialogTitle>
+            <DialogDescription>
+              Keep a separate collection of feeds for a project, a team, or
+              yourself.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogPanel>
+            <ValueForm
+              label="Workspace name"
+              placeholder="My reading space"
+              submitLabel="Create workspace"
+              schema={workspaceName}
+              onSubmit={createWorkspace}
+            />
+          </DialogPanel>
+        </DialogPopup>
+      </Dialog>
     </>
   )
 }

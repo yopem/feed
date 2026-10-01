@@ -1,23 +1,36 @@
 import { expect, test } from "bun:test"
 import { renderToStaticMarkup } from "react-dom/server"
 
-import { Modal } from "ui/dialog"
+import {
+  Dialog,
+  DialogDescription,
+  DialogHeader,
+  DialogPanel,
+  DialogPopup,
+  DialogTitle,
+} from "ui/dialog"
 
 function unexpectedChange() {
   throw new Error("SSR must not change dialog state")
 }
 
-test("closed modal does not mount portaled contents or invoke callbacks during SSR", () => {
+test("closed dialog does not mount portaled contents or invoke callbacks during SSR", () => {
   const html = renderToStaticMarkup(
-    <Modal
-      title="Follow a feed"
-      description="Paste an RSS URL."
+    <Dialog
       open={false}
       onOpenChange={unexpectedChange}
       onOpenChangeComplete={unexpectedChange}
     >
-      <input aria-label="Feed URL" />
-    </Modal>,
+      <DialogPopup>
+        <DialogHeader>
+          <DialogTitle>Follow a feed</DialogTitle>
+          <DialogDescription>Paste an RSS URL.</DialogDescription>
+        </DialogHeader>
+        <DialogPanel>
+          <input aria-label="Feed URL" />
+        </DialogPanel>
+      </DialogPopup>
+    </Dialog>,
   )
 
   expect(html).not.toContain("Follow a feed")

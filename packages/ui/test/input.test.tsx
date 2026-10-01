@@ -26,10 +26,28 @@ test("input keeps form labels, values, and validation on the native control", ()
 
 test("StyleX customization stays on the input wrapper", () => {
   const html = renderToStaticMarkup(
+    <Input controlXstyle={styles.wrapper} type="search" aria-label="Search" />,
+  )
+
+  expect(html).toMatch(
+    new RegExp(
+      `<span[^>]*class="[^"]*${stylex.props(styles.wrapper).className}`,
+    ),
+  )
+  expect(html).not.toContain("xstyle=")
+})
+
+test("StyleX customization can target the native input independently", () => {
+  const html = renderToStaticMarkup(
     <Input xstyle={styles.wrapper} type="search" aria-label="Search" />,
   )
 
   expect(html).toMatch(
+    new RegExp(
+      `<input[^>]*class="[^"]*${stylex.props(styles.wrapper).className}`,
+    ),
+  )
+  expect(html).not.toMatch(
     new RegExp(
       `<span[^>]*class="[^"]*${stylex.props(styles.wrapper).className}`,
     ),

@@ -4,21 +4,14 @@ import * as stylex from "@stylexjs/stylex"
 import { Loader2Icon } from "lucide-react"
 
 import type { StyleXComponentProps } from "ui/lib/stylex"
-import { stylexProps } from "ui/lib/stylex"
+import { mergeStylexProps, stylexProps } from "ui/lib/stylex"
 
 const spin = stylex.keyframes({
   to: { transform: "rotate(360deg)" },
 })
 
 const styles = stylex.create({
-  container: {
-    blockSize: "1em",
-    display: "inline-flex",
-    inlineSize: "1em",
-  },
   root: {
-    blockSize: "100%",
-    inlineSize: "100%",
     animationDuration: "1s",
     animationIterationCount: "infinite",
     animationName: spin,
@@ -29,25 +22,21 @@ const styles = stylex.create({
 export function Spinner({
   xstyle: consumerXstyle,
   className,
-  "data-slot": dataSlot = "spinner",
+  "aria-label": label = "Loading",
   ...restProps
-}: StyleXComponentProps<
-  React.ComponentProps<typeof Loader2Icon>,
-  { "data-slot"?: string }
->) {
+}: StyleXComponentProps<React.ComponentProps<typeof Loader2Icon>>) {
   const props = restProps
   const xstyle = consumerXstyle
 
   return (
-    <output
-      aria-label="Loading"
-      data-slot={dataSlot}
-      {...stylexProps(className, styles.container, xstyle)}
-    >
+    <output aria-label={label}>
       <Loader2Icon
-        {...stylex.props(styles.root)}
-        {...props}
         aria-hidden="true"
+        data-slot="spinner"
+        {...mergeStylexProps(
+          stylexProps(className, styles.root, xstyle),
+          props,
+        )}
       />
     </output>
   )

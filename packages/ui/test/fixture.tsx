@@ -2,7 +2,15 @@ import { useState } from "react"
 import { createRoot } from "react-dom/client"
 
 import { Button } from "ui/button"
-import { Modal } from "ui/dialog"
+import {
+  Dialog,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPanel,
+  DialogPopup,
+  DialogTitle,
+} from "ui/dialog"
 import { Input } from "ui/input"
 import {
   Select,
@@ -74,20 +82,28 @@ export function InteractiveFixture() {
         Follow a feed
       </Button>
       <p>Close complete: {String(complete)}</p>
-      <Modal
-        title="Follow RSS feed"
-        description="Enter feed URL."
+      <Dialog
         open={open}
         onOpenChange={setOpen}
         onOpenChangeComplete={(isOpen) => {
           if (!isOpen) setComplete(true)
         }}
       >
-        <label htmlFor="feed-url">Feed URL</label>
-        <Input id="feed-url" type="url" aria-describedby="feed-help" />
-        <p id="feed-help">Use an https URL.</p>
-        <Button onClick={() => setOpen(false)}>Cancel</Button>
-      </Modal>
+        <DialogPopup>
+          <DialogHeader>
+            <DialogTitle>Follow RSS feed</DialogTitle>
+            <DialogDescription>Enter feed URL.</DialogDescription>
+          </DialogHeader>
+          <DialogPanel>
+            <label htmlFor="feed-url">Feed URL</label>
+            <Input id="feed-url" type="url" aria-describedby="feed-help" />
+            <p id="feed-help">Use an https URL.</p>
+          </DialogPanel>
+          <DialogFooter>
+            <Button onClick={() => setOpen(false)}>Cancel</Button>
+          </DialogFooter>
+        </DialogPopup>
+      </Dialog>
       <form
         onSubmit={(event) => {
           event.preventDefault()

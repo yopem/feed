@@ -1,7 +1,5 @@
 "use client"
 
-import type { ReactNode } from "react"
-
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
@@ -9,7 +7,7 @@ import * as stylex from "@stylexjs/stylex"
 import { XIcon } from "lucide-react"
 
 import { Button } from "ui/button"
-import type { StyleXComponentProps, StyleXProps } from "ui/lib/stylex"
+import type { StyleXComponentProps } from "ui/lib/stylex"
 import { mergeStylexProps, stylexProps } from "ui/lib/stylex"
 import { ScrollArea } from "ui/scroll-area"
 import { themeMarker, tokens } from "ui/styles/tokens.stylex"
@@ -68,8 +66,6 @@ const styles = stylex.create({
     minInlineSize: 0,
     opacity: "calc(1 - var(--nested-dialogs))",
     outline: "none",
-    overflowY: "auto",
-    overscrollBehavior: "contain",
     position: "relative",
     transformOrigin: "center",
     transitionDuration: "200ms",
@@ -160,13 +156,6 @@ const styles = stylex.create({
     lineHeight: 1,
   },
   description: { color: tokens["--muted-foreground"], fontSize: "0.875rem" },
-  modal: { padding: "1.5rem" },
-  modalTitle: {
-    lineHeight: 1.4,
-    marginBlockEnd: "0.625rem",
-    paddingInlineEnd: "1.75rem",
-  },
-  modalDescription: { lineHeight: 1.6, marginBlockEnd: "1.5rem" },
   panel: {
     paddingBlockStart: {
       default: null,
@@ -274,7 +263,7 @@ export function DialogPopup({
   {
     showCloseButton?: boolean
     bottomStickOnMobile?: boolean
-    closeProps?: StyleXComponentProps<DialogPrimitive.Close.Props>
+    closeProps?: DialogPrimitive.Close.Props
     portalProps?: DialogPrimitive.Portal.Props
   }
 >) {
@@ -285,7 +274,10 @@ export function DialogPopup({
     <DialogPortal {...portalProps}>
       <DialogBackdrop />
       <DialogViewport
-        xstyle={bottomStickOnMobile && styles.viewportBottomMobile}
+        className={
+          stylex.props(bottomStickOnMobile && styles.viewportBottomMobile)
+            .className
+        }
       >
         <DialogPrimitive.Popup
           data-slot="dialog-popup"
@@ -301,7 +293,7 @@ export function DialogPopup({
         >
           {children}
           {showCloseButton ? (
-            <DialogClose
+            <DialogPrimitive.Close
               aria-label="Close"
               render={
                 <Button size="icon" variant="ghost" xstyle={styles.close} />
@@ -309,7 +301,7 @@ export function DialogPopup({
               {...closeProps}
             >
               <XIcon {...stylex.props(styles.closeIcon)} />
-            </DialogClose>
+            </DialogPrimitive.Close>
           ) : null}
         </DialogPrimitive.Popup>
       </DialogViewport>
@@ -434,45 +426,6 @@ export function DialogPanel({
     <ScrollArea overscrollContain scrollFade={scrollFade}>
       {content}
     </ScrollArea>
-  )
-}
-
-export function Modal({
-  title,
-  description,
-  children,
-  open,
-  onOpenChange,
-  onOpenChangeComplete,
-  xstyle,
-}: {
-  title: string
-  description?: string
-  children: ReactNode
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onOpenChangeComplete?: (open: boolean) => void
-} & StyleXProps) {
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-      onOpenChangeComplete={onOpenChangeComplete}
-    >
-      <DialogPopup
-        xstyle={[styles.modal, xstyle]}
-        bottomStickOnMobile={false}
-        closeProps={{ "aria-label": "Close dialog" }}
-      >
-        <DialogTitle xstyle={styles.modalTitle}>{title}</DialogTitle>
-        {description ? (
-          <DialogDescription xstyle={styles.modalDescription}>
-            {description}
-          </DialogDescription>
-        ) : null}
-        {children}
-      </DialogPopup>
-    </Dialog>
   )
 }
 

@@ -14,7 +14,14 @@ import { z } from "zod"
 import type { Article, ArticleFilter, Workspace } from "rpc/reader"
 import { useAddFeed, useArticles, useFeeds } from "rpc/reader"
 import { Button } from "ui/button"
-import { Modal } from "ui/dialog"
+import {
+  Dialog,
+  DialogDescription,
+  DialogHeader,
+  DialogPanel,
+  DialogPopup,
+  DialogTitle,
+} from "ui/dialog"
 import { Input } from "ui/input"
 import { tokens } from "ui/styles/tokens.stylex"
 import { Tabs, TabsList, TabsPanel, TabsTab } from "ui/tabs"
@@ -458,35 +465,47 @@ export function WorkspaceReader({
           </Tabs>
         </section>
       </main>
-      <Modal open={mobileNav} onOpenChange={setMobileNav} title="Your reading">
-        {mobileNav ? (
-          <div {...stylex.props(styles.mobileNavigation)}>{navigation}</div>
-        ) : null}
-        <div {...stylex.props(styles.mobileAccount)}>
-          <ThemeButton />
-          <SignOutButton />
-        </div>
-      </Modal>
-      <Modal
-        open={adding}
-        onOpenChange={setAdding}
-        title="Follow a feed"
-        description="Paste the RSS or Atom feed URL of a source you love."
-      >
-        <ValueForm
-          label="Feed URL"
-          type="url"
-          placeholder="https://example.com/feed.xml"
-          submitLabel="Follow feed"
-          schema={feedUrl}
-          onSubmit={async (url) => {
-            const feed = await add.mutateAsync(url)
-            setFeedId(feed.id)
-            setView("all")
-            setAdding(false)
-          }}
-        />
-      </Modal>
+      <Dialog open={mobileNav} onOpenChange={setMobileNav}>
+        <DialogPopup>
+          <DialogHeader>
+            <DialogTitle>Your reading</DialogTitle>
+          </DialogHeader>
+          <DialogPanel>
+            {mobileNav ? (
+              <div {...stylex.props(styles.mobileNavigation)}>{navigation}</div>
+            ) : null}
+            <div {...stylex.props(styles.mobileAccount)}>
+              <ThemeButton />
+              <SignOutButton />
+            </div>
+          </DialogPanel>
+        </DialogPopup>
+      </Dialog>
+      <Dialog open={adding} onOpenChange={setAdding}>
+        <DialogPopup>
+          <DialogHeader>
+            <DialogTitle>Follow a feed</DialogTitle>
+            <DialogDescription>
+              Paste the RSS or Atom feed URL of a source you love.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogPanel>
+            <ValueForm
+              label="Feed URL"
+              type="url"
+              placeholder="https://example.com/feed.xml"
+              submitLabel="Follow feed"
+              schema={feedUrl}
+              onSubmit={async (url) => {
+                const feed = await add.mutateAsync(url)
+                setFeedId(feed.id)
+                setView("all")
+                setAdding(false)
+              }}
+            />
+          </DialogPanel>
+        </DialogPopup>
+      </Dialog>
       {article ? (
         <ArticleDetail
           key={article.id}

@@ -464,7 +464,7 @@ export type ButtonProps = StyleXComponentProps<
 export function Button({
   xstyle: consumerXstyle,
   className,
-  variant = "outline",
+  variant,
   size,
   render,
   children,
