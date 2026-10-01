@@ -1,7 +1,8 @@
 # Yopem Feed
 
 An open-source RSS reader inspired by classic Feedly. No threat intelligence,
-admin panel, or AI features.
+admin panel, or AI features. UI uses StyleX and source-owned
+[Yopem UI](https://github.com/yopem/ui) components.
 
 ## Status
 

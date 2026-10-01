@@ -48,8 +48,8 @@
 - **Language:** TypeScript 7.
 - **Frontend:** React 19, TanStack Start, TanStack Router, TanStack Query, and
   TanStack React Form.
-- **Styling:** Tailwind CSS 4, Base UI, coss UI, `tw-animate-css`, and
-  `next-themes`.
+- **Styling:** StyleX and source-owned Yopem UI components built on Base UI.
+  Use Yopem UI's semantic tokens and SSR-safe theme provider.
 - **Backend:** Hono, Hono RPC, and OpenAPI through `@hono/zod-openapi`.
 - **AI:** TanStack AI through `@tanstack/ai`, with OpenAI or OpenRouter
   providers. Use `Bun.Image` for media processing when needed.
@@ -193,7 +193,10 @@ For a server organized under `apps/server/src`, use:
   components with `"use client"` when required by the framework.
 - **TanStack AI:** keep model calls, tools, prompts, and provider setup in
   server-side AI modules. Do not add another AI SDK.
-- Use existing coss UI and Base UI primitives before creating new UI controls.
+- Use existing Yopem UI and Base UI primitives before creating new UI controls.
+- Style Yopem UI components with `xstyle` and native elements with
+  `stylex.props(...)`. Define styles with `stylex.create` and semantic tokens.
+  Do not add Tailwind utilities or dependencies.
 - Use `lucide-react` icons only, with the `Icon` suffix in import names.
 
 ## Code style
