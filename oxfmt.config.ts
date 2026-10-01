@@ -7,9 +7,6 @@ export default {
   singleQuote: false,
   tabWidth: 2,
   trailingComma: "all",
-  experimentalTailwindcss: {
-    functions: ["cn", "cva", "clsx"],
-  },
   experimentalSortPackageJson: true,
   ignorePatterns: [
     "**/bun.lock",
