@@ -20,6 +20,7 @@ export function FeedToolbar({
   const refresh = useFeedAction(workspace.id, "refresh")
   const remove = useFeedAction(workspace.id, "remove")
   const canEdit = workspace.role !== "viewer"
+
   return (
     <>
       <div className="feed-toolbar">

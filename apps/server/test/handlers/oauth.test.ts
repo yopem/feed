@@ -11,12 +11,15 @@ const profile = {
   email: "reader@example.com",
   name: null,
 }
+
 const challenge = { state: "expected-state", verifier: "pkce-verifier" }
+
 const tokens = {
   access: "test-access",
   refresh: "test-refresh",
   expiresIn: 86400,
 }
+
 const cookie = `oauth_challenge=${encodeURIComponent(JSON.stringify(challenge))}`
 
 function mockExchange() {
@@ -33,6 +36,7 @@ function mockVerification(audience = env.AUTH_CLIENT_ID) {
 test("callback verifies and provisions external identity before setting session cookies", async () => {
   const exchange = mockExchange()
   const verify = mockVerification()
+
   const provision = spyOn(users, "provisionUser").mockResolvedValue({
     id: crypto.randomUUID(),
     issuer: env.AUTH_ISSUER,
@@ -40,6 +44,7 @@ test("callback verifies and provisions external identity before setting session 
     email: profile.email,
     name: profile.email,
   })
+
   try {
     const response = await app.request(
       "/auth/callback?code=test-code&state=expected-state",
@@ -47,6 +52,7 @@ test("callback verifies and provisions external identity before setting session 
         headers: { Cookie: cookie },
       },
     )
+
     expect(exchange).toHaveBeenCalledWith(
       "test-code",
       env.AUTH_CALLBACK_URL,
@@ -70,6 +76,7 @@ test("callback verifies and provisions external identity before setting session 
 
 test("wrong OAuth state never exchanges the authorization code", async () => {
   const exchange = mockExchange()
+
   try {
     const response = await app.request(
       "/auth/callback?code=test-code&state=wrong",
@@ -77,6 +84,7 @@ test("wrong OAuth state never exchanges the authorization code", async () => {
         headers: { Cookie: cookie },
       },
     )
+
     expect(response.status).toBe(400)
     expect(exchange).not.toHaveBeenCalled()
   } finally {
@@ -88,6 +96,7 @@ test("wrong audience never provisions an account or creates a session", async ()
   const exchange = mockExchange()
   const verify = mockVerification("other-app")
   const provision = spyOn(users, "provisionUser")
+
   try {
     const response = await app.request(
       "/auth/callback?code=test-code&state=expected-state",
@@ -95,6 +104,7 @@ test("wrong audience never provisions an account or creates a session", async ()
         headers: { Cookie: cookie },
       },
     )
+
     expect(response.status).toBe(401)
     expect(provision).not.toHaveBeenCalled()
     expect(response.headers.get("set-cookie")).not.toContain("access_token=")
@@ -108,9 +118,11 @@ test("wrong audience never provisions an account or creates a session", async ()
 test("disabled signup cannot leave valid login cookies behind", async () => {
   const exchange = mockExchange()
   const verify = mockVerification()
+
   const provision = spyOn(users, "provisionUser").mockRejectedValue(
     new ServiceError("Signup is disabled"),
   )
+
   try {
     const response = await app.request(
       "/auth/callback?code=test-code&state=expected-state",
@@ -118,6 +130,7 @@ test("disabled signup cannot leave valid login cookies behind", async () => {
         headers: { Cookie: cookie },
       },
     )
+
     expect(response.status).toBe(403)
     expect(response.headers.get("set-cookie")).not.toContain("access_token=")
   } finally {

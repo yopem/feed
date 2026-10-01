@@ -12,6 +12,7 @@ const options: CookieOptions = {
   sameSite: env.NODE_ENV === "production" ? "None" : "Lax",
   domain: env.COOKIE_DOMAIN,
 }
+
 export const loginCookieOptions: CookieOptions = {
   ...options,
   domain: undefined,
@@ -24,6 +25,7 @@ export function setSessionCookies(c: Context, access: string, refresh: string) {
   setCookie(c, "access_token", access, { ...options, maxAge: 86400 })
   setCookie(c, "refresh_token", refresh, { ...options, maxAge: 604800 })
 }
+
 export function clearSessionCookies(c: Context) {
   deleteCookie(c, "access_token", options)
   deleteCookie(c, "refresh_token", options)

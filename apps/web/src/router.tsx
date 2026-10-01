@@ -9,13 +9,16 @@ export function getRouter() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
   })
+
   const router = createRouter({
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
     defaultPreload: "intent",
   })
+
   setupRouterSsrQueryIntegration({ router, queryClient })
+
   return router
 }
 

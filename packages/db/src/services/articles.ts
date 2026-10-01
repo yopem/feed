@@ -16,12 +16,17 @@ export async function listArticles(
 ) {
   await requireMembership(userId, input.workspaceId)
   const filters = [eq(feeds.workspaceId, input.workspaceId)]
+
   if (input.feedId) filters.push(eq(feeds.id, input.feedId))
+
   if (input.view === "unread")
     filters.push(sql`coalesce(${readingStates.read}, false) = false`)
+
   if (input.view === "starred") filters.push(eq(readingStates.starred, true))
+
   if (input.view === "saved") filters.push(eq(readingStates.saved, true))
   const search = input.search?.replaceAll(/[%_\\]/g, "\\$&")
+
   return db
     .select({
       id: articles.id,
@@ -73,6 +78,7 @@ export async function setArticleState(
   },
 ) {
   await requireMembership(userId, input.workspaceId)
+
   const [article] = await db
     .select({ id: articles.id })
     .from(articles)
@@ -83,8 +89,10 @@ export async function setArticleState(
         eq(feeds.workspaceId, input.workspaceId),
       ),
     )
+
   if (!article) throw new ServiceError("Article not found", 404)
   const patch = { read: input.read, starred: input.starred, saved: input.saved }
+
   if (Object.values(patch).every((value) => value === undefined)) return
   await db
     .insert(readingStates)

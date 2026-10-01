@@ -23,10 +23,12 @@ export function ValueForm({
 }) {
   const id = useId()
   const [error, setError] = useState("")
+
   const form = useForm({
     defaultValues: { value: "" },
     onSubmit: async ({ value }) => {
       setError("")
+
       try {
         await onSubmit(value.value.trim())
         form.reset()

@@ -5,6 +5,7 @@ import { Button } from "ui/button"
 
 export function SignOutButton({ compact = false }: { compact?: boolean }) {
   const logout = useLogout()
+
   return (
     <div>
       <Button

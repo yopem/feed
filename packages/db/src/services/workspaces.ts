@@ -24,5 +24,6 @@ export async function createWorkspace(userId: string, name: string) {
       .insert(memberships)
       .values({ workspaceId: workspace.id, userId, role: workspace.role })
   })
+
   return workspace
 }

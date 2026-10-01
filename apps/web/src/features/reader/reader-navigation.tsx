@@ -36,6 +36,7 @@ export function ReaderNavigation({
   const id = useId()
   const feeds = useFeeds(workspace.id)
   const canEdit = workspace.role !== "viewer"
+
   return (
     <>
       <div className="workspace-picker">

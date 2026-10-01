@@ -12,6 +12,7 @@ import {
 import { cn } from "ui/utils"
 
 type TabsVariant = "default" | "underline"
+
 type TabsSize = SegmentedControlSize
 
 const TabsListContext: React.Context<TabsSize> =

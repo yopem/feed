@@ -13,6 +13,7 @@ test("input keeps form labels, values, and validation on the native control", ()
       aria-describedby="feed-error"
     />,
   )
+
   expect(html).toContain('data-slot="input-control"')
   expect(html).toMatch(/<input[^>]*id="feed-url"/)
   expect(html).toMatch(/<input[^>]*aria-invalid="true"/)

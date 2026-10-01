@@ -28,6 +28,7 @@ describe("RSS parsing", () => {
       ),
       url,
     )
+
     expect(feed.title).toBe("News & updates")
     expect(feed.url).toBe(url)
     expect(feed.articles).toEqual([
@@ -46,6 +47,7 @@ describe("RSS parsing", () => {
       `<feed xmlns="http://www.w3.org/2005/Atom"><title>Atom</title><entry><id>tag:example,1</id><title>One</title><link rel="self" href="/api"/><link rel="alternate" href="/one"/><content type="html">&lt;p&gt;A &amp;amp; B&lt;/p&gt;</content><updated>invalid</updated></entry><entry><link href="/two"/><content type="xhtml"><div xmlns="http://www.w3.org/1999/xhtml"><p>Safe <b>text</b> after <i>end</i></p></div></content></entry></feed>`,
       url,
     )
+
     expect(feed.articles[0]).toMatchObject({
       guid: "tag:example,1",
       url: "https://example.com/one",
@@ -60,6 +62,7 @@ describe("RSS parsing", () => {
       rss(item("&amp;lt;img src=x onerror=alert(1)&amp;gt;Hello")),
       url,
     )
+
     expect(feed.articles[0]?.content).not.toMatch(/[<>]/)
   })
 
@@ -67,6 +70,7 @@ describe("RSS parsing", () => {
     const items = Array.from({ length: 101 }, (_, index) =>
       item().replace("article-1", `article-${index}`),
     ).join("")
+
     expect(parseFeed(rss(items), url).articles).toHaveLength(100)
     expect(() => parseFeed(" ".repeat(2 * 1024 * 1024 + 1), url)).toThrow("2MB")
   })
@@ -135,6 +139,7 @@ describe("SSRF guards", () => {
     ]) {
       expect(isPublicAddress(ip)).toBe(false)
     }
+
     expect(isPublicAddress("8.8.8.8")).toBe(true)
     expect(isPublicAddress("2606:4700:4700::1111")).toBe(true)
   })
@@ -152,6 +157,7 @@ describe("SSRF guards", () => {
     ]) {
       expect(() => validateFeedUrl(input)).toThrow()
     }
+
     expect(validateFeedUrl("https://example.com:443/feed#part").href).toBe(url)
   })
 
@@ -163,6 +169,7 @@ describe("SSRF guards", () => {
     const pinned = createPinnedLookup((_hostname, _options, done) =>
       done(null, [{ address: "8.8.8.8", family: 4 }]),
     )
+
     await new Promise<void>((resolve, reject) => {
       pinned("example.com", {}, (error, address, family) => {
         if (error) return reject(error)
@@ -180,6 +187,7 @@ describe("SSRF guards", () => {
         { address: "127.0.0.1", family: 4 },
       ]),
     )
+
     await new Promise<void>((resolve) => {
       pinned("example.com", {}, (error) => {
         expect(error?.message).toBe("Unsafe feed DNS address")

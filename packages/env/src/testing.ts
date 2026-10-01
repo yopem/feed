@@ -13,18 +13,22 @@ export const testEnv = z
 
 export function configureTestEnvironment() {
   let databaseUrl = "postgres://localhost/feed_test"
+
   if (testEnv.RUN_DB_TESTS) {
     if (!testEnv.TEST_DATABASE_URL)
       throw new Error("Set TEST_DATABASE_URL for database tests")
     const url = new URL(testEnv.TEST_DATABASE_URL)
+
     if (
       !url.pathname.endsWith("_test") ||
       !["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
     ) {
       throw new Error("Database tests require a local database ending in _test")
     }
+
     databaseUrl = testEnv.TEST_DATABASE_URL
   }
+
   Object.assign(import.meta.env, {
     NODE_ENV: "test",
     DATABASE_URL: databaseUrl,

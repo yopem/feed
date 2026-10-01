@@ -31,6 +31,7 @@ export const articleRouter = new OpenAPIHono<AuthContext>({
     }),
     async (c) => {
       const articles = await listArticles(c.var.user.id, c.req.valid("query"))
+
       return c.json(
         {
           articles: articles.map((article) => ({
@@ -60,6 +61,7 @@ export const articleRouter = new OpenAPIHono<AuthContext>({
     }),
     async (c) => {
       await setArticleState(c.var.user.id, c.req.valid("json"))
+
       return c.json({ ok: true as const }, 200)
     },
   )

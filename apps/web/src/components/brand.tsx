@@ -5,6 +5,7 @@ import { Button } from "ui/button"
 
 export function ThemeButton() {
   const { resolvedTheme, setTheme } = useTheme()
+
   return (
     <Button
       variant="ghost"

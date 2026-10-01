@@ -20,7 +20,9 @@ import { ServiceError } from "db/services/access"
 import { env } from "env/server"
 
 const server = new OpenAPIHono<AuthContext>()
+
 server.use("*", secureHeaders())
+
 server.use(
   "*",
   cors({
@@ -30,8 +32,10 @@ server.use(
     allowHeaders: ["Content-Type"],
   }),
 )
+
 server.use("*", async (c, next) => {
   c.header("Cache-Control", "no-store")
+
   if (
     (c.req.path.startsWith("/rpc/") || c.req.path === "/auth/logout") &&
     !["GET", "HEAD", "OPTIONS"].includes(c.req.method) &&
@@ -39,6 +43,7 @@ server.use("*", async (c, next) => {
   ) {
     return c.json({ error: "Untrusted origin" }, 403)
   }
+
   await next()
   c.header(
     "Access-Control-Allow-Origin",
@@ -47,6 +52,7 @@ server.use("*", async (c, next) => {
       : undefined,
   )
 })
+
 server.use(
   "/rpc/*",
   bodyLimit({
@@ -54,21 +60,27 @@ server.use(
     onError: (c) => c.json({ error: "Request too large" }, 413),
   }),
 )
+
 server.onError((error, c) => {
   if (error instanceof ServiceError)
     return c.json({ error: error.message }, error.status)
+
   if (error instanceof HTTPException)
     return c.json(
       { error: error.status < 500 ? error.message : "Request failed" },
       error.status,
     )
   console.error("Request failed", error.name)
+
   return c.json({ error: "Internal server error" }, 500)
 })
+
 server.notFound((c) => c.json({ error: "Not found" }, 404))
 
 server.get("/health", (c) => c.json({ ok: true }))
+
 server.route("/auth", oauth)
+
 const publicRoutes = server.openapi(
   createRoute({
     method: "get",
@@ -103,10 +115,12 @@ export type AppType = typeof app
 if (import.meta.main) {
   const listener = Bun.serve({ port: env.SERVER_PORT, fetch: app.fetch })
   const stopPolling = startFeedPolling()
+
   function shutdown() {
     stopPolling()
     void listener.stop()
   }
+
   process.once("SIGTERM", shutdown)
   process.once("SIGINT", shutdown)
 }

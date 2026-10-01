@@ -25,7 +25,11 @@ export const feeds = pgTable(
 )
 
 export const insertFeedSchema = createInsertSchema(feeds)
+
 export const updateFeedSchema = createUpdateSchema(feeds)
+
 export const feedSchema = createSelectSchema(feeds)
+
 export type SelectFeed = typeof feeds.$inferSelect
+
 export type InsertFeed = typeof feeds.$inferInsert

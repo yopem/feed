@@ -37,9 +37,13 @@ export const articles = pgTable(
 )
 
 export const insertArticleSchema = createInsertSchema(articles)
+
 export const updateArticleSchema = createUpdateSchema(articles)
+
 export const articleSchema = createSelectSchema(articles)
+
 export type SelectArticle = typeof articles.$inferSelect
+
 export type InsertArticle = typeof articles.$inferInsert
 
 export const readingStates = pgTable(
@@ -59,7 +63,11 @@ export const readingStates = pgTable(
 )
 
 export const insertReadingStateSchema = createInsertSchema(readingStates)
+
 export const updateReadingStateSchema = createUpdateSchema(readingStates)
+
 export const readingStateSchema = createSelectSchema(readingStates)
+
 export type SelectReadingState = typeof readingStates.$inferSelect
+
 export type InsertReadingState = typeof readingStates.$inferInsert

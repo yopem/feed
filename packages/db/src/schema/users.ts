@@ -20,7 +20,11 @@ export const users = pgTable(
 )
 
 export const insertUserSchema = createInsertSchema(users)
+
 export const updateUserSchema = createUpdateSchema(users)
+
 export const userSchema = createSelectSchema(users)
+
 export type SelectUser = typeof users.$inferSelect
+
 export type InsertUser = typeof users.$inferInsert

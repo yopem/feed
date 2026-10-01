@@ -33,6 +33,7 @@ describe.skipIf(!testEnv.RUN_DB_TESTS)("PostgreSQL core services", () => {
       if (userIds.length) {
         await db.delete(users).where(inArray(users.id, userIds))
       }
+
       workspaceIds.length = 0
       userIds.length = 0
     }
@@ -46,6 +47,7 @@ describe.skipIf(!testEnv.RUN_DB_TESTS)("PostgreSQL core services", () => {
       () => null,
       (error: unknown) => error,
     )
+
     expect(result).toBeInstanceOf(Error)
     expect(result).toMatchObject(expected)
   }
@@ -63,13 +65,16 @@ describe.skipIf(!testEnv.RUN_DB_TESTS)("PostgreSQL core services", () => {
       },
       true,
     )
+
     userIds.push(created.id)
+
     return created
   }
 
   async function workspace(userId: string) {
     const created = await createWorkspace(userId, `Fixture ${createId()}`)
     workspaceIds.push(created.id)
+
     return created
   }
 
@@ -88,6 +93,7 @@ describe.skipIf(!testEnv.RUN_DB_TESTS)("PostgreSQL core services", () => {
     const url = `https://rss.invalid/${createId()}`
     const feed = await addFeed(owner.id, first.id, url)
     const otherFeed = await addFeed(owner.id, second.id, url)
+
     const result = {
       title: "Fixture feed",
       articles: [
@@ -100,17 +106,23 @@ describe.skipIf(!testEnv.RUN_DB_TESTS)("PostgreSQL core services", () => {
         },
       ],
     }
+
     for (const stored of [feed, otherFeed]) {
       await refreshStoredFeed(stored, (requestedUrl) => {
         expect(requestedUrl).toBe(url)
+
         return Promise.resolve(result)
       })
     }
+
     const [article] = await listArticles(owner.id, { workspaceId: first.id })
+
     const [otherArticle] = await listArticles(owner.id, {
       workspaceId: second.id,
     })
+
     if (!article || !otherArticle) throw new Error("Fixture articles missing")
+
     return {
       owner,
       editor,
@@ -129,11 +141,13 @@ describe.skipIf(!testEnv.RUN_DB_TESTS)("PostgreSQL core services", () => {
   test("provisions local UUIDs for external identities and respects signup policy", async () => {
     const subjectId = `provider|not-a-uuid:${createId()}`
     const issuer = "https://first-issuer.invalid"
+
     const profile = {
       id: subjectId,
       email: `${createId()}@example.invalid`,
       name: null,
     }
+
     await rejects(provisionUser(issuer, profile, false), {
       message: "Signup is disabled",
       status: 403,
@@ -178,6 +192,7 @@ describe.skipIf(!testEnv.RUN_DB_TESTS)("PostgreSQL core services", () => {
     ])
     expect(await listWorkspaces(f.viewer.id)).toHaveLength(2)
     expect(await listWorkspaces(f.outsider.id)).toEqual([])
+
     for (const member of [f.owner, f.editor, f.viewer]) {
       await requireMembership(member.id, f.first.id)
       expect(await listFeeds(member.id, f.first.id)).toHaveLength(1)
@@ -185,16 +200,20 @@ describe.skipIf(!testEnv.RUN_DB_TESTS)("PostgreSQL core services", () => {
         await listArticles(member.id, { workspaceId: f.first.id }),
       ).toHaveLength(1)
     }
+
     for (const writer of [f.owner, f.editor]) {
       await requireMembership(writer.id, f.first.id, true)
+
       const added = await addFeed(
         writer.id,
         f.first.id,
         `https://rss.invalid/${createId()}`,
       )
+
       expect((await getFeed(writer.id, f.first.id, added.id)).id).toBe(added.id)
       await removeFeed(writer.id, f.first.id, added.id)
     }
+
     for (const blocked of [f.viewer, f.outsider]) {
       await rejects(requireMembership(blocked.id, f.first.id, true), {
         status: 403,
@@ -208,6 +227,7 @@ describe.skipIf(!testEnv.RUN_DB_TESTS)("PostgreSQL core services", () => {
         status: 403,
       })
     }
+
     await rejects(requireMembership(f.outsider.id, f.first.id), { status: 403 })
     await rejects(listFeeds(f.outsider.id, f.first.id), {
       status: 403,
@@ -243,11 +263,13 @@ describe.skipIf(!testEnv.RUN_DB_TESTS)("PostgreSQL core services", () => {
     expect(
       await listArticles(f.viewer.id, { workspaceId: f.first.id }),
     ).toEqual([{ ...f.article, read: false, starred: true, saved: true }])
+
     for (const view of ["unread", "starred", "saved"] as const) {
       expect(
         await listArticles(f.viewer.id, { workspaceId: f.first.id, view }),
       ).toHaveLength(1)
     }
+
     expect(await listArticles(f.owner.id, { workspaceId: f.first.id })).toEqual(
       [f.article],
     )
@@ -273,11 +295,13 @@ describe.skipIf(!testEnv.RUN_DB_TESTS)("PostgreSQL core services", () => {
       starred: false,
       saved: false,
     })
+
     for (const view of ["unread", "starred", "saved"] as const) {
       expect(
         await listArticles(f.viewer.id, { workspaceId: f.first.id, view }),
       ).toEqual([])
     }
+
     expect(
       await db
         .select()
@@ -340,6 +364,7 @@ describe.skipIf(!testEnv.RUN_DB_TESTS)("PostgreSQL core services", () => {
       articleId: f.article.id,
       saved: true,
     })
+
     const revised = {
       title: "Updated feed",
       articles: f.result.articles.map((article) => ({
@@ -350,6 +375,7 @@ describe.skipIf(!testEnv.RUN_DB_TESTS)("PostgreSQL core services", () => {
         publishedAt: null,
       })),
     }
+
     await refreshStoredFeed(f.feed, () => Promise.resolve(revised))
     await refreshStoredFeed(f.feed, () => Promise.resolve(revised))
     const stored = await listArticles(f.viewer.id, { workspaceId: f.first.id })

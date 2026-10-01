@@ -27,6 +27,7 @@ const workspaceName = z
 
 export function Reader() {
   const session = useSession()
+
   if (session.isPending)
     return (
       <main className="welcome">
@@ -34,6 +35,7 @@ export function Reader() {
         <p role="status">Opening your reading space…</p>
       </main>
     )
+
   if (session.isError)
     return (
       <main className="welcome">
@@ -44,7 +46,9 @@ export function Reader() {
         <a href={`${clientEnv.VITE_SERVER_URL}/auth/login`}>Sign in again</a>
       </main>
     )
+
   if (!session.data.user) return <SignIn />
+
   return (
     <SignedInReader key={session.data.user.id} name={session.data.user.name} />
   )
@@ -131,6 +135,7 @@ function SignedInReader({ name }: { name: string }) {
   const create = useCreateWorkspace()
   const [selectedId, setSelectedId] = useState("")
   const [creating, setCreating] = useState(false)
+
   const workspace =
     workspaces.data?.find((item) => item.id === selectedId) ??
     workspaces.data?.[0]
@@ -148,6 +153,7 @@ function SignedInReader({ name }: { name: string }) {
         <p role="status">Loading workspaces…</p>
       </main>
     )
+
   if (workspaces.isError)
     return (
       <main className="welcome">

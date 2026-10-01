@@ -28,6 +28,7 @@ const serverSchema = z
       "AUTH_CALLBACK_URL",
     ] as const) {
       const url = new URL(value[key])
+
       if (
         !["http:", "https:"].includes(url.protocol) ||
         url.username ||

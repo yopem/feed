@@ -22,6 +22,7 @@ describe("server environment", () => {
       AUTH_SIGNUP_ENABLED: "false",
       COOKIE_DOMAIN: "",
     })
+
     expect(value.SERVER_PORT).toBe(4100)
     expect(value.AUTH_SIGNUP_ENABLED).toBe(false)
     expect(value.COOKIE_DOMAIN).toBeUndefined()

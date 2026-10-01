@@ -6,10 +6,12 @@ import { env } from "env/server"
 export function startFeedPolling() {
   let stopped = false
   let timer: ReturnType<typeof setTimeout> | undefined
+
   async function poll() {
     try {
       for (const feed of await pollingFeeds()) {
         if (stopped) break
+
         if (
           !feed.lastFetchedAt ||
           Date.now() - feed.lastFetchedAt.getTime() >=
@@ -24,7 +26,9 @@ export function startFeedPolling() {
       if (!stopped) timer = setTimeout(() => void poll(), 60_000)
     }
   }
+
   timer = setTimeout(() => void poll(), 1000)
+
   return function stop() {
     stopped = true
     clearTimeout(timer)

@@ -23,6 +23,7 @@ test("render composition preserves native link semantics", () => {
   const html = renderToStaticMarkup(
     <Button render={<a href="/auth/login" />}>Continue with Google</Button>,
   )
+
   expect(html).toStartWith("<a ")
   expect(html).toContain('href="/auth/login"')
   expect(html).not.toContain('type="button"')

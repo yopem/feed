@@ -1,6 +1,7 @@
 export function articleUrl(value: string) {
   try {
     const url = new URL(value)
+
     return url.protocol === "https:" || url.protocol === "http:"
       ? url.href
       : null

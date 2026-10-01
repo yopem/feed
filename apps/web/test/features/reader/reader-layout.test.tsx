@@ -35,11 +35,13 @@ test("reader composes coss filters, semantic article rows and viewer permissions
     ],
     [article],
   )
+
   const workspace = {
     id: "workspace-1",
     name: "Personal",
     role: "viewer" as const,
   }
+
   const html = renderToStaticMarkup(
     <QueryClientProvider client={cache}>
       <WorkspaceReader
@@ -51,6 +53,7 @@ test("reader composes coss filters, semantic article rows and viewer permissions
       />
     </QueryClientProvider>,
   )
+
   expect(html).toContain('role="tablist"')
   expect(html).toContain('aria-label="Article filters"')
   expect(html).toContain('role="tabpanel"')
@@ -67,11 +70,13 @@ test("reader composes coss filters, semantic article rows and viewer permissions
 test("signed-out reader uses coss authentication card and real sign-in link", () => {
   const cache = new QueryClient()
   cache.setQueryData(["session"], { user: null })
+
   const html = renderToStaticMarkup(
     <QueryClientProvider client={cache}>
       <Reader />
     </QueryClientProvider>,
   )
+
   expect(html).toContain('data-slot="card"')
   expect(html).toContain("/auth/login")
   expect(html).toContain("Continue with Google")
@@ -82,11 +87,13 @@ test("first workspace setup uses named form and coss card", () => {
   const cache = new QueryClient()
   cache.setQueryData(["session"], { user: { id: "user-1", name: "Reader" } })
   cache.setQueryData(["workspaces"], [])
+
   const html = renderToStaticMarkup(
     <QueryClientProvider client={cache}>
       <Reader />
     </QueryClientProvider>,
   )
+
   expect(html).toContain('data-slot="card"')
   expect(html).toContain("Create your reading space")
   expect(html).toContain("Workspace name")

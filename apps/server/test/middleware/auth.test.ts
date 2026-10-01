@@ -19,10 +19,12 @@ test("rejects verified tokens issued for another audience", async () => {
     aud: "another-client",
     subject: { type: "user", properties: profile },
   })
+
   try {
     const response = await route.request("/", {
       headers: { Cookie: "access_token=wrong-audience" },
     })
+
     expect(await response.json()).toEqual({ user: null })
     expect(response.headers.get("set-cookie")).toContain("Max-Age=0")
   } finally {
@@ -39,10 +41,12 @@ test("refreshes when access cookie has expired out of browser", async () => {
       expiresIn: 86400,
     },
   })
+
   const verify = spyOn(authClient, "verify").mockResolvedValue({
     aud: "another-client",
     subject: { type: "user", properties: profile },
   })
+
   try {
     await route.request("/", {
       headers: { Cookie: "refresh_token=old-refresh" },

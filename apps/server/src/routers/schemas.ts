@@ -7,13 +7,17 @@ export function validationHook(result: { success: boolean }, c: Context) {
 }
 
 export const id = z.string().uuid()
+
 export const workspaceInput = z.object({ workspaceId: id })
+
 export const feedInput = workspaceInput.extend({ feedId: id })
+
 export const workspaceSchema = z.object({
   id,
   name: z.string(),
   role: z.enum(["owner", "editor", "viewer"]),
 })
+
 export const feedSchema = z.object({
   id,
   title: z.string(),
@@ -21,6 +25,7 @@ export const feedSchema = z.object({
   lastFetchedAt: z.string().nullable(),
   error: z.string().nullable(),
 })
+
 export const articleSchema = z.object({
   id,
   feedId: id,
@@ -33,6 +38,7 @@ export const articleSchema = z.object({
   starred: z.boolean(),
   saved: z.boolean(),
 })
+
 export const okSchema = z.object({ ok: z.literal(true) })
 
 export function jsonBody<T extends z.ZodType>(schema: T) {
@@ -46,6 +52,7 @@ export function responses<T extends z.ZodType>(schema: T) {
       "application/json": { schema: z.object({ error: z.string() }) },
     },
   }
+
   return {
     200: {
       description: "Success",

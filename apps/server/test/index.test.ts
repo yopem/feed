@@ -31,9 +31,11 @@ test("every private RPC requires authentication", async () => {
     const response = await app.request(
       `/rpc${path}?workspaceId=${crypto.randomUUID()}`,
     )
+
     expect(response.status).toBe(401)
     expect(await response.json()).toEqual({ error: "Authentication required" })
   }
+
   for (const path of [
     "/workspace/create",
     "/feed/add",
@@ -49,6 +51,7 @@ test("every private RPC requires authentication", async () => {
       },
       body: "{}",
     })
+
     expect(response.status).toBe(401)
   }
 })
@@ -60,6 +63,7 @@ test("mutations reject absent and foreign origins", async () => {
         method: "POST",
         headers: origin ? { Origin: origin } : {},
       })
+
       expect(response.status).toBe(403)
     }
   }
@@ -76,14 +80,17 @@ test("logout clears cookies and CORS allows only web origin", async () => {
     method: "POST",
     headers: { Origin: "http://localhost:3000" },
   })
+
   expect(response.status).toBe(200)
   expect(response.headers.get("set-cookie")).toContain("Max-Age=0")
   expect(response.headers.get("access-control-allow-origin")).toBe(
     "http://localhost:3000",
   )
+
   const foreign = await app.request("/rpc/session", {
     headers: { Origin: "https://evil.example" },
   })
+
   expect(foreign.headers.get("access-control-allow-origin")).not.toBe(
     "https://evil.example",
   )

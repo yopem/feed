@@ -8,23 +8,29 @@ export type Article = InferResponseType<
   typeof client.rpc.article.list.$get,
   200
 >["articles"][number]
+
 export type ArticleFilter = InferRequestType<
   typeof client.rpc.article.list.$get
 >["query"]
+
 export type Workspace = InferResponseType<
   typeof client.rpc.workspace.list.$get,
   200
 >["workspaces"][number]
+
 export type ArticleState = InferRequestType<
   typeof client.rpc.article.state.$post
 >["json"]
 
 export function useLogout() {
   const cache = useQueryClient()
+
   return useMutation({
     mutationFn: async () => {
       const response = await authClient.logout.$post()
+
       if (!response.ok) throw new Error("Could not sign out. Try again.")
+
       return response.json()
     },
     onSuccess: async () => {
@@ -43,7 +49,9 @@ export function useSession() {
     queryFn: async () => {
       const response = await client.rpc.session.$get()
       const data = await response.json()
+
       if ("error" in data) throw new Error(data.error)
+
       return data
     },
   })
@@ -55,7 +63,9 @@ export function useWorkspaces() {
     queryFn: async () => {
       const response = await client.rpc.workspace.list.$get()
       const data = await response.json()
+
       if ("error" in data) throw new Error(data.error)
+
       return data.workspaces
     },
   })
@@ -69,8 +79,11 @@ export function useFeeds(workspaceId: string) {
         { query: { workspaceId } },
         { init: { signal } },
       )
+
       const data = await response.json()
+
       if ("error" in data) throw new Error(data.error)
+
       return data.feeds
     },
   })
@@ -84,8 +97,11 @@ export function useArticles(query: ArticleFilter) {
         { query },
         { init: { signal } },
       )
+
       const data = await response.json()
+
       if ("error" in data) throw new Error(data.error)
+
       return data.articles
     },
   })
@@ -93,13 +109,16 @@ export function useArticles(query: ArticleFilter) {
 
 export function useCreateWorkspace() {
   const cache = useQueryClient()
+
   return useMutation({
     mutationFn: async (
       json: InferRequestType<typeof client.rpc.workspace.create.$post>["json"],
     ) => {
       const response = await client.rpc.workspace.create.$post({ json })
       const data = await response.json()
+
       if ("error" in data) throw new Error(data.error)
+
       return data.workspace
     },
     onSuccess: () => cache.invalidateQueries({ queryKey: ["workspaces"] }),
@@ -108,13 +127,17 @@ export function useCreateWorkspace() {
 
 export function useAddFeed(workspaceId: string) {
   const cache = useQueryClient()
+
   return useMutation({
     mutationFn: async (url: string) => {
       const response = await client.rpc.feed.add.$post({
         json: { workspaceId, url },
       })
+
       const data = await response.json()
+
       if ("error" in data) throw new Error(data.error)
+
       return data.feed
     },
     onSuccess: () =>
@@ -127,13 +150,17 @@ export function useFeedAction(
   action: "remove" | "refresh",
 ) {
   const cache = useQueryClient()
+
   return useMutation({
     mutationFn: async (feedId: string) => {
       const response = await client.rpc.feed[action].$post({
         json: { workspaceId, feedId },
       })
+
       const data = await response.json()
+
       if ("error" in data) throw new Error(data.error)
+
       return data
     },
     onSuccess: () =>
@@ -143,13 +170,17 @@ export function useFeedAction(
 
 export function useArticleState(workspaceId: string) {
   const cache = useQueryClient()
+
   return useMutation({
     mutationFn: async (state: Omit<ArticleState, "workspaceId">) => {
       const response = await client.rpc.article.state.$post({
         json: { ...state, workspaceId },
       })
+
       const data = await response.json()
+
       if ("error" in data) throw new Error(data.error)
+
       return data
     },
     onSuccess: () =>

@@ -14,6 +14,7 @@ test("coss tabs render selected filter and active panel during SSR", () => {
       <TabsPanel value="unread">Unread stories</TabsPanel>
     </Tabs>,
   )
+
   expect(html).toContain('role="tablist"')
   expect(html).toContain('aria-selected="true"')
   expect(html).toContain('role="tabpanel"')

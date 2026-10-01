@@ -35,5 +35,6 @@ export async function requireMembership(
         eq(memberships.workspaceId, workspaceId),
       ),
     )
+
   assertRole(member?.role, write)
 }

@@ -8,6 +8,7 @@ test("article links allow only absolute HTTP URLs", () => {
   expect(articleUrl("http://example.com/story")).toBe(
     "http://example.com/story",
   )
+
   for (const unsafe of [
     "javascript:alert(1)",
     "data:text/html,test",

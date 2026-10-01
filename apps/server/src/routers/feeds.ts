@@ -36,6 +36,7 @@ export const feedRouter = new OpenAPIHono<AuthContext>({
         c.var.user.id,
         c.req.valid("query").workspaceId,
       )
+
       return c.json(
         {
           feeds: feeds.map((feed) => ({
@@ -59,14 +60,17 @@ export const feedRouter = new OpenAPIHono<AuthContext>({
     async (c) => {
       const input = c.req.valid("json")
       let url
+
       try {
         url = validateFeedUrl(input.url)
       } catch {
         throw new HTTPException(400, { message: "Invalid feed URL" })
       }
+
       const feed = await addFeed(c.var.user.id, input.workspaceId, url.href)
       await refreshStoredFeed(feed, fetchFeed)
       const updated = await getFeed(c.var.user.id, input.workspaceId, feed.id)
+
       return c.json(
         {
           feed: {
@@ -88,6 +92,7 @@ export const feedRouter = new OpenAPIHono<AuthContext>({
     async (c) => {
       const input = c.req.valid("json")
       await removeFeed(c.var.user.id, input.workspaceId, input.feedId)
+
       return c.json({ ok: true as const }, 200)
     },
   )
@@ -102,6 +107,7 @@ export const feedRouter = new OpenAPIHono<AuthContext>({
       const input = c.req.valid("json")
       const feed = await getFeed(c.var.user.id, input.workspaceId, input.feedId)
       await refreshStoredFeed(feed, fetchFeed)
+
       return c.json({ ok: true as const }, 200)
     },
   )

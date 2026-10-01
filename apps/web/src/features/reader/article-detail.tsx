@@ -42,6 +42,7 @@ export function ArticleDetail({
   async function share() {
     if (!url) return
     setShareMessage("")
+
     try {
       if (navigator.share) {
         await navigator.share({ title: article.title, url })

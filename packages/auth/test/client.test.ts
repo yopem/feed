@@ -8,6 +8,7 @@ test("authorization uses shared issuer but returns to the Feed callback with PKC
     pkce: true,
     provider: "google",
   })
+
   const target = new URL(url)
   expect(target.origin).toBe("https://auth.yopem.com")
   expect(target.pathname).toBe("/authorize")

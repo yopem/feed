@@ -14,6 +14,7 @@ test("workspace select renders its label during SSR, not its internal ID", () =>
       </SelectTrigger>
     </Select>,
   )
+
   expect(html).toContain('role="combobox"')
   expect(html).toContain('aria-label="Workspace"')
   expect(html).toContain(">Daily reading</span>")

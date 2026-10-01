@@ -10,6 +10,7 @@ test("table-derived schemas validate insert, select and partial updates", () => 
     email: "reader@example.com",
     name: "Reader",
   }
+
   expect(insertUserSchema.parse(user)).toEqual(user)
   expect(userSchema.parse(user)).toEqual(user)
   expect(updateUserSchema.parse({ name: "New name" })).toEqual({

@@ -43,12 +43,14 @@ export function WorkspaceReader({
   const [mobileNav, setMobileNav] = useState(false)
   const [article, setArticle] = useState<Article | null>(null)
   const feeds = useFeeds(workspace.id)
+
   const articles = useArticles({
     workspaceId: workspace.id,
     view,
     feedId,
     search: search || undefined,
   })
+
   const add = useAddFeed(workspace.id)
   const activeFeed = feeds.data?.find((feed) => feed.id === feedId)
   const currentView = views.find((item) => item.value === view) ?? views[0]
@@ -146,6 +148,7 @@ export function WorkspaceReader({
             value={view}
             onValueChange={(value) => {
               const selected = views.find((item) => item.value === value)
+
               if (selected) setView(selected.value)
             }}
           >
@@ -177,6 +180,7 @@ export function WorkspaceReader({
                   value={searchInput}
                   onChange={(event) => {
                     setSearchInput(event.target.value)
+
                     if (!event.target.value) setSearch("")
                   }}
                 />
